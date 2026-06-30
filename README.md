@@ -19,11 +19,24 @@ published product.
 
 | Version | Build Date | Platform | Status |
 |---------|-----------|----------|--------|
+| [**2.1.197**](versions/2.1.197/) | 2026-06-29 | Linux x86-64 | Complete (deep) |
 | [**2.1.169**](versions/2.1.169/) | 2026-06-08 | Linux x86-64 | Complete (deep) |
 | [**2.1.32**](versions/2.1.32/) | 2026-02-05 | Linux x86-64 | Complete |
 
-See [versions/README.md](versions/README.md) for the full version index, and
-[comparisons/2.1.32-to-2.1.169.md](comparisons/2.1.32-to-2.1.169.md) for the cross-version diff.
+See [versions/README.md](versions/README.md) for the full version index, and the
+[comparisons/](comparisons/) directory for cross-version diffs
+([2.1.32 → 2.1.169](comparisons/2.1.32-to-2.1.169.md),
+[2.1.169 → 2.1.197](comparisons/2.1.169-to-2.1.197.md)).
+
+> **Latest (v2.1.197):** a deep, bundle-extracted analysis (**Bun v1.4.0**, ~733k beautified lines).
+> Where 2.1.169 was a tectonic shift, **2.1.197 is a consolidation release** — the same cloud
+> agent-fabric, renamed and re-gated, with new managed-resource families bolted on. Headline deltas vs
+> 2.1.169: **243 feature flags** (+25), **1086 → 1163 telemetry events**, **49 built-in tools**,
+> **526 env vars**, **164 API path templates**; a new declarative model catalog with the **`fable`
+> family** (`claude-fable-5`, Mythos-class) and **`claude-sonnet-5`**; new cloud surfaces — credential
+> **Vaults**, **memory stores**, **skill versioning**, **Claude Design** MCP, and web-artifact frame
+> deploy. Notably, the Datadog telemetry token was **not** rotated this cycle. See the
+> [overview](versions/2.1.197/overview.md) and the [2.1.169 → 2.1.197 comparison](comparisons/2.1.169-to-2.1.197.md).
 
 > **Note on depth (v2.1.169):** this analysis goes **beyond `strings`**. v2.1.169 ships as a
 > **Bun v1.3.14** standalone executable, so the full 16.5 MB plaintext JS bundle was carved out of
@@ -75,6 +88,29 @@ versions/<version>/
 | [Glossary](docs/glossary.md) | Internal codenames (tengu, marble, copper, coral, grove, kairos, harbor, …) |
 | [Architecture Overview](docs/architecture-overview.md) | How this repository is organized |
 | [How to Analyze](docs/how-to-analyze.md) | Step-by-step guide for analyzing a new version |
+
+### Version 2.1.197 Reports
+
+| Report | Description |
+|--------|-------------|
+| [Overview](versions/2.1.197/overview.md) | Build metadata, headline counts, and the "consolidation release" story |
+| [**Device Fingerprinting**](versions/2.1.197/device-fingerprinting.md) | **Deep-dive** — machine-id, identity fields, device trust, what leaves the machine |
+| [Feature Flags](versions/2.1.197/feature-flags.md) | All 243 GrowthBook feature flags, accessor-decoded |
+| [Plan and Tier Gating](versions/2.1.197/plan-tier-gating.md) | Subscription types, model access, limits, usage credits |
+| [API Endpoints](versions/2.1.197/api-endpoints.md) | Inference + the cloud backend (incl. Vaults, memory stores, skill versioning) + OAuth |
+| [Telemetry](versions/2.1.197/telemetry.md) | Telemetry stack, controls, and 1163 events (Datadog token un-rotated) |
+| [System Prompt](versions/2.1.197/system-prompt.md) | Composer, section builders, reconstructed text |
+| [Tool Definitions](versions/2.1.197/tool-definitions.md) | 49 tools, schemas, permission modes |
+| [Security Model](versions/2.1.197/security-model.md) | LLM injection classifier, sandboxing, file access |
+| [Architecture](versions/2.1.197/architecture.md) | Bun 1.4.0 packaging, daemon, teams, bridge, loops, workflows |
+| [Model References](versions/2.1.197/model-references.md) | Zod-validated catalog, the new `fable`/`sonnet-5` ids, fallback, fast mode |
+| [Environment Variables](versions/2.1.197/environment-variables.md) | All 526 env vars + privacy opt-outs |
+| [Hidden Commands](versions/2.1.197/hidden-commands.md) | Disabled, hidden, and easter-egg slash commands |
+| [Codenames](versions/2.1.197/codenames.md) | Internal codename mappings (incl. new families) |
+
+Structured datasets: [`versions/2.1.197/data/`](versions/2.1.197/data/). Raw extraction + the
+carved/beautified bundle live under [`data/raw/`](versions/2.1.197/data/raw/) and
+[`bundle/`](versions/2.1.197/bundle/).
 
 ### Version 2.1.169 Reports
 
@@ -154,4 +190,5 @@ See [docs/methodology.md](docs/methodology.md) for the full extraction guide and
 ## Version Comparisons
 
 Cross-version diffs live in [`comparisons/`](comparisons/) — see
-[2.1.32 → 2.1.169](comparisons/2.1.32-to-2.1.169.md).
+[2.1.32 → 2.1.169](comparisons/2.1.32-to-2.1.169.md) and
+[2.1.169 → 2.1.197](comparisons/2.1.169-to-2.1.197.md).
