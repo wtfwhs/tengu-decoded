@@ -1,0 +1,657 @@
+# Model & routing data for Claude Code 2.1.197
+# Source of truth: cli.beauty.js. The model layer was REWRITTEN from the 2.1.169
+# hand-coded `tz` object into a Zod-validated declarative catalog:
+#   - catalog data `pQs`            (94000-94405)
+#   - Zod schema   `hfd`            (94492)  -> parsed by `iMt()` (94507)
+#   - lookups: WM(id) (94412), dU(id,cap) (94416), fQs(alias,prov) (94420)
+#   - CATALOG_ID_TO_KEY `Sfd` (94570) bridges to legacy routing object `va` = Afd() (94587)
+# Alias resolve Bo (102388), defaults O_/nE/Rj/Wje (101772-101807),
+# main-loop Ww/Ey (101860-102249), caps (132480-133050, 146660-146945),
+# fallback (596700-604480), fast mode + pricing (100577-101086).
+
+catalog:
+  schema_version_field: true        # pQs.schema_version, validated by hfd() (94492)
+  capabilities_are_data: true       # per-model `capabilities[]` string array, queried via dU(id,cap)
+  catalog_id_to_key_map: "Sfd (94570)"   # claude-fable-5->fable5, claude-sonnet-5->sonnet5, ...
+  legacy_routing_object: "va (94587, was `tz`)"
+
+# ---------------------------------------------------------------------------
+# Current model families. `id` = catalog id / canonical short id; `key` = the
+# internal va/Sfd key; `first_party` = api.anthropic.com id. Provider rows are
+# the per-plane provider_ids from the catalog entry.
+# ---------------------------------------------------------------------------
+current_models:
+  - family: "Fable 5"
+    catalog_family: fable
+    key: fable5
+    canonical: "claude-fable-5"
+    is_best_model: true             # `best` alias resolves here when Vle() (Zai, 101659)
+    is_default_fable: true          # aliases.fable.default
+    tier: "Mythos-class (above Opus)"
+    model_ids: ["claude-fable-5"]
+    providers:
+      firstParty: "claude-fable-5"
+      bedrock: "us.anthropic.claude-fable-5"
+      vertex: "claude-fable-5"
+      foundry: "claude-fable-5"
+      anthropicAws: "claude-fable-5"
+      mantle: "anthropic.claude-fable-5"
+      gateway: "claude-fable-5"
+    eager_input_streaming: [bedrock, vertex]
+    context: {window: 1000000, native_1m: true, supports_1m_beta: true}
+    capabilities: [effort, max_effort, xhigh_effort, adaptive_thinking, rejects_disabled_thinking, mid_conv_system, context_management, lean_prompt, fable_5_mitigations]
+    default_effort: high
+    knowledge_cutoff: "January 2026"
+    pricing_per_mtok: {input: 10, output: 50}   # OHn
+    max_output: {default: 64000, upper: 128000}
+    notes: "NEW. Identity prompt Dam (593910): 'first model in Anthropic's new Claude 5 family', Mythos-class tier above Opus. Native 1M. Thinking cannot be disabled (rejects_disabled_thinking)."
+
+  - family: "Mythos 5"
+    catalog_family: mythos
+    key: null                       # NOT in Sfd; handled via const IQs (94589) + hard-coded predicate special-cases
+    canonical: "claude-mythos-5"
+    tier: "Mythos-class (approved orgs only, no dual-use mitigations)"
+    model_ids: ["claude-mythos-5"]
+    providers_catalog:              # catalog entry (94356) has 3P ids NULL
+      firstParty: "claude-mythos-5"
+      bedrock: null
+      vertex: null
+      foundry: null
+      anthropicAws: null
+      mantle: null
+      gateway: null
+    providers_IQs:                  # separate const IQs (94589) carries full set
+      firstParty: "claude-mythos-5"
+      bedrock: "us.anthropic.claude-mythos-5"
+      vertex: "claude-mythos-5"
+      foundry: "claude-mythos-5"
+      anthropicAws: "claude-mythos-5"
+      mantle: "anthropic.claude-mythos-5"
+      gateway: "claude-mythos-5"
+    eager_input_streaming: [bedrock, vertex]   # via IQs
+    capabilities_catalog: []        # empty in catalog; treated as capability-complete via `|| e==="claude-mythos-5"` in predicates
+    knowledge_cutoff: "January 2026"
+    pricing_per_mtok: {input: 10, output: 50}   # OHn
+    max_output: {default: 64000, upper: 128000}
+    notes: "NEW. Shares underlying model with Fable 5 (per identity prompt). Gated by zHn(); availability check qye() reports 'absent' when zHn() false."
+
+  - family: "Opus 4.8"
+    catalog_family: opus
+    key: opus48
+    canonical: "claude-opus-4-8"
+    is_default_opus: true           # aliases.opus.default; the firstParty Opus and the model running this analysis
+    model_ids: ["claude-opus-4-8"]
+    providers:
+      firstParty: "claude-opus-4-8"
+      bedrock: "us.anthropic.claude-opus-4-8"
+      vertex: "claude-opus-4-8"
+      foundry: "claude-opus-4-8"
+      anthropicAws: "claude-opus-4-8"
+      mantle: "anthropic.claude-opus-4-8"
+      gateway: "claude-opus-4-8"
+    eager_input_streaming: [bedrock, vertex]
+    context: {window: 1000000, native_1m: true, supports_1m_beta: true}
+    capabilities: [effort, max_effort, xhigh_effort, adaptive_thinking, mid_conv_system, context_management, fast_mode, lean_prompt]
+    default_effort: high
+    knowledge_cutoff: "January 2026"
+    pricing_per_mtok: {input: 5, output: 25}        # jle
+    pricing_fast_per_mtok: {input: 10, output: 50}  # OHn (speed=fast)
+    max_output: {default: 64000, upper: 128000}
+
+  - family: "Opus 4.7"
+    catalog_family: opus
+    key: opus47
+    canonical: "claude-opus-4-7"
+    is_default_3p_opus_some: true   # aliases.opus.per_provider anthropicAws/mantle/gateway -> 4-7; DEFAULT_MANTLE_OPUS_KEY=opus47
+    model_ids: ["claude-opus-4-7"]
+    providers:
+      firstParty: "claude-opus-4-7"
+      bedrock: "us.anthropic.claude-opus-4-7"
+      vertex: "claude-opus-4-7"
+      foundry: "claude-opus-4-7"
+      anthropicAws: "claude-opus-4-7"
+      mantle: "anthropic.claude-opus-4-7"
+      gateway: "claude-opus-4-7"
+    eager_input_streaming: [bedrock, vertex]
+    context: {window: 1000000, native_1m: true, supports_1m_beta: true}
+    capabilities: [effort, max_effort, xhigh_effort, adaptive_thinking, context_management, fast_mode]
+    default_effort: xhigh
+    knowledge_cutoff: "January 2026"
+    pricing_per_mtok: {input: 5, output: 25}        # jle
+    pricing_fast_per_mtok: {input: 30, output: 150} # Nai (speed=fast)
+    max_output: {default: 64000, upper: 128000}
+    notes: "Fast mode sunsets ~2026-07-25 (tengu_sunset_penguin_opus47, vai 100687). mantle default main-loop model (zMt)."
+
+  - family: "Opus 4.6"
+    catalog_family: opus
+    key: opus46
+    canonical: "claude-opus-4-6"
+    is_default_3p_opus: true        # DEFAULT_3P_OPUS_KEY (Vte) = "opus46"; aliases.opus.per_provider bedrock/vertex/foundry
+    model_ids: ["claude-opus-4-6", "claude-opus-4-6-20251101", "claude-opus-4-6-fast", "claude-opus-4-6-v1"]
+    providers:
+      firstParty: "claude-opus-4-6"
+      bedrock: "us.anthropic.claude-opus-4-6-v1"
+      vertex: "claude-opus-4-6"
+      foundry: "claude-opus-4-6"
+      anthropicAws: "claude-opus-4-6"
+      mantle: null
+      gateway: "claude-opus-4-6"
+    eager_input_streaming: [vertex]
+    context: {window: 200000, supports_1m_beta: true}
+    capabilities: [effort, max_effort, adaptive_thinking, context_management]
+    knowledge_cutoff: "May 2025"
+    pricing_per_mtok: {input: 5, output: 25}        # jle
+    pricing_fast_per_mtok: {input: 30, output: 150} # Nai (claude-opus-4-6-fast api string; NO LONGER fast-eligible in CLI ig())
+    max_output: {default: 64000, upper: 128000}
+    notes: "CHANGED: lost CLI fast-mode eligibility (no `fast_mode` capability). codename mythos-preview maps here in SDK deprecation map."
+
+  - family: "Opus 4.5"
+    catalog_family: opus
+    key: opus45
+    canonical: "claude-opus-4-5"
+    model_ids: ["claude-opus-4-5", "claude-opus-4-5-20251101", "claude-opus-4-5-20251101-v1"]
+    providers:
+      firstParty: "claude-opus-4-5-20251101"
+      bedrock: "us.anthropic.claude-opus-4-5-20251101-v1:0"
+      vertex: "claude-opus-4-5@20251101"
+      foundry: "claude-opus-4-5"
+      anthropicAws: "claude-opus-4-5-20251101"
+      mantle: null
+      gateway: "claude-opus-4-5-20251101"
+    eager_input_streaming: [vertex]
+    context: {window: 200000}
+    capabilities: [context_management]
+    knowledge_cutoff: "May 2025"
+    pricing_per_mtok: {input: 5, output: 25}        # jle
+    max_output: {default: 32000, upper: 64000}
+
+  - family: "Opus 4.1"
+    catalog_family: opus
+    key: opus41
+    canonical: "claude-opus-4-1"
+    legacy_remap_target: true       # in hyd
+    model_ids: ["claude-opus-4-1", "claude-opus-4-1-20250805", "claude-opus-4-1-20250805-v1"]
+    providers:
+      firstParty: "claude-opus-4-1-20250805"
+      bedrock: "us.anthropic.claude-opus-4-1-20250805-v1:0"
+      vertex: "claude-opus-4-1@20250805"
+      foundry: "claude-opus-4-1"
+      anthropicAws: "claude-opus-4-1-20250805"
+      mantle: null
+      gateway: "claude-opus-4-1-20250805"
+    capabilities: [context_management]
+    knowledge_cutoff: "January 2025"
+    pricing_per_mtok: {input: 15, output: 75}       # $ai
+    max_output: {default: 32000, upper: 32000}
+
+  - family: "Opus 4.0"
+    catalog_family: opus
+    key: opus40
+    canonical: "claude-opus-4-0"
+    legacy_remap_target: true       # in hyd
+    model_ids: ["claude-opus-4", "claude-opus-4-0", "claude-opus-4-20250514", "claude-opus-4-20250514-v1", "claude-4-opus-20250514"]
+    providers:
+      firstParty: "claude-opus-4-20250514"
+      bedrock: "us.anthropic.claude-opus-4-20250514-v1:0"
+      vertex: "claude-opus-4@20250514"
+      foundry: "claude-opus-4"
+      anthropicAws: "claude-opus-4-20250514"
+      mantle: null
+      gateway: "claude-opus-4-20250514"
+    capabilities: [context_management]
+    knowledge_cutoff: "January 2025"
+    pricing_per_mtok: {input: 15, output: 75}       # $ai
+    max_output: {default: 32000, upper: 32000}
+
+  - family: "Sonnet 5"
+    catalog_family: sonnet
+    key: sonnet5
+    canonical: "claude-sonnet-5"
+    is_default_sonnet: true         # aliases.sonnet.default; default non-premium firstParty main-loop model
+    model_ids: ["claude-sonnet-5"]
+    providers:
+      firstParty: "claude-sonnet-5"
+      bedrock: "us.anthropic.claude-sonnet-5"
+      vertex: "claude-sonnet-5"
+      foundry: "claude-sonnet-5"
+      anthropicAws: "claude-sonnet-5"
+      mantle: "anthropic.claude-sonnet-5"
+      gateway: "claude-sonnet-5"
+    eager_input_streaming: [bedrock, vertex]
+    context: {window: 1000000, native_1m: true, supports_1m_beta: true, native_1m_3p: {bedrock: true, vertex: true, foundry: true}}
+    capabilities: [effort, max_effort, xhigh_effort, adaptive_thinking, mid_conv_system, context_management]
+    default_effort: high
+    knowledge_cutoff: "January 2026"
+    pricing_per_mtok: {input: 3, output: 15}        # jte
+    max_output: {default: 64000, upper: 128000}
+    image_limits: {maxWidth: 2000, maxHeight: 2000}
+    notes: "NEW. Only model with native_1m_3p (1M on bedrock/vertex/foundry without beta). Now the default `sonnet` alias (was Sonnet 4.6)."
+
+  - family: "Sonnet 4.6"
+    catalog_family: sonnet
+    key: sonnet46
+    canonical: "claude-sonnet-4-6"
+    model_ids: ["claude-sonnet-4-6", "claude-sonnet-4-6-20251114"]
+    providers:
+      firstParty: "claude-sonnet-4-6"
+      bedrock: "us.anthropic.claude-sonnet-4-6"
+      vertex: "claude-sonnet-4-6"
+      foundry: "claude-sonnet-4-6"
+      anthropicAws: "claude-sonnet-4-6"
+      mantle: null
+      gateway: "claude-sonnet-4-6"
+    eager_input_streaming: [bedrock, vertex]
+    context: {window: 200000, supports_1m_beta: true}
+    capabilities: [effort, max_effort, adaptive_thinking, context_management]
+    knowledge_cutoff: "August 2025"
+    pricing_per_mtok: {input: 3, output: 15}        # jte
+    max_output: {default: 32000, upper: 128000}
+    notes: "kelp_forest_sonnet client-data key can override base context window (exn, 132565)."
+
+  - family: "Sonnet 4.5"
+    catalog_family: sonnet
+    key: sonnet45
+    canonical: "claude-sonnet-4-5"
+    is_default_3p_sonnet: true      # DEFAULT_3P_SONNET_KEY (cW) = "sonnet45"
+    model_ids: ["claude-sonnet-4-5", "claude-sonnet-4-5-20250929", "claude-sonnet-4-5-20250929-v1"]
+    providers:
+      firstParty: "claude-sonnet-4-5-20250929"
+      bedrock: "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+      vertex: "claude-sonnet-4-5@20250929"
+      foundry: "claude-sonnet-4-5"
+      anthropicAws: "claude-sonnet-4-5-20250929"
+      mantle: null
+      gateway: "claude-sonnet-4-5-20250929"
+    eager_input_streaming: [vertex]
+    context: {window: 200000, supports_1m_beta: true}
+    capabilities: [context_management]
+    knowledge_cutoff: "January 2025"
+    pricing_per_mtok: {input: 3, output: 15}        # jte
+    max_output: {default: 32000, upper: 64000}
+
+  - family: "Sonnet 4.0"
+    catalog_family: sonnet
+    key: sonnet40
+    canonical: "claude-sonnet-4-0"
+    model_ids: ["claude-sonnet-4", "claude-sonnet-4-0", "claude-sonnet-4-20250514", "claude-sonnet-4-20250514-v1"]
+    providers:
+      firstParty: "claude-sonnet-4-20250514"
+      bedrock: "us.anthropic.claude-sonnet-4-20250514-v1:0"
+      vertex: "claude-sonnet-4@20250514"
+      foundry: "claude-sonnet-4"
+      anthropicAws: "claude-sonnet-4-20250514"
+      mantle: null
+      gateway: "claude-sonnet-4-20250514"
+    eager_input_streaming: [vertex]
+    context: {window: 200000, supports_1m_beta: true}
+    capabilities: [context_management]
+    knowledge_cutoff: "January 2025"
+    pricing_per_mtok: {input: 3, output: 15}        # jte
+    max_output: {default: 32000, upper: 64000}
+
+  - family: "Sonnet 3.7"
+    catalog_family: sonnet
+    key: sonnet37
+    canonical: "claude-3-7-sonnet"
+    model_ids: ["claude-3-7-sonnet", "claude-3-7-sonnet-20250219", "claude-3-7-sonnet-20250219-v1", "claude-3-7-sonnet-latest"]
+    providers:
+      firstParty: "claude-3-7-sonnet-20250219"
+      bedrock: "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
+      vertex: "claude-3-7-sonnet@20250219"
+      foundry: "claude-3-7-sonnet"
+      anthropicAws: "claude-3-7-sonnet-20250219"
+      mantle: null
+      gateway: "claude-3-7-sonnet-20250219"
+    capabilities: []
+    pricing_per_mtok: {input: 3, output: 15}        # jte
+    max_output: {default: 32000, upper: 64000}
+
+  - family: "Sonnet 3.5"
+    catalog_family: sonnet
+    key: sonnet35
+    canonical: "claude-3-5-sonnet"
+    model_ids: ["claude-3-5-sonnet", "claude-3-5-sonnet-20240620", "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20241022-v2", "claude-3-5-sonnet-v2"]
+    providers:
+      firstParty: "claude-3-5-sonnet-20241022"
+      bedrock: "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+      vertex: "claude-3-5-sonnet-v2@20241022"
+      foundry: "claude-3-5-sonnet"
+      anthropicAws: "claude-3-5-sonnet-20241022"
+      mantle: null
+      gateway: "claude-3-5-sonnet-20241022"
+    capabilities: []
+    pricing_per_mtok: {input: 3, output: 15}        # jte
+    max_output: {default: 8192, upper: 8192}
+
+  - family: "Haiku 4.5"
+    catalog_family: haiku
+    key: haiku45
+    canonical: "claude-haiku-4-5"
+    is_default_haiku: true          # DEFAULT_3P_HAIKU_KEY (zte) = "haiku45"; aliases.haiku.default; firstParty default Haiku
+    role: "small/fast model (classifiers, summaries, command-injection prefix-classify, WebFetch, prompt/agent hooks)"
+    model_ids: ["claude-haiku-4-5", "claude-haiku-4-5-20251001", "claude-haiku-4-5-20251001-v1"]
+    providers:
+      firstParty: "claude-haiku-4-5-20251001"
+      bedrock: "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+      vertex: "claude-haiku-4-5@20251001"
+      foundry: "claude-haiku-4-5"
+      anthropicAws: "claude-haiku-4-5-20251001"
+      mantle: "anthropic.claude-haiku-4-5"
+      gateway: "claude-haiku-4-5-20251001"
+    capabilities: [context_management]
+    knowledge_cutoff: "February 2025"
+    pricing_per_mtok: {input: 1, output: 5}         # A4r
+    max_output: {default: 32000, upper: 64000}
+
+  - family: "Haiku 3.5"
+    catalog_family: haiku
+    key: haiku35
+    canonical: "claude-3-5-haiku"
+    role: "fallback small/fast model on older/3P configs"
+    model_ids: ["claude-3-5-haiku", "claude-3-5-haiku-20241022", "claude-3-5-haiku-20241022-v1", "claude-3-5-haiku-latest"]
+    providers:
+      firstParty: "claude-3-5-haiku-20241022"
+      bedrock: "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+      vertex: "claude-3-5-haiku@20241022"
+      foundry: "claude-3-5-haiku"
+      anthropicAws: "claude-3-5-haiku-20241022"
+      mantle: null
+      gateway: "claude-3-5-haiku-20241022"
+    eager_input_streaming: [vertex]
+    capabilities: []
+    pricing_per_mtok: {input: 0.8, output: 4}       # E4r
+    max_output: {default: 8192, upper: 8192}
+
+# +5 model ids vs 2.1.169 (56 -> 61). New: claude-fable-5, claude-mythos-5,
+# claude-sonnet-5, claude-opus-4-7-fast (doc-only, not a catalog entry),
+# claude-fable-5.md (docs path, not a model id).
+new_model_ids_vs_2_1_169: ["claude-fable-5", "claude-mythos-5", "claude-sonnet-5", "claude-opus-4-7-fast (doc-only)", "claude-fable-5.md (docs path)"]
+
+# Legacy models recognised by c_() canonicaliser (102261) but absent from catalog/va.
+legacy_models:
+  - "claude-3-opus"
+  - "claude-3-sonnet"
+  - "claude-3-haiku"
+  - "claude-2.1"
+  - "claude-2.0"
+  - "claude-1.3"
+  - "claude-instant-1.1"
+  - "claude-instant-1.2"
+
+codenamed_models:
+  - id: "claude-mythos-preview"
+    maps_to: "claude-opus-4-6"
+    where: "SDK deprecation map; 1M check special-case _I (132495)"
+    note: "Older Opus-4.6 preview codename; DISTINCT from the new shipping claude-mythos-5."
+
+one_m_context_suffix: "[1m]"
+
+# ---------------------------------------------------------------------------
+# Alias / remap resolution (Bo, defaults O_/nE/Rj/Wje, main-loop Ww/Ey)
+# ---------------------------------------------------------------------------
+aliases:
+  resolver_fn: "Bo (102388, was c7)"
+  user_facing_aliases: ["sonnet", "opus", "haiku", "fable", "best", "sonnet[1m]", "opus[1m]", "fable[1m]", "opusplan"]   # Uye (94616)
+  short_aliases: ["sonnet", "opus", "haiku", "fable"]   # Hfd (94617)
+  catalog_alias_defaults:           # pQs.aliases (94367)
+    opus:   {default: "claude-opus-4-8",  per_provider: {bedrock: "claude-opus-4-6", vertex: "claude-opus-4-6", foundry: "claude-opus-4-6", mantle: "claude-opus-4-7", anthropic_aws: "claude-opus-4-7", gateway: "claude-opus-4-7"}}
+    sonnet: {default: "claude-sonnet-5",  per_provider: {bedrock: "claude-sonnet-4-5", vertex: "claude-sonnet-4-5", foundry: "claude-sonnet-4-5", mantle: "claude-sonnet-4-5", anthropic_aws: "claude-sonnet-4-6", gateway: "claude-sonnet-4-6"}}
+    haiku:  {default: "claude-haiku-4-5"}
+    fable:  {default: "claude-fable-5"}
+  latest_per_family:                # pQs.latest_per_family (94398)
+    fable: "claude-fable-5"
+    opus: "claude-opus-4-8"
+    sonnet: "claude-sonnet-5"
+    haiku: "claude-haiku-4-5"
+  resolution:
+    opus: "O_() -> ANTHROPIC_DEFAULT_OPUS_MODEL || KHn('opus') = aliases.opus default/per_provider"
+    sonnet: "nE() -> ANTHROPIC_DEFAULT_SONNET_MODEL || KHn('sonnet') = aliases.sonnet default (Sonnet 5)"
+    haiku: "Rj() -> ANTHROPIC_DEFAULT_HAIKU_MODEL || KHn('haiku') = haiku45"
+    fable: "Wje() -> ANTHROPIC_DEFAULT_FABLE_MODEL || L4r() = fable5 (NEW)"
+    best: "Zai() (101659) -> Fable 5 if Vle() else Opus (O_)"
+    opusplan: "Bo returns resting Sonnet (nE); plan-mode Opus upgrade applied at runtime by rL() (101813)"
+    "[1m] suffix": "preserved through alias expansion when CLAUDE_CODE_DISABLE_1M_CONTEXT unset"
+  default_model_selection:
+    setting_fn: "getDefaultMainLoopModelSetting (Ww, 101860) -> $4r() (101904)"
+    rule: >
+      Subscription users (Ao): if Max (zle) || Team-5x (Nxe) || Enterprise-usage-based (Xye) -> Opus (O_, +[1m] if cT()).
+      API-key/ud() users -> Opus (O_, +[1m]). mantle -> zd()[opus47]. Everyone else -> Sonnet (nE = Sonnet 5).
+    main_loop_fn: "getMainLoopModel (Ts, 101653): honours user override (lW) first, else Ey() = Bo(Ww())"
+    running_this_analysis: "claude-opus-4-8 (firstParty subscription; live session reports model id claude-opus-4-8)"
+  fable_decline_fallback:
+    fn: "getFableDeclineFallbackModel (Kye, 102251)"
+    rule: "If default model is Fable (iH), pick first non-Fable of [O_(), nE(), Rj()] that is org-allowed."
+  availability_gate:
+    fn: "qye() (101725); Vle() (101681) enables Fable; zHn() (101690) enables Mythos"
+    reasons: ["disabled", "absent"]
+
+env_overrides:
+  ANTHROPIC_MODEL: "main-loop model override (read by lW)"
+  ANTHROPIC_DEFAULT_OPUS_MODEL: "override 'opus' (O_). + _NAME/_DESCRIPTION/_SUPPORTED_CAPABILITIES"
+  ANTHROPIC_DEFAULT_SONNET_MODEL: "override 'sonnet' (nE) + siblings"
+  ANTHROPIC_DEFAULT_HAIKU_MODEL: "override 'haiku'/small-fast (Rj) + siblings"
+  ANTHROPIC_DEFAULT_FABLE_MODEL: "NEW: override 'fable' (Wje); flips Vle()/J9() so Fable is treated available. + siblings"
+  ANTHROPIC_SMALL_FAST_MODEL: "highest-priority small/fast override (qw); + ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION"
+  CLAUDE_CODE_SUBAGENT_MODEL: "model for Task subagents/teammates; 'inherit' = parent's model (fDo, 419845)"
+  CLAUDE_CODE_DISABLE_LEGACY_MODEL_REMAP: "disable legacy-opus remap (Gje, 102434)"
+  ANTHROPIC_CUSTOM_MODEL_OPTION: "adds a custom model entry to the picker (+ _NAME/_DESCRIPTION/_SUPPORTED_CAPABILITIES)"
+  VERTEX_REGION_CLAUDE_*: "per-model Vertex region (pJc, 4507). NEW: VERTEX_REGION_CLAUDE_FABLE_5, VERTEX_REGION_CLAUDE_5_SONNET"
+  modelOverrides_setting: "managed-settings record mapping anthropic id -> provider id (e.g. Bedrock ARN)"
+
+legacy_remap:
+  fn: "isLegacyModelRemapEnabled (Gje, 102434)"
+  enabled_by_default: true
+  disable_env: "CLAUDE_CODE_DISABLE_LEGACY_MODEL_REMAP"
+  remapped_ids: ["claude-opus-4-20250514", "claude-opus-4-1-20250805", "claude-opus-4-0", "claude-opus-4-1"]   # hyd (102505), unchanged
+  effect: "On ud() providers, these legacy Opus ids resolve to current default Opus (O_) + [1m] if requested."
+
+default_keys:
+  DEFAULT_3P_OPUS_KEY: "opus46"     # Vte
+  DEFAULT_3P_SONNET_KEY: "sonnet45" # cW
+  DEFAULT_3P_HAIKU_KEY: "haiku45"   # zte
+  DEFAULT_3P_FABLE_KEY: "fable5"    # YMt (NEW)
+  DEFAULT_MANTLE_OPUS_KEY: "opus47" # zMt
+
+# ---------------------------------------------------------------------------
+# Provider planes (yr, 94636)
+# ---------------------------------------------------------------------------
+providers:
+  selector_fn: "yr() (94636): checks gateway (Lm) first, then ternary"
+  resolution_env:
+    gateway: "CLAUDE_CODE_USE_GATEWAY (Lm() -> 'gateway', checked first)"
+    bedrock: "CLAUDE_CODE_USE_BEDROCK"
+    foundry: "CLAUDE_CODE_USE_FOUNDRY"
+    anthropicAws: "CLAUDE_CODE_USE_ANTHROPIC_AWS"
+    mantle: "CLAUDE_CODE_USE_MANTLE (bedrock + mantle secondary)"
+    vertex: "CLAUDE_CODE_USE_VERTEX"
+    firstParty: "(default)"
+  uses_first_party_model_ids: [firstParty, anthropicAws, gateway]   # ud()
+  has_first_party_capabilities: [firstParty, anthropicAws, foundry, mantle]   # S1()
+  vertex_region_env_prefix: "VERTEX_REGION_CLAUDE_*"  # pJc (4507)
+
+# ---------------------------------------------------------------------------
+# Fallback system
+# ---------------------------------------------------------------------------
+fallback_system:
+  cli_option: "--fallback-model (array; 'default' expands to Ey(); CLI takes precedence over fallbackModel setting)"
+  events:
+    opus_fallback: "tengu_api_opus_fallback_triggered"
+    model_fallback: "tengu_model_fallback_triggered"
+    last_resort_fallback: "tengu_api_fallback_last_resort"
+    refusal_fallback: "tengu_refusal_fallback_triggered (+ _prompt_shown/_prompt_choice/_suppressed/_supersedes/_setting_changed/_dialog_suppressed)"
+    refusal_retraction: "tengu_refusal_retraction_* (NEW family, 606734)"
+    streaming_to_nonstreaming: "tengu_streaming_fallback_to_non_streaming"
+    fast_mode_cooldown: "tengu_fast_mode_fallback_triggered"
+  force_fallback_env: "FALLBACK_FOR_ALL_PRIMARY_MODELS"
+  overload_handling:
+    trigger: "HTTP 529 or overloaded_error body"
+    api_key_path_models: "opus OR fable OR mythos family (qte||not||rot, 604459) -- CHANGED: broadened from legacy-Opus-only"
+    fallback_throw: "tengu_api_opus_fallback_triggered when fallbackModel set OR FALLBACK_FOR_ALL_PRIMARY_MODELS OR (!Ao() && premium-tier model)"
+    fast_mode_response: "fast mode disabled + cooldown (kai, 100709) on overload/rate-limit"
+  streaming_fallback:
+    disable_env: "CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK"
+    disable_flag: "tengu_disable_streaming_to_non_streaming_fallback"
+    note: "If partial content already yielded, error is rethrown instead of non-streaming retry."
+  refusal_fallback:
+    enable_flag: "tengu_loggia_carousel (server config refusalFallbackLaneEnabled, 237979)"
+    disable_env: "CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK"
+    server_side_beta: "server-side-fallback-2026-06-01 (T1) / fallback-credit-2026-06-01 (v1)  [credit date moved from 06-09]"
+    mechanism: "On stop_reason=='refusal', latch a fallback model for the turn (refusalFallbackModelLatch, 2504/2976); user prompt/dialog may show; supersedes prior assistant turns."
+
+# ---------------------------------------------------------------------------
+# Fast Mode ("penguin mode")
+# ---------------------------------------------------------------------------
+fast_mode:
+  gate_fn: "uc() (100600) = firstParty provider AND !CLAUDE_CODE_DISABLE_FAST_MODE"
+  eligible_fn: "ig() (100678) = dU(model,'fast_mode') OR id contains opus-4-7/opus-4-8"
+  eligible_models: ["claude-opus-4-7", "claude-opus-4-8"]   # CHANGED: Opus 4.6 dropped vs 2.1.169
+  display_name: "Opus 4.8"          # iW() (100656)
+  mechanism: "speed:'fast' request flag (beta fast-mode-2026-02-01 Xrt), NOT a separate main-loop model id"
+  fast_model_string: "claude-opus-4-6-fast (api-only Fast variant, retired -> silent fallback); claude-opus-4-7-fast (doc-only, future hard error)"
+  opus47_sunset:
+    flag: "tengu_sunset_penguin_opus47"
+    default_date: "2026-07-25"
+    fn: "vai() (100687)"
+  org_kill_switch_flag: "tengu_penguins_off (string reason; null = allowed)"
+  org_status_endpoint: "/api/claude_code_penguin_mode (penguinModeOrgEnabled)"
+  unavailability_reasons_fn: "Khd() (100614): free | preference | extra_usage_disabled | network_error | unknown"
+  env:
+    CLAUDE_CODE_DISABLE_FAST_MODE: "bool; disables fast mode entirely (via uc)"
+    CLAUDE_CODE_SKIP_FAST_MODE_NETWORK_ERRORS: "bool; treat network errors as allowed"
+    CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK: "bool; bypass org status check ($Hn)"
+  inert_env: "CLAUDE_CODE_ENABLE_OPUS_4_7_FAST_MODE still registered in env map (46550 -> nPu) but INERT -- nPu declared and never read by fast-mode logic (ig/uc). Opus 4.7 fast on by default via catalog fast_mode capability"
+  pricing:
+    standard_opus_per_mtok: {input: 5, output: 25}   # jle
+    fast_opus48_per_mtok: {input: 10, output: 50}    # OHn
+    fast_opus46_47_per_mtok: {input: 30, output: 150} # Nai
+  cooldown: "overload/rate-limit -> timed cooldown (kai, 100709), auto re-enables after resetAt (_4r, 100699)"
+  toggle: "/fast slash command (tengu_fast_mode_toggled)"
+
+# ---------------------------------------------------------------------------
+# 1M context
+# ---------------------------------------------------------------------------
+one_m_context:
+  beta_header: "context-1m-2025-08-07 (h7, long_context)"
+  disable_env: "CLAUDE_CODE_DISABLE_1M_CONTEXT (Yye, 132482)"
+  suffix: "[1m] (parsed by mh; stripped for API by S7/Gu)"
+  context_window: 1000000   # WIi() (132546)
+  native_1m_fn: "_I() (132491): catalog context.native_1m on firstParty/anthropicAws/mantle, or native_1m_3p on 3P"
+  native_1m_models: ["claude-fable-5", "claude-sonnet-5", "claude-opus-4-7", "claude-opus-4-8", "claude-mythos-5"]
+  native_1m_3p_models: ["claude-sonnet-5"]   # context.native_1m_3p bedrock/vertex/foundry (94182)
+  beta_eligible_fn: "Q9() (132519): catalog context.supports_1m_beta"
+  beta_eligible_models: ["claude-opus-4-6", "claude-opus-4-7", "claude-opus-4-8", "claude-fable-5", "claude-sonnet-4-0", "claude-sonnet-4-5", "claude-sonnet-4-6", "claude-sonnet-5", "claude-mythos-5"]
+  excluded_fn: "QHn() (132515)"
+  excluded: ["claude-3-*", "claude-opus-4-0", "claude-opus-4-1", "claude-opus-4-5", "claude-haiku-4-5"]
+  merge_toggle:
+    fn: "cT() (102338)"
+    rule: "false if 1M disabled, Pro, non-firstParty, or (subscription && Di()==null)"
+  window_override: "kelp_forest_sonnet client-data key overrides Sonnet 4.6 base window (exn, 132565)"
+
+# ---------------------------------------------------------------------------
+# Effort / adaptive thinking
+# ---------------------------------------------------------------------------
+effort:
+  beta_header: "effort-2025-11-24 (Krt)"
+  levels: ["low", "medium", "high", "xhigh", "max"]   # $v (146942)
+  env:
+    CLAUDE_CODE_EFFORT_LEVEL: "string; 'unset'/'auto' => null (auto). Session override (EGe, 146797)"
+    CLAUDE_CODE_ALWAYS_ENABLE_EFFORT: "bool; force effort capability on for all models"
+  supports_effort_fn: "Jw (146664) -> dU(id,'effort')"
+  supports_effort: ["claude-fable-5", "claude-mythos-5", "claude-sonnet-5", "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6", "claude-sonnet-4-6"]
+  supports_max_effort: ["claude-fable-5", "claude-mythos-5", "claude-sonnet-5", "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6", "claude-sonnet-4-6"]   # c0e (146674)
+  supports_xhigh_effort: ["claude-fable-5", "claude-mythos-5", "claude-sonnet-5", "claude-opus-4-8", "claude-opus-4-7"]   # Rne (146683)
+  launch_default_effort:
+    fn: "qBt() (146921) -> catalog default_effort ?? 'high'"
+    "claude-opus-4-8": "high"
+    "claude-opus-4-7": "xhigh"
+    "claude-sonnet-5": "high"
+    "claude-fable-5": "high"
+    other: "high"
+  launch_effort_unpin:
+    desc: "NEW: launch defaults pinned for opus47/opus48/fable5 until user changes effort (AGe 146802, zj 146815)"
+    settings_keys: ["unpinOpus47LaunchEffort", "unpinOpus48LaunchEffort", "unpinFable5LaunchEffort"]
+  silent_downgrade: "nX() (146824): 'max'->'high' if !c0e; 'xhigh'->'high' if !Rne; clamp to org per-model max (Xit/u0e)"
+  exposed_env_to_hooks_and_bash: "CLAUDE_EFFORT (290542; passthrough allowlist Tgp 237436)"
+  ultracode_alias: "settings.ultracode==true => effort 'xhigh' (H7r, 146787)"
+
+thinking:
+  disable_env: "CLAUDE_CODE_DISABLE_THINKING (bool)"
+  disable_adaptive_env: "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING"
+  disable_interleaved_env: "DISABLE_INTERLEAVED_THINKING"
+  max_thinking_tokens_env: "MAX_THINKING_TOKENS (also CLI --max-thinking-tokens)"
+  supports_adaptive_thinking: ["claude-fable-5", "claude-mythos-5", "claude-sonnet-5", "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6", "claude-sonnet-4-6"]   # dU(id,'adaptive_thinking') (132842)
+  rejects_disabled_thinking: ["claude-fable-5"]   # dU(id,'rejects_disabled_thinking') (132833) -- thinking cannot be disabled
+  interleaved_thinking_excluded: ["claude-haiku-4-5", "claude-3-*"]
+  interleaved_beta: "interleaved-thinking-2025-05-14 (zrt)"
+  redact_thinking_beta: "redact-thinking-2026-02-12 (BMt)"
+  thinking_token_count_beta: "thinking-token-count-2026-05-13 (PHn)"
+
+# ---------------------------------------------------------------------------
+# Capability predicates (now mostly delegate to catalog dU(id,cap))
+# ---------------------------------------------------------------------------
+capabilities:
+  predicate_dispatch: "dU(id, capability) (94416) reads catalog model.capabilities[]"
+  new_capabilities_vs_2_1_169: ["lean_prompt", "rejects_disabled_thinking", "fable_5_mitigations", "mid_conv_system", "context_management", "fast_mode"]
+  predicates:
+    fast_mode: "ig() / dU('fast_mode')"
+    one_m_context_native: "_I()"
+    one_m_context_beta: "Q9()"
+    effort: "Jw()"
+    max_effort: "c0e()"
+    xhigh_effort: "Rne()"
+    adaptive_thinking: "dU('adaptive_thinking')"
+    mid_conv_system: "dU('mid_conv_system')"
+    lean_prompt: "eMd() inverse / dU('lean_prompt')"
+    fable_5_mitigations: "B_e() / dU('fable_5_mitigations')"
+  lean_prompt_models: ["claude-opus-4-8", "claude-fable-5", "claude-mythos-5"]   # short '# Harness' system prompt (eMd, 132681)
+  mid_conv_system_models: ["claude-fable-5", "claude-mythos-5", "claude-sonnet-5", "claude-opus-4-8"]
+  matrix:
+    claude-fable-5:    {fast: false, one_m: native, effort: true,  xhigh: true,  adaptive_thinking: true,  mid_conv: true,  lean: true,  max_output: 64000, upper_output: 128000}
+    claude-mythos-5:   {fast: false, one_m: native, effort: true,  xhigh: true,  adaptive_thinking: true,  mid_conv: true,  lean: true,  max_output: 64000, upper_output: 128000}
+    claude-opus-4-8:   {fast: true,  one_m: native, effort: true,  xhigh: true,  adaptive_thinking: true,  mid_conv: true,  lean: true,  max_output: 64000, upper_output: 128000}
+    claude-opus-4-7:   {fast: true,  one_m: native, effort: true,  xhigh: true,  adaptive_thinking: true,  mid_conv: false, lean: false, max_output: 64000, upper_output: 128000}
+    claude-opus-4-6:   {fast: false, one_m: beta,   effort: true,  xhigh: false, adaptive_thinking: true,  mid_conv: false, lean: false, max_output: 64000, upper_output: 128000}
+    claude-opus-4-5:   {fast: false, one_m: false,  effort: false, xhigh: false, adaptive_thinking: false, mid_conv: false, lean: false, max_output: 32000, upper_output: 64000}
+    claude-opus-4-1:   {fast: false, one_m: false,  effort: false, xhigh: false, adaptive_thinking: false, mid_conv: false, lean: false, max_output: 32000, upper_output: 32000}
+    claude-opus-4-0:   {fast: false, one_m: false,  effort: false, xhigh: false, adaptive_thinking: false, mid_conv: false, lean: false, max_output: 32000, upper_output: 32000}
+    claude-sonnet-5:   {fast: false, one_m: native, effort: true,  xhigh: true,  adaptive_thinking: true,  mid_conv: true,  lean: false, max_output: 64000, upper_output: 128000}
+    claude-sonnet-4-6: {fast: false, one_m: beta,   effort: true,  xhigh: false, adaptive_thinking: true,  mid_conv: false, lean: false, max_output: 32000, upper_output: 128000}
+    claude-sonnet-4-5: {fast: false, one_m: beta,   effort: false, xhigh: false, adaptive_thinking: false, mid_conv: false, lean: false, max_output: 32000, upper_output: 64000}
+    claude-sonnet-4-0: {fast: false, one_m: beta,   effort: false, xhigh: false, adaptive_thinking: false, mid_conv: false, lean: false, max_output: 32000, upper_output: 64000}
+    claude-haiku-4-5:  {fast: false, one_m: false,  effort: false, xhigh: false, adaptive_thinking: false, mid_conv: false, lean: false, max_output: 32000, upper_output: 64000}
+    claude-3-7-sonnet: {fast: false, one_m: false,  effort: false, xhigh: false, adaptive_thinking: false, mid_conv: false, lean: false, max_output: 32000, upper_output: 64000}
+
+small_fast_model:
+  fn: "getSmallFastModel (qw, 101613)"
+  resolution: "ANTHROPIC_SMALL_FAST_MODEL || (firstParty-canonical/anthropicAws -> Rj()=haiku45) || Ts() (main loop)"
+  uses: ["command-injection prefix classifier", "WebFetch summarisation", "auto-mode classifier", "title/summary generation", "prompt/agent hooks default model"]
+  flag_route: "tengu_plum_vx3 (426632) can route a classifier to small/fast vs main loop"
+
+# ---------------------------------------------------------------------------
+# API betas registry (zhd, 100577) -- new/changed vs 2.1.169
+# ---------------------------------------------------------------------------
+api_betas:
+  fast_mode: "fast-mode-2026-02-01 (Xrt)"
+  effort: "effort-2025-11-24 (Krt)"
+  long_context_1m: "context-1m-2025-08-07 (h7)"
+  context_management: "context-management-2025-06-27 (Nje)"
+  structured_outputs: "structured-outputs-2025-12-15 (Fte)"
+  interleaved_thinking: "interleaved-thinking-2025-05-14 (zrt)"
+  redact_thinking: "redact-thinking-2026-02-12 (BMt)"
+  thinking_token_count: "thinking-token-count-2026-05-13 (PHn)"
+  tool_search_first_party: "advanced-tool-use-2025-11-20 (s4r)"
+  tool_search_3p: "tool-search-tool-2025-10-19 (NMt)"
+  mid_conversation_system: "mid-conversation-system-2026-04-07 (y7) NEW"
+  server_side_fallback: "server-side-fallback-2026-06-01 (T1)"
+  fallback_credit: "fallback-credit-2026-06-01 (v1)  [was 2026-06-09 in 2.1.169]"
+  new_in_2_1_197: ["task-budgets-2026-03-13", "summarize-connector-text-2026-03-13", "afk-mode-2026-01-31", "advisor-tool-2026-03-01", "cache-diagnosis-2026-04-07", "context-hint-2026-04-09", "mcp-servers-2025-12-04", "files-api-2025-04-14", "environments-2025-11-01", "ccr-byoc-2025-07-29", "mid-conversation-system-2026-04-07"]
+
+notes: >
+  Model layer REWRITTEN as a Zod-validated declarative catalog (pQs/hfd/iMt/WM/dU/fQs) bridged to the
+  legacy va routing object via Sfd. +5 model ids (56->61): Fable 5, Mythos 5, Sonnet 5 are the
+  headline additions. Fable 5 is the new 'Mythos-class' top tier and the `best` alias target; default
+  `sonnet` alias is now Sonnet 5 (was 4.6); default Opus stays 4.8 (the model running this analysis).
+  New `fable`/`fable[1m]` aliases + ANTHROPIC_DEFAULT_FABLE_MODEL env family. Fast-mode eligibility
+  narrowed to Opus 4.7/4.8 (4.6 dropped) with an Opus-4.7 sunset date; overload api-key fallback
+  broadened to the whole Opus+Fable+Mythos tier. New per-model capabilities: lean_prompt,
+  rejects_disabled_thinking, fable_5_mitigations, mid_conv_system, context_management.

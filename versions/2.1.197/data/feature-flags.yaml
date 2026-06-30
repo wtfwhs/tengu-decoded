@@ -1,0 +1,1811 @@
+# Feature Flags — Claude Code (tengu) v2.1.197
+# Extracted from beautified binary source (cli.beauty.js, Bun v1.4.0 standalone)
+# Build: 2026-06-29T19:08:42Z | GIT_SHA: c8fd8048f30950a21d28734718275aa7e97f5143 | Platform: Linux x86-64
+# Backend: GrowthBook (cachedGrowthBookFeatures)
+#
+# Accessors in THIS build (minified names rotate every build):
+#   it(flag, default)        primary flag get (was j$ in 2.1.169). Resolution: CBt override map ->
+#                            IBt managed/remote map -> default if GB not ready (!LW()) -> track exposure ->
+#                            Pt().cachedGrowthBookFeatures[flag] else default. cli.beauty.js:145150
+#   J7(flag, default, _)     thin wrapper around it. cli.beauty.js:145167
+#   QYr(flag) / $U(flag)     async boolean flag check. cli.beauty.js:145170 / :145181
+# Additional config wrappers (not in the headline 4, noted for completeness):
+#   ik(flag, default)        config-object getter (e.g. bridge_min_version, desktop_upsell, malort_pedway)
+#   ern(flag, default)       survey-config getter (feedback/bad/fine/good survey configs)
+#   it(Gst(flag, x), def)    Gst() name-transform wrapper (velvet_hammer, velvet_mallet)
+#
+# Defaults: !0=true, !1=false, null, {}=object, []=array, ""/"str"=string, number, or a
+#   minified var = computed/config default (resolved value noted where known).
+# Total distinct flags via it/J7/QYr/$U: 244 enumerated (canonical headline: 243).
+# Codenames (amber_*, cobalt_*, saffron_*, ...) are auto-generated adjective_noun labels; behavior is inferred from call sites.
+
+flags:
+  # ── agent-teams ──
+  - name: "tengu_amber_flint"
+    default: true
+    category: "agent-teams"
+    accessor: "it"
+    description: "Agent Teams (agent swarms / teammate mode) GrowthBook rollout gate"
+    related_env_var: "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS"
+    notes: "Carried from 2.1.169. cli.beauty.js:292360"
+
+  - name: "tengu_amber_heron"
+    default: false
+    category: "agent-teams"
+    accessor: "it"
+    description: "Force a spawned subagent into background/isolated execution"
+    notes: "NEW in 2.1.197. One of several conditions in agent-tool isolation selection. cli.beauty.js:420970"
+
+  - name: "tengu_amber_sentinel"
+    default: false
+    category: "agent-teams"
+    accessor: "it"
+    description: "Gate (Gm()) near the Monitor tool / event-monitoring code path"
+    notes: "Carried from 2.1.169. cli.beauty.js:223976"
+
+  - name: "tengu_coordinator_panel"
+    default: true
+    category: "agent-teams"
+    accessor: "it"
+    description: "Coordinator panel UI for Agent Teams (task list / teammate view)"
+    notes: "Carried from 2.1.169. cli.beauty.js:380223"
+
+  - name: "tengu_copper_thistle"
+    default: false
+    category: "agent-teams"
+    accessor: "it"
+    description: "Rename teammate tasks from 'task' to 'job' nomenclature in coordinator UI"
+    notes: "Carried from 2.1.169. cli.beauty.js:301802"
+
+  - name: "tengu_idle_amber_finch"
+    default: false
+    category: "agent-teams"
+    accessor: "it"
+    description: "Idle-detection behavior for teammate/agent sessions (mn())"
+    notes: "Carried from 2.1.169. cli.beauty.js:232207"
+
+  - name: "tengu_quiet_slate_wren"
+    default: false
+    category: "agent-teams"
+    accessor: "it"
+    description: "Teammate-mode quiet variant gate (near agent-swarm snapshot code)"
+    notes: "Carried from 2.1.169. cli.beauty.js:232211"
+
+  # ── background-agents ──
+  - name: "tengu_bg_attach_stall_ms"
+    default: "(config/var)"
+    category: "background-agents"
+    accessor: "it"
+    description: "Stall timeout (ms) when attaching to a background session (default var UJA=5000)"
+    notes: "Carried from 2.1.169. cli.beauty.js:574287"
+
+  - name: "tengu_bg_attach_upgrade"
+    default: true
+    category: "background-agents"
+    accessor: "it"
+    description: "Allow attaching to / upgrading an existing background session"
+    notes: "Carried from 2.1.169. cli.beauty.js:574205"
+
+  - name: "tengu_bg_binary_takeover"
+    default: true
+    category: "background-agents"
+    accessor: "it"
+    description: "Allow a newer client binary to retire a stale background daemon/supervisor running an older version"
+    notes: "Carried from 2.1.169. cli.beauty.js:575462"
+
+  - name: "tengu_bg_classifier_config"
+    default: "(config/var)"
+    category: "background-agents"
+    accessor: "it"
+    description: "Model config for the background-session event classifier (small/fast model, no thinking)"
+    notes: "Carried from 2.1.169. cli.beauty.js:457404"
+
+  - name: "tengu_bg_leftarrow_inprocess"
+    default: true
+    category: "background-agents"
+    accessor: "it"
+    description: "Handle left-arrow (detach/back) in-process for attached bg sessions"
+    notes: "Carried from 2.1.169. cli.beauty.js:681620"
+
+  - name: "tengu_bg_low_mem_mb"
+    default: 1024
+    category: "background-agents"
+    accessor: "it"
+    description: "Free-memory floor (MB) below which bg dispatch is throttled (low-mem guard). 0 on macOS."
+    notes: "Carried from 2.1.169. cli.beauty.js:574170"
+
+  - name: "tengu_bg_prewarm_per_sweep"
+    default: 3
+    category: "background-agents"
+    accessor: "it"
+    description: "Number of spare bg workers to pre-warm per supervisor sweep"
+    notes: "Carried from 2.1.169. cli.beauty.js:731274"
+
+  - name: "tengu_bg_retire_grace_bridged_min"
+    default: 480
+    category: "background-agents"
+    accessor: "it"
+    description: "Grace period (minutes) before retiring a bridged background session"
+    notes: "Carried from 2.1.169. cli.beauty.js:574201"
+
+  - name: "tengu_bg_spare_enable"
+    default: true
+    category: "background-agents"
+    accessor: "it"
+    description: "Enable pre-warmed spare background worker pool (claim/spawn spares)"
+    notes: "Carried from 2.1.169. cli.beauty.js:731059"
+
+  - name: "tengu_defer_cap_ms"
+    default: "10000 (1e4)"
+    category: "background-agents"
+    accessor: "it"
+    description: "Max wait (ms) for 'defer-then-fork' before forking a background task"
+    notes: "NEW in 2.1.197. Fires tengu_defer_cap_refused_queued on timeout. cli.beauty.js:693491"
+
+  - name: "tengu_non_deferrable_builtins"
+    default: "null (→ list)"
+    category: "background-agents"
+    accessor: "it"
+    description: "Built-in tool names that must NOT be deferred to background"
+    notes: "NEW in 2.1.197. Merged with managed non_deferrable_builtins. cli.beauty.js:224448"
+
+  # ── scheduling ──
+  - name: "tengu_pencil_farmer"
+    default: false
+    category: "scheduling"
+    accessor: "it"
+    description: "Schedule timing default — 'next' vs 'later' for follow-up turns"
+    notes: "NEW in 2.1.197. cli.beauty.js:621509 (Dtn)"
+
+  # ── remote-control ──
+  - name: "tengu_cobalt_harbor"
+    default: false
+    category: "remote-control"
+    accessor: "it"
+    description: "Default Remote Control ON at startup (a6o())"
+    notes: "NEW in 2.1.197. Overridden by managed setting remote_control_at_startup. cli.beauty.js:605504"
+
+  - name: "tengu_cobalt_harbor_notice"
+    default: true
+    category: "remote-control"
+    accessor: "it"
+    description: "Show the 'Remote Control auto-on by default' one-time notification (≤3 impressions)"
+    notes: "NEW in 2.1.197. Default TRUE. f9f(). cli.beauty.js:529669"
+
+  - name: "tengu_harbor_moth"
+    default: false
+    category: "remote-control"
+    accessor: "it"
+    description: "Remote recap / away-summary delivery over the CCR channel"
+    related_env_var: "CLAUDE_CODE_ENABLE_REMOTE_RECAP"
+    notes: "NEW in 2.1.197. Requires 'ccr' surface. cli.beauty.js:292198 (X$p)"
+
+  - name: "tengu_neapolitan"
+    default: false
+    category: "remote-control"
+    accessor: "it"
+    description: "Allow 'remote' agent isolation for spawned subagents (BKt())"
+    notes: "NEW in 2.1.197. Requires prior remote-session use + hasRemoteEnvironment. cli.beauty.js:420423"
+
+  # ── ccr ──
+  - name: "tengu_ccr_delta_rehydrate"
+    default: false
+    category: "ccr"
+    accessor: "it"
+    description: "CCR delta rehydration of session state (Ihr())"
+    notes: "NEW in 2.1.197. cli.beauty.js:704630"
+
+  # ── frame-artifacts ──
+  - name: "tengu_cobalt_plinth"
+    default: false
+    category: "frame-artifacts"
+    accessor: "it"
+    description: "Master gate for the Frame artifact pipeline (Ela()/xLe() enable frame base-version path)"
+    notes: "NEW in 2.1.197. cli.beauty.js:224993"
+
+  - name: "tengu_cobalt_plinth_direct"
+    default: false
+    category: "frame-artifacts"
+    accessor: "it"
+    description: "Direct artifact upload lane for rendered Frame pages (bypass relay)"
+    related_env_var: "CLAUDE_CODE_ARTIFACT_DIRECT_UPLOAD"
+    notes: "NEW in 2.1.197. Also keyed off CLAUDE_CODE_ENTRYPOINT allowlist. cli.beauty.js:406097"
+
+  - name: "tengu_cobalt_plinth_fern"
+    default: false
+    category: "frame-artifacts"
+    accessor: "it"
+    description: "isFrameBaseVersionEnabled() — use Frame base-version artifact rendering"
+    notes: "NEW in 2.1.197. cli.beauty.js:405997 (vXn)"
+
+  - name: "tengu_cobalt_plinth_putguard"
+    default: true
+    category: "frame-artifacts"
+    accessor: "it"
+    description: "Guard PUT writes to the artifact reader store"
+    notes: "NEW in 2.1.197. Default TRUE. cli.beauty.js:406009 (Myl)"
+
+  - name: "tengu_cobalt_plinth_reader_persist"
+    default: false
+    category: "frame-artifacts"
+    accessor: "it"
+    description: "Persist artifactReadVersions across reads"
+    notes: "NEW in 2.1.197. cli.beauty.js:406005 (xhf)"
+
+  - name: "tengu_frame_publish_context"
+    default: false
+    category: "frame-artifacts"
+    accessor: "it"
+    description: "Include publish context when publishing a Frame artifact"
+    notes: "NEW in 2.1.197. cli.beauty.js:406013 (QRo)"
+
+  - name: "tengu_saffron_anchor"
+    default: false
+    category: "frame-artifacts"
+    accessor: "it"
+    description: "Frame artifact gate (lKt())"
+    notes: "NEW in 2.1.197. cli.beauty.js:406001"
+
+  # ── billing-credits ──
+  - name: "tengu_cedar_lattice"
+    default: false
+    category: "billing-credits"
+    accessor: "it"
+    description: "First-party only: inject fallback_credit_token header on non-auxiliary queries"
+    notes: "NEW in 2.1.197. Gated yr()==='firstParty' && Eu(). cli.beauty.js:595983"
+
+  - name: "tengu_lantern_spool"
+    default: false
+    category: "billing-credits"
+    accessor: "it"
+    description: "First-party only: query-tracking/credit header on deep (depth>0) compact queries"
+    notes: "NEW in 2.1.197. cli.beauty.js:595982"
+
+  - name: "tengu_saffron_credits_only_tiers"
+    default: "[] (config list)"
+    category: "billing-credits"
+    accessor: "it"
+    description: "Subscription tiers that are credits-only (Ede() → restrict to credits)"
+    notes: "NEW in 2.1.197. cli.beauty.js:230980; warns 'unparseable value' on bad config"
+
+  - name: "tengu_saffron_lattice"
+    default: "{} (zod-parsed config)"
+    category: "billing-credits"
+    accessor: "it"
+    description: "Overage / plan-limits config: {enabled, overageConsentRequired, planLimitsEndDate}. Drives 'extra usage' consent + plan-limit-end banner"
+    notes: "NEW in 2.1.197. Sde()/KSe(). cli.beauty.js:230934"
+
+  - name: "tengu_saffron_picker_dim"
+    default: false
+    category: "billing-credits"
+    accessor: "it"
+    description: "Dim/disable the model picker for credits-only tiers"
+    notes: "NEW in 2.1.197. cli.beauty.js:231006 (Rua)"
+
+  # ── auto-mode ──
+  - name: "tengu_ant_yolo_equiv_strip_config"
+    default: "{}"
+    category: "auto-mode"
+    accessor: "it"
+    description: "Config controlling which bash flags are stripped for permission-equivalence ('yolo equiv') matching"
+    notes: "Carried from 2.1.169. cli.beauty.js:599274"
+
+  - name: "tengu_auto_mode_config"
+    default: "{}"
+    category: "auto-mode"
+    accessor: "it"
+    description: "Auto-mode (auto-accept) configuration object; field .enabled drives availability ('disabled' kills it)"
+    notes: "Carried from 2.1.169. cli.beauty.js:147059"
+
+  - name: "tengu_cfc_in_product_permissions"
+    default: false
+    category: "auto-mode"
+    accessor: "it"
+    description: "Claude-for-Chrome (CFC) in-product permissions handling"
+    notes: "Carried from 2.1.169. cli.beauty.js:190059"
+
+  - name: "tengu_cowork_chrome_automode_default"
+    default: false
+    category: "auto-mode"
+    accessor: "it"
+    description: "Default the Chrome classifier floor (auto-mode availability) for cowork"
+    related_env_var: "CLAUDE_CHROME_CLASSIFIER_FLOOR"
+    notes: "NEW in 2.1.197. cli.beauty.js:599631"
+
+  - name: "tengu_destructive_command_warning"
+    default: false
+    category: "auto-mode"
+    accessor: "it"
+    description: "Show a warning before running detected destructive shell commands"
+    notes: "Carried from 2.1.169. cli.beauty.js:648884"
+
+  - name: "tengu_disable_bypass_permissions_mode"
+    default: false
+    category: "auto-mode"
+    accessor: "it"
+    description: "Kill switch: disables bypass-permissions (--dangerously-skip-permissions) mode"
+    notes: "Carried from 2.1.169. cli.beauty.js:147079"
+
+  - name: "tengu_harbor_permissions"
+    default: false
+    category: "auto-mode"
+    accessor: "it"
+    description: "Enable harbor permission rule engine (FNV-hashed allow/deny rules)"
+    notes: "Carried from 2.1.169. cli.beauty.js:408511"
+
+  - name: "tengu_harbor_willow"
+    default: false
+    category: "auto-mode"
+    accessor: "it"
+    description: "Default the session into auto mode when permissions allow"
+    notes: "Carried from 2.1.169. cli.beauty.js:147140"
+
+  - name: "tengu_moss_anchor"
+    default: false
+    category: "auto-mode"
+    accessor: "it"
+    description: "Permit auto-mode default in non-interactive sessions"
+    notes: "Carried from 2.1.169. cli.beauty.js:147140"
+
+  # ── classifier ──
+  - name: "tengu_classifier_disabled_surfaces"
+    default: "\"\""
+    category: "classifier"
+    accessor: "it"
+    description: "Comma-separated list of classifier surfaces (cli/bg/bridge/desktop/ccr/...) to disable"
+    notes: "Carried from 2.1.169. cli.beauty.js:292105"
+
+  - name: "tengu_classifier_summary_heuristic_emit"
+    default: false
+    category: "classifier"
+    accessor: "it"
+    description: "Force the classifier summary stage to emit via heuristic"
+    notes: "Carried from 2.1.169. cli.beauty.js:292134"
+
+  - name: "tengu_classifier_summary_kill"
+    default: false
+    category: "classifier"
+    accessor: "it"
+    description: "Kill switch: removes the 'summary' classifier stage"
+    notes: "Carried from 2.1.169. cli.beauty.js:292111"
+
+  - name: "tengu_classifier_summary_llm_emit"
+    default: false
+    category: "classifier"
+    accessor: "it"
+    description: "Force the classifier summary stage to emit via LLM"
+    notes: "Carried from 2.1.169. cli.beauty.js:292133"
+
+  - name: "tengu_cobalt_wren"
+    default: false
+    category: "classifier"
+    accessor: "it"
+    description: "Downgrade classifier summary from 'llm' to 'heuristic' mode"
+    related_env_var: "CLAUDE_CODE_CLASSIFIER_SUMMARY"
+    notes: "Carried from 2.1.169. cli.beauty.js:292129"
+
+  # ── channels ──
+  - name: "tengu_harbor"
+    default: false
+    category: "channels"
+    accessor: "it"
+    description: "Enable Channels feature (isChannelsEnabled)"
+    notes: "Carried from 2.1.169. cli.beauty.js:408347"
+
+  - name: "tengu_harbor_ledger"
+    default: "[]"
+    category: "channels"
+    accessor: "it"
+    description: "Channel allowlist (array of {name, marketplace} entries, zod-validated)"
+    notes: "Carried from 2.1.169. cli.beauty.js:408341"
+
+  - name: "tengu_harbor_prism"
+    default: false
+    category: "channels"
+    accessor: "it"
+    description: "Channels prism variant gate"
+    notes: "Carried from 2.1.169. cli.beauty.js:296779"
+
+  - name: "tengu_quiet_harbor"
+    default: false
+    category: "channels"
+    accessor: "it"
+    description: "When true, daemon install prompt defaults to 'ask' (else 'transient')"
+    notes: "Carried from 2.1.169. cli.beauty.js:145713"
+
+  # ── cowork ──
+  - name: "tengu_flint_harbor_prompt"
+    default: "{}"
+    category: "cowork"
+    accessor: "it"
+    description: "Config for the /team-onboarding command (prompt text, guide template, windowDays)"
+    notes: "Carried from 2.1.169. cli.beauty.js:573696"
+
+  - name: "tengu_flint_harbor_share"
+    default: false
+    category: "cowork"
+    accessor: "it"
+    description: "Team onboarding share affordance gate"
+    notes: "Carried from 2.1.169. cli.beauty.js:434317"
+
+  - name: "tengu_herring_clock"
+    default: false
+    category: "cowork"
+    accessor: "it"
+    description: "Team memory directory gate (when off, team memdir disabled telemetry fires)"
+    related_env_var: "CLAUDE_MEMORY_STORES"
+    notes: "Carried from 2.1.169. cli.beauty.js:149163"
+
+  - name: "tengu_team_discovery"
+    default: false
+    category: "cowork"
+    accessor: "it"
+    description: "Fetch team-discovery data (suggest teams to join)"
+    notes: "NEW in 2.1.197. Also gated by managed allow_team_discovery + logged-in (Ao()). cli.beauty.js:350724"
+
+  # ── workflows ──
+  - name: "tengu_workflows_enabled"
+    default: true
+    category: "workflows"
+    accessor: "it"
+    description: "Enable Workflows feature (default-on for non-pro plans)"
+    related_env_var: "CLAUDE_CODE_WORKFLOWS"
+    notes: "Carried from 2.1.169. cli.beauty.js:146635"
+
+  # ── review ──
+  - name: "tengu_fleetview_onboarding_v2"
+    default: false
+    category: "review"
+    accessor: "it"
+    description: "Fleet-view onboarding v2 flow"
+    notes: "NEW in 2.1.197. cli.beauty.js:679474"
+
+  - name: "tengu_fleetview_pr_batch"
+    default: true
+    category: "review"
+    accessor: "it"
+    description: "Batch PR fleet-view operations (bughunter/ultrareview cloud review)"
+    notes: "Carried from 2.1.169. cli.beauty.js:679217"
+
+  - name: "tengu_review_bughunter_config"
+    default: null
+    category: "review"
+    accessor: "it"
+    description: "Bughunter (fleet code-review) configuration object"
+    related_env_var: "BUGHUNTER_FLEET_SIZE"
+    notes: "Carried from 2.1.169. cli.beauty.js:374609"
+
+  - name: "tengu_review_workflow_routing"
+    default: false
+    category: "review"
+    accessor: "it"
+    description: "Route /code-review through the workflow router"
+    notes: "Carried from 2.1.169. cli.beauty.js:653700"
+
+  # ── tools-review ──
+  - name: "tengu_report_findings_tool"
+    default: false
+    category: "tools-review"
+    accessor: "it"
+    description: "Expose the ReportFindings tool (structured code-review findings)"
+    related_env_var: "CLAUDE_CODE_REPORT_FINDINGS"
+    notes: "NEW in 2.1.197. Only when a review tool is present and effort != 'low'. cli.beauty.js:653604"
+
+  # ── tools ──
+  - name: "tengu_malformed_tool_use_clean_retry"
+    default: false
+    category: "tools"
+    accessor: "it"
+    description: "On a malformed tool_use, do a clean retry instead of erroring (hDl())"
+    notes: "NEW in 2.1.197. cli.beauty.js:458683"
+
+  # ── advisor ──
+  - name: "tengu_sage_compass2"
+    default: "{}"
+    category: "advisor"
+    accessor: "it"
+    description: "Advisor tool config; .enabled gates the experimental Advisor tool (firstParty only)"
+    related_env_var: "CLAUDE_CODE_DISABLE_ADVISOR_TOOL / CLAUDE_CODE_ENABLE_EXPERIMENTAL_ADVISOR_TOOL"
+    notes: "Carried from 2.1.169. cli.beauty.js:363795"
+
+  # ── system-prompt ──
+  - name: "tengu_amber_sextant"
+    default: true
+    category: "system-prompt"
+    accessor: "it"
+    description: "Inject the 'operating autonomously' system-prompt section (don't ask permission mid-task)"
+    notes: "Carried from 2.1.169. cli.beauty.js:593578"
+
+  - name: "tengu_cedar_lantern"
+    default: true
+    category: "system-prompt"
+    accessor: "it"
+    description: "Arm the 'act, don't rederive' system-prompt variant"
+    related_env_var: "CLAUDE_CODE_ACT_DONT_REDERIVE"
+    notes: "Carried from 2.1.169. cli.beauty.js:593983"
+
+  - name: "tengu_chair_sermon"
+    default: false
+    category: "system-prompt"
+    accessor: "it"
+    description: "Alternate message/content mapping in prompt assembly (maps content via DPf)"
+    notes: "Carried from 2.1.169. cli.beauty.js:601781"
+
+  - name: "tengu_cinder_plover"
+    default: "\"\""
+    category: "system-prompt"
+    accessor: "it"
+    description: "Custom prompt override string for a specific tool/model path"
+    notes: "Carried from 2.1.169. cli.beauty.js:368949"
+
+  - name: "tengu_heron_brook"
+    default: "\"\""
+    category: "system-prompt"
+    accessor: "it"
+    description: "Custom system-prompt notice string (Msf); also read from clientDataCache.tengu_heron_brook"
+    notes: "Carried from 2.1.169. cli.beauty.js:593566"
+
+  - name: "tengu_orchid_mantis"
+    default: false
+    category: "system-prompt"
+    accessor: "it"
+    description: "Inject /schedule follow-up offer guidance (v1: offer when natural future follow-up, 75%+ yes odds)"
+    notes: "Carried from 2.1.169. cli.beauty.js:593673"
+
+  - name: "tengu_orchid_mantis_v2"
+    default: false
+    category: "system-prompt"
+    accessor: "it"
+    description: "More conservative /schedule follow-up guidance (v2: only when a named artifact has a quotable future obligation)"
+    notes: "Carried from 2.1.169. cli.beauty.js:593673"
+
+  - name: "tengu_russet_linnet"
+    default: false
+    category: "system-prompt"
+    accessor: "it"
+    description: "Skill-description reframe arm — swaps in reworded Skill tool description"
+    related_env_var: "CLAUDE_CODE_SKILL_DESC_REFRAME"
+    notes: "NEW in 2.1.197. Logs skill_desc_reframe_arm_active. cli.beauty.js:223333"
+
+  - name: "tengu_silent_harbor"
+    default: false
+    category: "system-prompt"
+    accessor: "it"
+    description: "System-prompt anti-verbosity arm — when on, adds ':send_user_msg' suffix steering replies to the dedicated user-message tool"
+    notes: "NEW in 2.1.197. cli.beauty.js:593724"
+
+  - name: "tengu_sparrow_ledger"
+    default: false
+    category: "system-prompt"
+    accessor: "it"
+    description: "Arm the 'verify prompt' system-prompt variant"
+    related_env_var: "CLAUDE_CODE_VERIFY_PROMPT"
+    notes: "Carried from 2.1.169. cli.beauty.js:593708"
+
+  - name: "tengu_verified_vs_assumed"
+    default: false
+    category: "system-prompt"
+    accessor: "it"
+    description: "Inject 'be accurate about verified vs assumed' guidance into system prompt"
+    notes: "Carried from 2.1.169. cli.beauty.js:593623"
+
+  - name: "tengu_walnut_prism"
+    default: false
+    category: "system-prompt"
+    accessor: "it"
+    description: "Arm the 'ownership frame' system-prompt variant"
+    related_env_var: "CLAUDE_CODE_OWNERSHIP_FRAME"
+    notes: "Carried from 2.1.169. cli.beauty.js:593977"
+
+  # ── model-routing ──
+  - name: "tengu_sunset_penguin_opus47"
+    default: "\"2026-07-25\""
+    category: "model-routing"
+    accessor: "it"
+    description: "Sunset date for claude-opus-4-7 — shows a deprecation banner until the date passes"
+    notes: "NEW in 2.1.197. vai(); only when current model is claude-opus-4-7. cli.beauty.js:100689"
+
+  # ── context ──
+  - name: "tengu_media_byte_cap"
+    default: "78643200 (xKi = 75 MiB)"
+    category: "context"
+    accessor: "it"
+    description: "Byte cap applied to media (base64) blocks during message normalization"
+    notes: "NEW in 2.1.197. cli.beauty.js:595311"
+
+  - name: "tengu_reactive_compact_remote"
+    default: false
+    category: "context"
+    accessor: "it"
+    description: "Enable reactive (mid-turn) autocompact in remote sessions"
+    related_env_var: "CLAUDE_CODE_REMOTE"
+    notes: "NEW in 2.1.197. pJ() returns false in remote unless this flag is on. cli.beauty.js:230153"
+
+  - name: "tengu_soft_slate_nudge"
+    default: "\"baseline\""
+    category: "context"
+    accessor: "it"
+    description: "Todo-reminder injection mode ('baseline' on, 'off' disables todo reminders)"
+    related_env_var: "CLAUDE_CODE_TODO_REMINDER_MODE"
+    notes: "NEW in 2.1.197. cli.beauty.js:466938 (U1o)"
+
+  # ── memory ──
+  - name: "tengu_memory_store_resync_interval_minutes"
+    default: "60 (xIf; floor 1 min)"
+    category: "memory"
+    accessor: "it"
+    description: "Periodic team-memory store resync interval (minutes)"
+    related_env_var: "CLAUDE_CODE_DISABLE_MEMORY_PERIODIC_RESYNC"
+    notes: "NEW in 2.1.197. 0/<=0 disables. cli.beauty.js:449395"
+
+  - name: "tengu_silk_almanac"
+    default: false
+    category: "memory"
+    accessor: "it"
+    description: "Team-memory multistore gate (l7t())"
+    notes: "NEW in 2.1.197. cli.beauty.js:448919"
+
+  # ── sessions ──
+  - name: "tengu_rename_full_session_fork"
+    default: false
+    category: "sessions"
+    accessor: "it"
+    description: "Fork the full session when renaming (preferFork path)"
+    notes: "Carried from 2.1.169. cli.beauty.js:525557"
+
+  - name: "tengu_rewind_first_message"
+    default: false
+    category: "sessions"
+    accessor: "it"
+    description: "On rewind, anchor to the persistAnchor (first message) rather than the preceding assistant turn"
+    notes: "NEW in 2.1.197. cli.beauty.js:709718"
+
+  # ── mcp ──
+  - name: "tengu_mcp_directory_bff"
+    default: false
+    category: "mcp"
+    accessor: "it"
+    description: "Use BFF endpoint for the MCP directory"
+    notes: "Carried from 2.1.169. cli.beauty.js:143264"
+
+  - name: "tengu_mcp_directory_visibility"
+    default: "(config/var)"
+    category: "mcp"
+    accessor: "it"
+    description: "Org categories allowed to see the MCP directory (default var CtK)"
+    notes: "Carried from 2.1.169. cli.beauty.js:143207"
+
+  - name: "tengu_mcp_local_oauth_blocked_hosts"
+    default: "(config/var)"
+    category: "mcp"
+    accessor: "it"
+    description: "Hosts blocked from local MCP OAuth (default var VE7)"
+    notes: "Carried from 2.1.169. cli.beauty.js:271904"
+
+  - name: "tengu_mcp_normalize_root_combinators"
+    default: "[] (hostname allowlist)"
+    category: "mcp"
+    accessor: "it"
+    description: "Normalize MCP root-URL combinators for hostnames in the list ('*' = all)"
+    notes: "NEW in 2.1.197. cli.beauty.js:281908 (oPp)"
+
+  - name: "tengu_mcp_server_policy_bypass_exempt"
+    default: true
+    category: "mcp"
+    accessor: "it"
+    description: "Remote only: exempt mcpServerPolicy rules from being overridden by bypassPermissions mode"
+    related_env_var: "CLAUDE_CODE_REMOTE"
+    notes: "NEW in 2.1.197. Default TRUE — keeps server policy authoritative. cli.beauty.js:598639"
+
+  - name: "tengu_mcp_singleton_unwrap"
+    default: true
+    category: "mcp"
+    accessor: "it"
+    description: "Unwrap singleton MCP tool results"
+    notes: "Carried from 2.1.169. cli.beauty.js:282419"
+
+  - name: "tengu_mcp_skills"
+    default: false
+    category: "mcp"
+    accessor: "it"
+    description: "Expose skills as MCP tools / MCP skills integration"
+    notes: "Carried from 2.1.169. cli.beauty.js:272218"
+
+  - name: "tengu_mcp_startup_policy_seed"
+    default: true
+    category: "mcp"
+    accessor: "it"
+    description: "Remote only: seed MCP permission policy from server config at startup"
+    related_env_var: "CLAUDE_CODE_REMOTE"
+    notes: "NEW in 2.1.197. Default TRUE. _xs(). cli.beauty.js:729107"
+
+  - name: "tengu_mcp_stateless_skip_init"
+    default: true
+    category: "mcp"
+    accessor: "it"
+    description: "Skip init handshake for stateless MCP servers"
+    notes: "Carried from 2.1.169. cli.beauty.js:268422"
+
+  - name: "tengu_mcp_strip_trailing_xml_tags"
+    default: false
+    category: "mcp"
+    accessor: "it"
+    description: "Strip trailing XML tags from MCP tool output before returning"
+    notes: "NEW in 2.1.197. Passed into _Da(). cli.beauty.js:283778"
+
+  - name: "tengu_mcp_subagent_prompt"
+    default: false
+    category: "mcp"
+    accessor: "it"
+    description: "Use new (non-legacy) subagent MCP prompt"
+    notes: "Carried from 2.1.169. cli.beauty.js:272965"
+
+  # ── plugins ──
+  - name: "tengu_amber_lattice"
+    default: "{}"
+    category: "plugins"
+    accessor: "it"
+    description: "Config {plugins:[...]} — allowlist of plugin names enabled via flag"
+    notes: "Carried from 2.1.169. cli.beauty.js:590452"
+
+  - name: "tengu_plugin_autoupdate_allow_credential_helper"
+    default: false
+    category: "plugins"
+    accessor: "it"
+    description: "Allow git credential helper during plugin-marketplace autoupdate refresh"
+    notes: "NEW in 2.1.197. When off, jse() runs with disableCredentialHelper:true. cli.beauty.js:514238"
+
+  - name: "tengu_plugin_binary_assets"
+    default: false
+    category: "plugins"
+    accessor: "it"
+    description: "Enable plugin binary-asset download/caching"
+    related_env_var: "CLAUDE_CODE_PLUGIN_BINARY_ASSETS"
+    notes: "NEW in 2.1.197. cli.beauty.js:471694 (yPf)"
+
+  - name: "tengu_plugin_official_mkt_git_fallback"
+    default: true
+    category: "plugins"
+    accessor: "it"
+    description: "Allow git fallback when official marketplace GCS fetch fails"
+    notes: "Carried from 2.1.169. cli.beauty.js:470900"
+
+  - name: "tengu_skills_dashboard_enabled"
+    default: false
+    category: "plugins"
+    accessor: "it"
+    description: "Enable the skills dashboard UI"
+    notes: "Carried from 2.1.169. cli.beauty.js:515247"
+
+  # ── file-tools ──
+  - name: "tengu_cedar_sundial"
+    default: false
+    category: "file-tools"
+    accessor: "it"
+    description: "File-edit 'applies' gate (Nxl()) — extra condition before an edit applies"
+    notes: "NEW in 2.1.197. cli.beauty.js:444410"
+
+  # ── terminal ──
+  - name: "tengu_basalt_meadow"
+    default: false
+    category: "terminal"
+    accessor: "it"
+    description: "Terminal redraw/atlas behavior gate (works with xterm_atlas_reset)"
+    notes: "Carried from 2.1.169. cli.beauty.js:643739"
+
+  - name: "tengu_cicada_nap_ms"
+    default: 0
+    category: "terminal"
+    accessor: "it"
+    description: "Delay (ms) inserted in a render/idle loop (cicada nap)"
+    notes: "Carried from 2.1.169. cli.beauty.js:729062"
+
+  - name: "tengu_xterm_atlas_reset"
+    default: true
+    category: "terminal"
+    accessor: "it"
+    description: "Reset the xterm glyph atlas cache (rendering correctness)"
+    notes: "Carried from 2.1.169. cli.beauty.js:643737"
+
+  # ── tips ──
+  - name: "tengu_amber_quill"
+    default: false
+    category: "tips"
+    accessor: "it"
+    description: "Master gate for in-conversation context tips / spinner tips"
+    notes: "NEW in 2.1.197. Also gated by managed allow_context_tips. cli.beauty.js:351892 (g8t)"
+
+  - name: "tengu_cobalt_heron"
+    default: false
+    category: "tips"
+    accessor: "it"
+    description: "Context tip 'opus-on-pro-near-limit' (suggest Sonnet when Pro user on Opus >50% usage)"
+    notes: "NEW in 2.1.197. cli.beauty.js:351092"
+
+  - name: "tengu_slate_moth"
+    default: false
+    category: "tips"
+    accessor: "it"
+    description: "Context tip 'large-context-stale-files' (suggest /compact at >300K ctx & >100K stale-file tokens)"
+    notes: "NEW in 2.1.197. cli.beauty.js:351098"
+
+  # ── onboarding ──
+  - name: "tengu_birch_lantern"
+    default: "\"off\""
+    category: "onboarding"
+    accessor: "it"
+    description: "Powerup onboarding arm (off/banner/step)"
+    related_env_var: "CLAUDE_CODE_POWERUP_ONBOARDING"
+    notes: "NEW in 2.1.197. Replaces 2.1.169's maple_pier nudge. cli.beauty.js:528623 (O4o)"
+
+  # ── diagnostics ──
+  - name: "tengu_basalt_scarp"
+    default: false
+    category: "diagnostics"
+    accessor: "it"
+    description: "Diagnostics/feature gate requiring SN() (basalt scarp)"
+    notes: "Carried from 2.1.169. cli.beauty.js:455878"
+
+  - name: "tengu_basalt_spur"
+    default: false
+    category: "diagnostics"
+    accessor: "it"
+    description: "Diagnostics/feature gate requiring SN() (basalt spur)"
+    notes: "Carried from 2.1.169. cli.beauty.js:455874"
+
+  - name: "tengu_brick_follow"
+    default: false
+    category: "diagnostics"
+    accessor: "it"
+    description: "Feature gate emitted into telemetry context; also a behavior gate (brick follow)"
+    notes: "Carried from 2.1.169. cli.beauty.js:237977"
+
+  - name: "tengu_canary"
+    default: "{}"
+    category: "diagnostics"
+    accessor: "it"
+    description: "Canary config object (rollout canary / diagnostics payload)"
+    notes: "Carried from 2.1.169. cli.beauty.js:340810"
+
+  - name: "tengu_ember_latch"
+    default: false
+    category: "diagnostics"
+    accessor: "it"
+    description: "Gate OR'd with another condition (ember latch) in a coordinator/state path"
+    notes: "Carried from 2.1.169. cli.beauty.js:376294"
+
+  - name: "tengu_lapis_anchor"
+    default: "\"off\""
+    category: "diagnostics"
+    accessor: "it"
+    description: "Total-tokens reminder mode"
+    related_env_var: "CLAUDE_CODE_TOTAL_TOKENS_REMINDER"
+    notes: "NEW in 2.1.197. cli.beauty.js:454944"
+
+  - name: "tengu_lapis_anchor_budget"
+    default: "15000000 (NRl = 15M tokens)"
+    category: "diagnostics"
+    accessor: "it"
+    description: "Token budget for the total-tokens reminder"
+    related_env_var: "CLAUDE_CODE_TOTAL_TOKENS_REMINDER_BUDGET"
+    notes: "NEW in 2.1.197. cli.beauty.js:454951"
+
+  - name: "tengu_scratch"
+    default: false
+    category: "diagnostics"
+    accessor: "it"
+    description: "Generic scratch/experimental gate (two call sites)"
+    notes: "Carried from 2.1.169. cli.beauty.js:586362"
+
+  - name: "tengu_sedge_lantern"
+    default: true
+    category: "diagnostics"
+    accessor: "it"
+    description: "Enable the 'away summary' feature (summarize what happened while user was away)"
+    related_env_var: "CLAUDE_CODE_ENABLE_AWAY_SUMMARY"
+    notes: "Carried from 2.1.169. cli.beauty.js:292189"
+
+  - name: "tengu_sedge_lantern_config"
+    default: "(config/var)"
+    category: "diagnostics"
+    accessor: "it"
+    description: "Config for the away-summary feature (default var eXq=180000ms)"
+    notes: "Carried from 2.1.169. cli.beauty.js:686740"
+
+  - name: "tengu_shoji_engine"
+    default: false
+    category: "diagnostics"
+    accessor: "it"
+    description: "Enable the 'shoji' engine path (oge())"
+    related_env_var: "CLAUDE_CODE_SHOJI_ENGINE"
+    notes: "NEW in 2.1.197. cli.beauty.js:619857"
+
+  - name: "tengu_vellum_siding"
+    default: false
+    category: "diagnostics"
+    accessor: "it"
+    description: "Feature gate emitted into telemetry context (vellum siding)"
+    notes: "Carried from 2.1.169. cli.beauty.js:237978"
+
+  # ── api-networking ──
+  - name: "tengu_tool_pear"
+    default: false
+    category: "api-networking"
+    accessor: "it"
+    description: "Enable strict:true on tool schemas and push an extra API beta"
+    notes: "Carried from 2.1.169. cli.beauty.js:133055"
+
+  # ── context-management ──
+  - name: "tengu_amber_prism"
+    default: false
+    category: "context-management"
+    accessor: "it"
+    description: "Append extra block (fPf) to context/system content when in a particular mode (t1())"
+    notes: "Carried from 2.1.169. cli.beauty.js:600505"
+
+  - name: "tengu_amber_rokovoko"
+    default: "(config/var)"
+    category: "context-management"
+    accessor: "it"
+    description: "Autocompact precompute buffer fraction (must be 0 <= x < 1; default var hqq=0.2)"
+    notes: "Carried from 2.1.169. cli.beauty.js:230455"
+
+  - name: "tengu_compact_cache_prefix"
+    default: true
+    category: "context-management"
+    accessor: "it"
+    description: "Prompt caching during compaction"
+    notes: "Carried from 2.1.169. cli.beauty.js:462485"
+
+  - name: "tengu_hazel_osprey"
+    default: false
+    category: "context-management"
+    accessor: "it"
+    description: "Context-window flooring behavior gate"
+    notes: "Carried from 2.1.169. cli.beauty.js:594550"
+
+  - name: "tengu_hazel_osprey_floor"
+    default: "(config/var)"
+    category: "context-management"
+    accessor: "it"
+    description: "Token floor value used by hazel_osprey (default var tsf=75000)"
+    notes: "Carried from 2.1.169. cli.beauty.js:594554"
+
+  - name: "tengu_memory_bulk_inflate"
+    default: true
+    category: "context-management"
+    accessor: "it"
+    description: "Bulk-inflate memory entries on load (vs lazy); when off, returns 'not-attempted'"
+    notes: "Carried from 2.1.169. cli.beauty.js:449212"
+
+  - name: "tengu_moth_copse"
+    default: false
+    category: "context-management"
+    accessor: "it"
+    description: "Transform applied to message history (when off, returns history unchanged)"
+    notes: "Carried from 2.1.169. cli.beauty.js:149402"
+
+  - name: "tengu_paper_halyard"
+    default: false
+    category: "context-management"
+    accessor: "it"
+    description: "Context/message assembly variant gate"
+    notes: "Carried from 2.1.169. cli.beauty.js:229426"
+
+  - name: "tengu_prompt_cache_1h_config"
+    default: "(config/var)"
+    category: "context-management"
+    accessor: "it"
+    description: "1-hour prompt-cache config (allowlist of cache keys eligible for 1h TTL)"
+    notes: "Carried from 2.1.169. cli.beauty.js:594802"
+
+  - name: "tengu_prompt_cache_diagnostics"
+    default: false
+    category: "context-management"
+    accessor: "it"
+    description: "Emit prompt-cache diagnostics"
+    notes: "Carried from 2.1.169. cli.beauty.js:595161"
+
+  - name: "tengu_read_dedup_killswitch"
+    default: false
+    category: "context-management"
+    accessor: "it"
+    description: "Kill switch: disables Read-tool result deduplication cache"
+    notes: "Carried from 2.1.169. cli.beauty.js:466058"
+
+  - name: "tengu_velvet_ibis"
+    default: "{}"
+    category: "context-management"
+    accessor: "it"
+    description: "Tool-result clearing/limits config; .mcp_tool sets MCP output token cap"
+    related_env_var: "MAX_MCP_OUTPUT_TOKENS"
+    notes: "Carried from 2.1.169. cli.beauty.js:240626"
+
+  # ── feedback-surveys ──
+  - name: "tengu_feedback_survey_config"
+    default: "(config/var)"
+    category: "feedback-surveys"
+    accessor: "it"
+    description: "Feedback survey configuration (default var mg8)"
+    notes: "Carried from 2.1.169. cli.beauty.js:706830"
+
+  # ── file-operations ──
+  - name: "tengu_amber_wren"
+    default: "{}"
+    category: "file-operations"
+    accessor: "it"
+    description: "Read tool config: maxSizeBytes, maxTokens, includeMaxSizeInPrompt, targetedRangeNudge"
+    notes: "Carried from 2.1.169. cli.beauty.js:272550"
+
+  - name: "tengu_edit_minimalanchor_jrn"
+    default: false
+    category: "file-operations"
+    accessor: "it"
+    description: "Use the 'minimal anchor' variant of the Edit tool description (keep old_string 1-3 lines)"
+    notes: "Carried from 2.1.169. cli.beauty.js:444125"
+
+  - name: "tengu_hawthorn_steeple"
+    default: false
+    category: "file-operations"
+    accessor: "it"
+    description: "Gate for an early-return file/tool-results behavior (when off, returns early)"
+    notes: "Carried from 2.1.169. cli.beauty.js:272708"
+
+  - name: "tengu_send_user_file"
+    default: true
+    category: "file-operations"
+    accessor: "it"
+    description: "Enable the SendUserFile tool (remote/bridge sessions, firstParty)"
+    notes: "Carried from 2.1.169. cli.beauty.js:430018"
+
+  - name: "tengu_tab_read_sep"
+    default: false
+    category: "file-operations"
+    accessor: "it"
+    description: "Tab/separator handling option for Read tool output"
+    notes: "Carried from 2.1.169. cli.beauty.js:272561"
+
+  - name: "tengu_velvet_static"
+    default: false
+    category: "file-operations"
+    accessor: "it"
+    description: "Enables a 'velvet static' tool/feature (isEnabled gate)"
+    notes: "Carried from 2.1.169. cli.beauty.js:556545"
+
+  # ── loops-kairos ──
+  - name: "tengu_kairos_brief"
+    default: false
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Brief mode (plain assistant text hidden; only a dedicated reply tool reaches the user)"
+    related_env_var: "CLAUDE_CODE_BRIEF"
+    notes: "Carried from 2.1.169. cli.beauty.js:353599"
+
+  - name: "tengu_kairos_brief_config"
+    default: "(config/var)"
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Brief-mode configuration object (default var mz9)"
+    notes: "Carried from 2.1.169. cli.beauty.js:561911"
+
+  - name: "tengu_kairos_brief_stop_hook_text"
+    default: "\"\""
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Override text for the brief-mode stop-hook nudge"
+    notes: "Carried from 2.1.169. cli.beauty.js:422677"
+
+  - name: "tengu_kairos_cron"
+    default: true
+    category: "loops-kairos"
+    accessor: "J7"
+    description: "Cron-based scheduling (CronCreate/CronList, recurring routines) availability"
+    related_env_var: "CLAUDE_CODE_DISABLE_CRON"
+    notes: "Carried from 2.1.169. cli.beauty.js:224838"
+
+  - name: "tengu_kairos_cron_config"
+    default: "(config/var)"
+    category: "loops-kairos"
+    accessor: "J7"
+    description: "Timing config for cron scheduling (recurring fraction/caps, one-shot windows)"
+    notes: "Carried from 2.1.169. cli.beauty.js:223861"
+
+  - name: "tengu_kairos_cron_durable"
+    default: true
+    category: "loops-kairos"
+    accessor: "J7"
+    description: "Durable (persisted) cron jobs across sessions"
+    notes: "Carried from 2.1.169. cli.beauty.js:224842"
+
+  - name: "tengu_kairos_input_needed_push"
+    default: false
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Push a notification when the loop/agent needs user input"
+    notes: "Carried from 2.1.169. cli.beauty.js:223940"
+
+  - name: "tengu_kairos_loop_dynamic"
+    default: false
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Dynamic-pacing /loop mode (ScheduleWakeup self-paced iterations)"
+    notes: "Carried from 2.1.169. cli.beauty.js:224238"
+
+  - name: "tengu_kairos_loop_keepalive"
+    default: false
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Keepalive scheduling for /loop (re-schedules wakeup to keep loop alive)"
+    related_env_var: "CLAUDE_CODE_LOOP_KEEPALIVE"
+    notes: "Carried from 2.1.169. cli.beauty.js:224243"
+
+  - name: "tengu_kairos_loop_persistent"
+    default: false
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Persistent /loop preamble variant (loop survives across turns)"
+    related_env_var: "CLAUDE_CODE_LOOP_PERSISTENT"
+    notes: "Carried from 2.1.169. cli.beauty.js:224055"
+
+  - name: "tengu_kairos_loop_prompt"
+    default: false
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Enables autonomous-loop tick prompt resolution (sentinel <<autonomous-loop>> / -dynamic)"
+    notes: "Carried from 2.1.169. cli.beauty.js:224091"
+
+  - name: "tengu_kairos_push_notifications"
+    default: false
+    category: "loops-kairos"
+    accessor: "it"
+    description: "Enable agent PushNotification tool (terminal + mobile push when Remote Control connected)"
+    notes: "Carried from 2.1.169. cli.beauty.js:223936"
+
+  # ── model-access ──
+  - name: "tengu_amber_redwood2"
+    default: "\"\""
+    category: "model-access"
+    accessor: "it"
+    description: "Numeric config (parsed) applied only to claude-opus-4-8 (context/threshold tuning)"
+    notes: "Carried from 2.1.169. cli.beauty.js:230142"
+
+  - name: "tengu_amber_redwood3"
+    default: "\"\""
+    category: "model-access"
+    accessor: "it"
+    description: "Boolean-ish gate (truthy string) tied to opus-4-8 behavior (pi())"
+    notes: "Carried from 2.1.169. cli.beauty.js:230142"
+
+  - name: "tengu_crimson_vector"
+    default: false
+    category: "model-access"
+    accessor: "it"
+    description: "First-party model routing/affordance gate (returns JA7 when on)"
+    notes: "Carried from 2.1.169. cli.beauty.js:183828"
+
+  - name: "tengu_gypsum_kite"
+    default: false
+    category: "model-access"
+    accessor: "it"
+    description: "Show '~2x usage vs Sonnet' hint for pro-plan users on certain models"
+    notes: "Carried from 2.1.169. cli.beauty.js:231409"
+
+  - name: "tengu_immediate_model_command"
+    default: false
+    category: "model-access"
+    accessor: "it"
+    description: "Apply /model command immediately (without confirmation step)"
+    notes: "Carried from 2.1.169. cli.beauty.js:546639"
+
+  - name: "tengu_marble_lark"
+    default: false
+    category: "model-access"
+    accessor: "it"
+    description: "Model-related gate (carried marble_* lineage; behavior tied to model availability)"
+    notes: "Carried from 2.1.169. cli.beauty.js:288164"
+
+  - name: "tengu_penguins_off"
+    default: null
+    category: "model-access"
+    accessor: "it"
+    description: "Fast mode kill switch: a non-null string is the reason Fast mode is unavailable"
+    notes: "Carried from 2.1.169. cli.beauty.js:100631"
+
+  - name: "tengu_pewter_owl_model"
+    default: "\"\""
+    category: "model-access"
+    accessor: "it"
+    description: "Model override string (pewter owl) used in model selection"
+    notes: "Carried from 2.1.169. cli.beauty.js:132764"
+
+  - name: "tengu_quartz_heron"
+    default: false
+    category: "model-access"
+    accessor: "it"
+    description: "When true, a subagent/task inherits the parent model ('inherit') instead of haiku"
+    notes: "Carried from 2.1.169. cli.beauty.js:374569"
+
+  - name: "tengu_velvet_cascade"
+    default: null
+    category: "model-access"
+    accessor: "it"
+    description: "Config {models:[...]} marking models that get the 'simple system prompt' treatment"
+    notes: "Carried from 2.1.169. cli.beauty.js:132673"
+
+  # ── plan-v2 ──
+  - name: "tengu_ultraplan_config"
+    default: null
+    category: "plan-v2"
+    accessor: "it"
+    description: "Ultraplan (cloud plan phase) config; .enabled must be true (and not remote)"
+    notes: "Carried from 2.1.169. cli.beauty.js:535851"
+
+  - name: "tengu_ultraplan_prompt_identifier"
+    default: "(config/var)"
+    category: "plan-v2"
+    accessor: "it"
+    description: "Prompt identifier used for ultraplan (default var zK9='simple_plan')"
+    notes: "Carried from 2.1.169. cli.beauty.js:535949"
+
+  - name: "tengu_ultraplan_timeout_seconds"
+    default: 5400
+    category: "plan-v2"
+    accessor: "it"
+    description: "Ultraplan cloud timeout in seconds (default 90 min; multiplied to ms)"
+    notes: "Carried from 2.1.169. cli.beauty.js:535937"
+
+  # ── remote-bridge ──
+  - name: "tengu_amber_relay"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Bridge/relay-related gate (Ks6(), near REPL bridge enable code)"
+    notes: "Carried from 2.1.169. cli.beauty.js:605512"
+
+  - name: "tengu_bridge_attestation_enforce"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Enforce bridge attestation (security gate for Remote Control bridge connections)"
+    notes: "Carried from 2.1.169. cli.beauty.js:298872"
+
+  - name: "tengu_bridge_attestation_enforce_config"
+    default: "{}"
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Config object accompanying bridge attestation enforcement"
+    notes: "Carried from 2.1.169. cli.beauty.js:298874"
+
+  - name: "tengu_bridge_poll_interval_config"
+    default: "(config/var)"
+    category: "remote-bridge"
+    accessor: "J7"
+    description: "Bridge polling interval configuration (default var v1$, fallback 300000ms)"
+    notes: "Carried from 2.1.169. cli.beauty.js:567956"
+
+  - name: "tengu_bridge_repl_v2_cse_shim_enabled"
+    default: true
+    category: "remote-bridge"
+    accessor: "it"
+    description: "REPL v2 client-side-execution shim for the bridge"
+    notes: "Carried from 2.1.169. cli.beauty.js:605474"
+
+  - name: "tengu_bridge_requires_action_details"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Bridge requires detailed action descriptions for requires-action prompts"
+    notes: "Carried from 2.1.169. cli.beauty.js:623644"
+
+  - name: "tengu_bridge_system_init"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Bridge sends a system_init message on connection"
+    notes: "Carried from 2.1.169. cli.beauty.js:624353"
+
+  - name: "tengu_bridge_vivid"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Bridge 'vivid' rendering/feature variant (P6f())"
+    notes: "Carried from 2.1.169. cli.beauty.js:605520"
+
+  - name: "tengu_ccr_bridge"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "CCR bridge mode (cloud-backed remote execution bridge)"
+    notes: "Carried from 2.1.169. cli.beauty.js:605213"
+
+  - name: "tengu_ccr_bundle_max_bytes"
+    default: null
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Max bytes for CCR session bundle upload (falls back to qqf=104857600 / 100MB)"
+    notes: "Carried from 2.1.169. cli.beauty.js:360294"
+
+  - name: "tengu_ccr_bundle_seed_enabled"
+    default: "(config/var)"
+    category: "remote-bridge"
+    accessor: "$U"
+    description: "Enable CCR bundle seeding (upload conversation bundle for cloud session)"
+    related_env_var: "CCR_ENABLE_BUNDLE / CCR_FORCE_BUNDLE"
+    notes: "Carried from 2.1.169. cli.beauty.js:298685"
+
+  - name: "tengu_ccr_v2_send_events_cli"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Send CCR v2 events from the CLI"
+    notes: "Carried from 2.1.169. cli.beauty.js:605478"
+
+  - name: "tengu_cobalt_lantern"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Quick web setup for remote sessions (requires allow_remote_sessions + allow_quick_web_setup)"
+    notes: "Carried from 2.1.169. cli.beauty.js:298639"
+
+  - name: "tengu_relay_chain_v1"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "When true, removes the multi-command bash chaining guidance from the system prompt"
+    notes: "Carried from 2.1.169. cli.beauty.js:450750"
+
+  - name: "tengu_remote_backend"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Remote backend mode (carried over from 2.1.32)"
+    notes: "Carried from 2.1.169. cli.beauty.js:729758"
+
+  - name: "tengu_slate_harbor"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "REPL mode availability gate when entrypoint is cli or remote"
+    related_env_var: "CLAUDE_CODE_REPL"
+    notes: "Carried from 2.1.169. cli.beauty.js:224806"
+
+  - name: "tengu_slate_harbor_experiment"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "New /init experiment (CLAUDE.md generation flow)"
+    related_env_var: "CLAUDE_CODE_NEW_INIT"
+    notes: "Carried from 2.1.169. cli.beauty.js:502733"
+
+  - name: "tengu_surreal_dali"
+    default: false
+    category: "remote-bridge"
+    accessor: "it"
+    description: "Remote-sessions onboarding/affordance gate (requires allow_remote_sessions capability)"
+    notes: "Carried from 2.1.169. cli.beauty.js:350999"
+
+  # ── session-memory ──
+  - name: "tengu_bramble_lintel"
+    default: null
+    category: "session-memory"
+    accessor: "it"
+    description: "Numeric config for memory/dream pacing (defaults to 1 when null)"
+    notes: "Carried from 2.1.169. cli.beauty.js:456150"
+
+  - name: "tengu_ochre_finch"
+    default: false
+    category: "session-memory"
+    accessor: "it"
+    description: "Session-memory feature gate (memory types / save flow, tG6())"
+    notes: "Carried from 2.1.169. cli.beauty.js:149118"
+
+  - name: "tengu_onyx_plover"
+    default: null
+    category: "session-memory"
+    accessor: "it"
+    description: "Thresholds config for 'dream'/memory sessions (minHours, minSessions)"
+    notes: "Carried from 2.1.169. cli.beauty.js:455561"
+
+  - name: "tengu_passport_quail"
+    default: false
+    category: "session-memory"
+    accessor: "it"
+    description: "Memory/dream-related capability gate (also gates a slate_thimble path)"
+    notes: "Carried from 2.1.169. cli.beauty.js:145395"
+
+  - name: "tengu_sepia_cormorant"
+    default: null
+    category: "session-memory"
+    accessor: "it"
+    description: "Memory/dream config object (read in same cluster as passport_quail/billiard_aviary)"
+    notes: "Carried from 2.1.169. cli.beauty.js:145386"
+
+  - name: "tengu_sepia_moth"
+    default: false
+    category: "session-memory"
+    accessor: "it"
+    description: "Memory/dream-related gate (xm4 cluster)"
+    notes: "Carried from 2.1.169. cli.beauty.js:453635"
+
+  - name: "tengu_shale_finch"
+    default: false
+    category: "session-memory"
+    accessor: "it"
+    description: "Memory-related gate (returned directly; near memory permission code)"
+    notes: "Carried from 2.1.169. cli.beauty.js:373755"
+
+  - name: "tengu_tussock_oriole"
+    default: false
+    category: "session-memory"
+    accessor: "it"
+    description: "Gate for projectSettings-scoped memory store behavior"
+    notes: "Carried from 2.1.169. cli.beauty.js:371237"
+
+  - name: "tengu_umber_petrel"
+    default: false
+    category: "session-memory"
+    accessor: "it"
+    description: "Memory/dream-related gate in the same cluster (umber petrel)"
+    notes: "Carried from 2.1.169. cli.beauty.js:145391"
+
+  # ── streaming-performance ──
+  - name: "tengu_byte_stream_idle_timeout_ms"
+    default: "(config/var)"
+    category: "streaming-performance"
+    accessor: "it"
+    description: "Idle timeout (ms) for the byte stream; default is a computed value (firstParty vs default)"
+    related_env_var: "CLAUDE_BYTE_STREAM_IDLE_TIMEOUT_MS / CLAUDE_STREAM_IDLE_TIMEOUT_MS"
+    notes: "Carried from 2.1.169. cli.beauty.js:132126"
+
+  - name: "tengu_disable_keepalive_on_econnreset"
+    default: false
+    category: "streaming-performance"
+    accessor: "it"
+    description: "Disable HTTP keep-alive for retry after ECONNRESET (stale connection)"
+    notes: "Carried from 2.1.169. cli.beauty.js:604386"
+
+  - name: "tengu_disable_streaming_to_non_streaming_fallback"
+    default: false
+    category: "streaming-performance"
+    accessor: "it"
+    description: "Kill switch: disable the streaming -> non-streaming fallback"
+    related_env_var: "CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK"
+    notes: "Carried from 2.1.169. cli.beauty.js:596656"
+
+  - name: "tengu_drift_lantern"
+    default: false
+    category: "streaming-performance"
+    accessor: "it"
+    description: "Start the event-loop stall detector"
+    notes: "Carried from 2.1.169. cli.beauty.js:728095"
+
+  - name: "tengu_fgts"
+    default: false
+    category: "streaming-performance"
+    accessor: "it"
+    description: "Eager input streaming for firstParty requests"
+    notes: "Carried from 2.1.169. cli.beauty.js:594037"
+
+  - name: "tengu_plum_vx3"
+    default: false
+    category: "streaming-performance"
+    accessor: "it"
+    description: "Disables thinking tokens for WebSearch (carried over from 2.1.32)"
+    notes: "Carried from 2.1.169. cli.beauty.js:426632"
+
+  - name: "tengu_stream_watchdog_default_on"
+    default: true
+    category: "streaming-performance"
+    accessor: "it"
+    description: "Stream watchdog enabled by default"
+    related_env_var: "CLAUDE_ENABLE_STREAM_WATCHDOG"
+    notes: "Carried from 2.1.169. cli.beauty.js:132251"
+
+  - name: "tengu_trace_lantern"
+    default: false
+    category: "streaming-performance"
+    accessor: "it"
+    description: "Enable detailed beta tracing (with BETA_TRACING_ENDPOINT)"
+    related_env_var: "ENABLE_BETA_TRACING_DETAILED / BETA_TRACING_ENDPOINT"
+    notes: "Carried from 2.1.169. cli.beauty.js:274854"
+
+  # ── subscription-upsells ──
+  - name: "tengu_amber_creek"
+    default: false
+    category: "subscription-upsells"
+    accessor: "it"
+    description: "TUI fullscreen 'downsell' gate (downsell_on) — part of fullscreen rollout logic"
+    notes: "Carried from 2.1.169. cli.beauty.js:152853"
+
+  - name: "tengu_amber_lark"
+    default: false
+    category: "subscription-upsells"
+    accessor: "it"
+    description: "Append extra usage/status detail (S34) to the usage status message"
+    notes: "Carried from 2.1.169. cli.beauty.js:543690"
+
+  - name: "tengu_c4e_slash_upsell"
+    default: false
+    category: "subscription-upsells"
+    accessor: "it"
+    description: "Claude-for-Enterprise (c4e) slash-command upsell"
+    notes: "Carried from 2.1.169. cli.beauty.js:556779"
+
+  - name: "tengu_copper_lantern"
+    default: "{}"
+    category: "subscription-upsells"
+    accessor: "it"
+    description: "Extra-usage upsell promo gate"
+    notes: "Carried from 2.1.169. cli.beauty.js:145709"
+
+  - name: "tengu_coral_beacon"
+    default: false
+    category: "subscription-upsells"
+    accessor: "it"
+    description: "Upgrade-paths upsell UI variant gate"
+    notes: "Carried from 2.1.169. cli.beauty.js:378761"
+
+  - name: "tengu_jade_anvil_4"
+    default: false
+    category: "subscription-upsells"
+    accessor: "it"
+    description: "Upgrade/overage upsell UI variant gate"
+    notes: "Carried from 2.1.169. cli.beauty.js:560601"
+
+  - name: "tengu_pewter_brook"
+    default: false
+    category: "subscription-upsells"
+    accessor: "it"
+    description: "TUI fullscreen GrowthBook rollout gate (gb_on/gb_off)"
+    notes: "Carried from 2.1.169. cli.beauty.js:152849"
+
+  # ── tips-promo ──
+  - name: "tengu_alder_compass"
+    default: false
+    category: "tips-promo"
+    accessor: "it"
+    description: "Startup tip: '/powerup' interactive tutorial (new-user carousel item)"
+    notes: "Carried from 2.1.169. cli.beauty.js:685599"
+
+  - name: "tengu_birch_kettle"
+    default: false
+    category: "tips-promo"
+    accessor: "it"
+    description: "Startup tip carousel item gate"
+    notes: "Carried from 2.1.169. cli.beauty.js:675006"
+
+  - name: "tengu_cedar_plume"
+    default: false
+    category: "tips-promo"
+    accessor: "it"
+    description: "Startup tip: Claude Design ('mock 5 versions of your screen') promo"
+    notes: "Carried from 2.1.169. cli.beauty.js:685920"
+
+  - name: "tengu_kestrel_arch"
+    default: "\"off\""
+    category: "tips-promo"
+    accessor: "it"
+    description: "Tip/promo arm; enabled when value == 'on'"
+    notes: "Carried from 2.1.169. cli.beauty.js:685962"
+
+  - name: "tengu_maple_pier"
+    default: false
+    category: "tips-promo"
+    accessor: "it"
+    description: "Auto-default-mode onboarding nudge gate (post-onboarding)"
+    notes: "Carried from 2.1.169. cli.beauty.js:690529"
+
+  - name: "tengu_mocha_barista"
+    default: false
+    category: "tips-promo"
+    accessor: "it"
+    description: "Append one-time scheduled-run wording to the /schedule skill description"
+    notes: "Carried from 2.1.169. cli.beauty.js:665037"
+
+  - name: "tengu_startup_notice"
+    default: "\"\""
+    category: "tips-promo"
+    accessor: "it"
+    description: "Free-form startup notice text shown at launch"
+    notes: "Carried from 2.1.169. cli.beauty.js:689525"
+
+  # ── tool-search ──
+  - name: "tengu_tool_search_unsupported_models"
+    default: null
+    category: "tool-search"
+    accessor: "it"
+    description: "Array of model names that don't support tool search"
+    notes: "Carried from 2.1.169. cli.beauty.js:224426"
+
+  # ── ui-ux ──
+  - name: "tengu_amber_anchor"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI/feature gate (_JH())"
+    notes: "Carried from 2.1.169. cli.beauty.js:145705"
+
+  - name: "tengu_amber_lynx"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI variant gate in a session/columns view component"
+    notes: "Carried from 2.1.169. cli.beauty.js:479210"
+
+  - name: "tengu_cedar_marsh"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI/feature gate requiring gw() (cedar marsh)"
+    notes: "Carried from 2.1.169. cli.beauty.js:183701"
+
+  - name: "tengu_chomp_inflection"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "Prompt suggestions feature"
+    notes: "Carried from 2.1.169. cli.beauty.js:292389"
+
+  - name: "tengu_chrome_auto_enable"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "Auto-enable Claude-in-Chrome (CFC) integration"
+    related_env_var: "CLAUDE_CODE_ENABLE_CFC"
+    notes: "Carried from 2.1.169. cli.beauty.js:506263"
+
+  - name: "tengu_cobalt_ridge"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI/feature gate (cobalt ridge)"
+    notes: "Carried from 2.1.169. cli.beauty.js:224638"
+
+  - name: "tengu_cobalt_thicket"
+    default: true
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI behavior enabled when gw() and flag (g67(true))"
+    notes: "Carried from 2.1.169. cli.beauty.js:728776"
+
+  - name: "tengu_gleaming_fair"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI/feature gate; when off returns null (feature hidden)"
+    notes: "Carried from 2.1.169. cli.beauty.js:620645"
+
+  - name: "tengu_gouda_loop"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI behavior gate (gouda loop) in an effect/ref-guarded render path"
+    notes: "Carried from 2.1.169. cli.beauty.js:628699"
+
+  - name: "tengu_keybinding_customization_release"
+    default: true
+    category: "ui-ux"
+    accessor: "it"
+    description: "Custom keybinding support"
+    notes: "Carried from 2.1.169. cli.beauty.js:175176"
+
+  - name: "tengu_maple_sundial"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI gate (maple sundial)"
+    notes: "Carried from 2.1.169. cli.beauty.js:483340"
+
+  - name: "tengu_marlin_porch"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI/feature gate, memoized (marlin porch)"
+    notes: "Carried from 2.1.169. cli.beauty.js:171915"
+
+  - name: "tengu_mint_lanes"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "Menu 'kind lanes' grouping in selection menus"
+    related_env_var: "CLAUDE_CODE_ENABLE_MENU_KIND_LANES"
+    notes: "Carried from 2.1.169. cli.beauty.js:629882"
+
+  - name: "tengu_native_cursor"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "Use native cursor rendering in the TUI"
+    notes: "Carried from 2.1.169. cli.beauty.js:171937"
+
+  - name: "tengu_ochre_hollow"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI/feature gate (ochre hollow)"
+    notes: "Carried from 2.1.169. cli.beauty.js:527711"
+
+  - name: "tengu_shining_fractals"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI/animation gate (shining fractals)"
+    notes: "Carried from 2.1.169. cli.beauty.js:353705"
+
+  - name: "tengu_silk_hinge"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "Message timestamp display + related footer option"
+    notes: "Carried from 2.1.169. cli.beauty.js:483783"
+
+  - name: "tengu_slate_finch"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "Show 'high · burns fastest — medium handles most tasks' effort-level hint"
+    notes: "Carried from 2.1.169. cli.beauty.js:146915"
+
+  - name: "tengu_slate_harrier"
+    default: "\"off\""
+    category: "ui-ux"
+    accessor: "it"
+    description: "String-arm gate ('off' default) controlling a system/UI section"
+    notes: "Carried from 2.1.169. cli.beauty.js:593902"
+
+  - name: "tengu_slate_prism"
+    default: true
+    category: "ui-ux"
+    accessor: "it"
+    description: "Enable agent progress summaries rendering"
+    notes: "Carried from 2.1.169. cli.beauty.js:709576"
+
+  - name: "tengu_slate_quill"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "UI/feature gate (slate quill)"
+    notes: "Carried from 2.1.169. cli.beauty.js:430838"
+
+  - name: "tengu_slate_thimble"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "Gate that, with F6(), enables a UI path (returns !F6() || flag)"
+    notes: "Carried from 2.1.169. cli.beauty.js:145396"
+
+  - name: "tengu_terminal_sidebar"
+    default: false
+    category: "ui-ux"
+    accessor: "it"
+    description: "Terminal sidebar UI (status in terminal tab)"
+    notes: "Carried from 2.1.169. cli.beauty.js:483739"
+
+  - name: "tengu_turtle_carbon"
+    default: true
+    category: "ui-ux"
+    accessor: "it"
+    description: "Show thinking summaries (EyH())"
+    notes: "Carried from 2.1.169. cli.beauty.js:132800"
+
+  # ── vscode-ide ──
+  - name: "tengu_vscode_feedback_survey"
+    default: false
+    category: "vscode-ide"
+    accessor: "it"
+    description: "VS Code feedback survey experiment"
+    notes: "Carried from 2.1.169. cli.beauty.js:706826"
+
+  - name: "tengu_vscode_onboarding"
+    default: false
+    category: "vscode-ide"
+    accessor: "it"
+    description: "VS Code onboarding experiment (now explicit boolean default)"
+    notes: "Carried from 2.1.169. cli.beauty.js:237973"
+
+  - name: "tengu_vscode_review_upsell"
+    default: false
+    category: "vscode-ide"
+    accessor: "it"
+    description: "VS Code review upsell experiment (now explicit boolean default)"
+    notes: "Carried from 2.1.169. cli.beauty.js:237972"

@@ -1,0 +1,273 @@
+# Slash commands — Claude Code 2.1.197
+# Build 2026-06-29T19:08:42Z | GIT_SHA c8fd8048f30950a21d28734718275aa7e97f5143
+#
+# Source of truth: command registry module exporting getCommands (gA), getBuiltinCommands
+# (EVo -> yen()), isCommandEnabled (rx), meetsAvailabilityRequirement (VTt),
+# INTERNAL_ONLY_COMMANDS (Tsm), ANT_GATED_COMMANDS (vsm), REMOTE_SAFE_COMMANDS (Zcr),
+# BRIDGE_SAFE_COMMANDS (TVo).  cli.beauty.js ~476k-581k & 605k-665k.
+#
+# Registry total (distinct name: on a type:"local"|"local-jsx"|"prompt" object): 93 (net unchanged
+# vs 2.1.169). Churn: NEW design-login, pause-memory; REMOVED bridge-kick, standalone toggle-memory.
+#
+# Status semantics:
+#   enabled        -> isEnabled absent or always-true; isHidden absent/false
+#   conditional    -> isEnabled gated by a flag / capability / mode / env var
+#   hidden         -> isHidden: !0 (or getter true) — runs but not listed in /help
+#   disabled       -> isEnabled: () => !1 (cannot run)
+#   stub           -> object is the shared disabled+hidden "stub" placeholder (WNo) in THIS build
+#   upsell-stub    -> wrapped by uTt() = hidden "available with Claude for Enterprise" upsell
+#   skill          -> registered via Bd() as a userInvocable skill-command, NOT a registry object
+#
+# Gate helpers (resolved from source, with 2.1.169 name):
+#   Ao()   -> first-party + oauth scopes (logged into claude.ai)          [134427]  (was hq())
+#   Cr()   -> !Bt.isInteractive  (HEADLESS / non-interactive run)         [3268]    (was F6())
+#   $x()   -> Bt.isInteractive                                            [3271]    (was a2())
+#   _a()   -> Bt.caps.workspace === "remote" (cloud/remote agent)         [3929]    (was z4())
+#   Jv()   -> coordinator mode (CLAUDE_CODE_COORDINATOR_MODE)             [225052]  (was K2())
+#   js(c)  -> capability check (allow_remote_sessions, allow_design_sync) [145859]  (was b7(c))
+#   Eu()   -> assume first-party base URL (console availability)          [94683]
+#   j7()   -> !xc()  (used in "console" availability)                     [134540]
+#   it(f,d)-> GrowthBook flag get                                         [145150]  (was j$())
+#   mz()   -> advisor available (firstParty + tengu_sage_compass2.enabled / env) [363791] (was HB())
+#   LC()   -> remote-control connectable                                 [605232]  (was jh())
+#   RSt()  -> js(allow_design_sync) && !Ki() && (xc() || tengu_slate_quill) [430834]
+#   Y_t()  -> usage-credits available (R0() balance or Uke())            [378623]  (was VK$())
+#   TOl()  -> autofix-pr gate (Ao() && allow_remote_sessions && !Cr())   [477315]  (was xF4())
+#   LNl()  -> autocompact gate                                           [482730]  (was og4())
+#   Ime()  -> ultraplan gate                                             [535850]  (was B4H())
+#   yz()   -> ultrareview / review gate                                  [374636]  (was kg())
+#   BZt()  -> voice available                                            [571416]  (was Pu$())
+#   iE()   -> workflows available                                        [146597]  (was RP())
+#   lAt()  -> V$f() && js(allow_desktop_handoff); V$f()=()=>!1 so always false [482049] (was Cg4())
+#   uc()   -> fast mode available                                        [100600]
+#   YHt()  -> /fast immediate                                            [546638]
+
+active_commands:
+  # --- core / always available ---
+  - { name: "/help",    aliases: [],                          status: "enabled",     line: 502119 }
+  - { name: "/config",  aliases: ["/settings"],               status: "enabled",     line: 495023, notes: "interactive local-jsx visible; headless local twin isEnabled:()=>Cr(), isHidden getter !Cr()" }
+  - { name: "/login",   aliases: [],  status: "conditional",  line: 503676, notes: "isEnabled: () => !DISABLE_LOGIN_COMMAND" }
+  - { name: "/logout",  aliases: [],  status: "conditional",  line: 503692, notes: "isEnabled: () => !DISABLE_LOGOUT_COMMAND" }
+  - { name: "/clear",   aliases: ["/reset", "/new"],          status: "enabled",     line: 480972, notes: "supportsNonInteractive" }
+  - { name: "/compact", aliases: [],  status: "conditional",  line: 482444, notes: "isEnabled: () => !DISABLE_COMPACT" }
+  - { name: "/resume",  aliases: ["/continue"],               status: "enabled",     line: 535026 }
+  - { name: "/memory",  aliases: [],                          status: "enabled",     line: 501479 }
+  - { name: "/model",   aliases: [],  status: "enabled",      line: 559903, notes: "dual local/local-jsx variants" }
+  - { name: "/plan",    aliases: [],  status: "enabled",      line: 546627 }
+  - { name: "/permissions", aliases: ["/allowed-tools"],      status: "enabled",     line: 546513 }
+  - { name: "/hooks",   aliases: [],  status: "enabled",      line: 549250 }
+  - { name: "/agents",  aliases: [],                          status: "enabled",     line: 554234 }
+  - { name: "/skills",  aliases: [],  status: "enabled",      line: 537759 }
+  - { name: "/mcp",     aliases: [],                          status: "enabled",     line: 521058, notes: "dual local/local-jsx" }
+  - { name: "/status",  aliases: [],  status: "enabled",      line: 537785 }
+  - { name: "/ide",     aliases: [],                          status: "enabled",     line: 502724 }
+  - { name: "/add-dir", aliases: [],                          status: "enabled",     line: 476816 }
+  - { name: "/cd",      aliases: [],  status: "enabled",      line: 480110, notes: "Move this session to a new working directory" }
+  - { name: "/theme",   aliases: [],                          status: "enabled",     line: 544656 }
+  - { name: "/color",   aliases: [],  status: "enabled",      line: 481078, notes: "dual local/local-jsx" }
+  - { name: "/rename",  aliases: ["/name"],                   status: "enabled",     line: 525685, notes: "dual local/local-jsx" }
+  - { name: "/copy",    aliases: [],                          status: "enabled",     line: 481464, notes: "Copy Claude's last response (or /copy N)" }
+  - { name: "/diff",    aliases: [],  status: "enabled",      line: 497722, notes: "View uncommitted changes and per-turn diffs" }
+  - { name: "/export",  aliases: [],  status: "enabled",      line: 558434 }
+  - { name: "/rewind",  aliases: ["/checkpoint", "/undo"],    status: "enabled",     line: 554718, notes: "Restore code and/or conversation to a previous point" }
+  - { name: "/keybindings", aliases: [], status: "conditional", notes: "terminal-support gated" }
+  - { name: "/statusline", aliases: [], status: "enabled",    line: 560724, notes: "type:prompt; Set up status-line UI" }
+  - { name: "/terminal-setup", aliases: [],                   status: "enabled",     line: 543579 }
+  - { name: "/exit",    aliases: ["/quit"],                   status: "enabled",     line: 557443, notes: "dual local/local-jsx" }
+  - { name: "/btw",     aliases: [],  status: "enabled",      line: 478389, notes: "active local-jsx, immediate. UNCHANGED vs 2.1.169 (was already active there: const l7q, 2.1.169:454068, in cu$ registry array 2.1.169:547461). Ask a quick side question" }
+  - { name: "/context", aliases: [],  status: "conditional",  line: 496031, notes: "dual variant; headless twin gated by Cr()" }
+  - { name: "/autocompact", aliases: [], status: "conditional", line: 482738, notes: "isEnabled: () => LNl() && !Cr(); headless twin" }
+  - { name: "/init",    aliases: [],  status: "enabled",      line: 502985, notes: "type:prompt; Initialize CLAUDE.md (CLAUDE_CODE_NEW_INIT expands desc)" }
+  - { name: "/init-verifiers", aliases: [], status: "enabled", line: 503005, notes: "type:prompt; Create verifier skill(s) for automated verification" }
+
+  # --- usage / billing ---
+  - { name: "/usage",   aliases: ["/cost", "/stats"],         status: "enabled",     line: 543730, notes: "local-jsx immediate (requires ink); headless local twin isEnabled:()=>Cr()" }
+  - { name: "/usage-credits", aliases: [], status: "conditional", line: 378644, notes: "isEnabled: () => Y_t() && Cr() (headless) / && !Cr() (interactive). Configure usage credits at limit" }
+  - { name: "/extra-usage", aliases: [], status: "conditional", line: 378654, notes: "Renamed to /usage-credits (description says so); same Y_t() gate" }
+  - { name: "/passes",  aliases: [],  status: "conditional",  line: 547344, notes: "isHidden getter depends on referral availability" }
+  - { name: "/privacy-settings", aliases: [], status: "conditional", line: 547853, notes: "isEnabled: () => G_e()" }
+  - { name: "/upgrade", aliases: [],  status: "conditional",  line: 560282, notes: "availability:[claude-ai]; isEnabled: () => !gJ() && !DISABLE_UPGRADE_COMMAND && Di() !== 'enterprise'" }
+
+  # --- agents / plugins / skills runtime ---
+  - { name: "/plugin",  aliases: ["/plugins", "/marketplace"], status: "enabled",    line: 554412 }
+  - { name: "/reload-plugins", aliases: [], status: "enabled", line: 554653, notes: "Activate pending plugin changes" }
+  - { name: "/reload-skills",  aliases: [], status: "enabled", line: 554697, notes: "Pick up on-disk skill changes; supportsNonInteractive" }
+  - { name: "/advisor", aliases: [], status: "conditional",   line: 556755, notes: "isEnabled: () => mz(); hidden unless advisor available. Consult a stronger model at key moments" }
+
+  # --- background / multi-session orchestration ---
+  - { name: "/background", aliases: ["/bg"], status: "enabled", line: 578936, notes: "isEnabled: () => !0. Send session to background, free the terminal" }
+  - { name: "/fork",    aliases: [],  status: "conditional",  line: 549788, notes: "isEnabled: () => !Jv() (not in coordinator mode). Spawn background agent inheriting full conversation" }
+  - { name: "/branch",  aliases: [],  status: "enabled",      line: 549754, notes: "Create a branch of the conversation at this point" }
+  - { name: "/tasks",   aliases: ["/bashes"], status: "enabled", line: 542759, notes: "View/manage everything running in the background" }
+  - { name: "/stop",    aliases: [],  status: "enabled",      line: 579018, notes: "isEnabled: yi; dual local/local-jsx. Stop this background session; transcript & worktree kept" }
+  - { name: "/daemon",  aliases: [],  status: "enabled",      line: 571405, notes: "Manage background services and routines" }
+  - { name: "/workflows", aliases: [], status: "conditional", line: 573024, notes: "isEnabled: () => iE() (workflows available). Browse running/completed workflows" }
+  - { name: "/loops",   aliases: [],  status: "disabled",     line: 549743, notes: "isEnabled: () => !1. 'List, create, and delete loops'. Shipped off (see /loop skill)" }
+
+  # --- cloud / remote / cross-device ---
+  - { name: "/session", aliases: ["/remote"], status: "conditional", line: 537078, notes: "isEnabled: () => _a(); isHidden getter. Show cloud session URL + QR" }
+  - { name: "/remote-control", aliases: ["/rc"], status: "conditional", line: 562589, notes: "isEnabled: LC; isHidden getter. Drive session from phone / claude.ai/code" }
+  - { name: "/remote-env", aliases: [], status: "conditional", line: 560221, notes: "isEnabled: () => Ao() && js('allow_remote_sessions'). Choose default cloud-agent environment" }
+  - { name: "/teleport", aliases: ["/tp"], status: "conditional", line: 543288, notes: "isEnabled: () => Ao() && js('allow_remote_sessions'); isHidden getter. (Also an enterprise upsell-stub.)" }
+  - { name: "/autofix-pr", aliases: [], status: "conditional", line: 477324, notes: "isEnabled: () => TOl() && !Cr() (=Ao() && allow_remote_sessions && interactive). Monitor and autofix current PR" }
+  - { name: "/ultraplan", aliases: [], status: "conditional", line: 536363, notes: "isEnabled: () => Ime(). Cloud drafts an editable plan" }
+  - { name: "/ultrareview", aliases: [], status: "conditional", line: 536921, notes: "isEnabled: () => yz(). Deprecated alias for /code-review ultra (per system prompt). Cloud bug-hunt/verify on branch" }
+  - { name: "/web-setup", aliases: [], status: "conditional", line: 573352, notes: "availability:[claude-ai]; isEnabled gated by it('tengu_cobalt_lantern',…) && allow_remote_sessions; isHidden getter. Set up Claude Code on the web with GitHub" }
+  - { name: "/install-github-app", aliases: [], status: "conditional", line: 506134, notes: "availability:[claude-ai,console]; isEnabled: () => !DISABLE_INSTALL_GITHUB_APP_COMMAND" }
+  - { name: "/desktop", aliases: ["/app"], status: "hidden", line: 482056, notes: "availability:[claude-ai]; isEnabled=lAt, isHidden getter !lAt(); lAt()=V$f()&&js('allow_desktop_handoff'), V$f()=()=>!1 -> always OFF" }
+  - { name: "/mobile",  aliases: ["/ios", "/android"], status: "disabled", line: 524099, notes: "isEnabled: () => !1, isHidden:!0. Show QR to download mobile app — shipped off" }
+  - { name: "/chrome",  aliases: [],  status: "conditional",  notes: "availability:[claude-ai]; isEnabled gated by !Cr(). Open Claude in Chrome (beta)" }
+
+  # --- session UX / personalization ---
+  - { name: "/effort",  aliases: [],  status: "enabled",      line: 561689, notes: "dual variants; Set effort level [low|medium|high|xhigh|max|auto]" }
+  - { name: "/goal",    aliases: [],  status: "conditional",  line: 572509, notes: "isEnabled: () => Cr() || _a(); isHidden getter. Set a goal Claude checks before stopping" }
+  - { name: "/focus",   aliases: [],  status: "enabled",      line: 561828, notes: "Toggle focus view (prompt + summary + response only)" }
+  - { name: "/brief",   aliases: [],  status: "conditional",  line: 561929, notes: "isEnabled: () => QQf().enable_slash_command. Toggle brief-only mode" }
+  - { name: "/recap",   aliases: [],  status: "conditional",  line: 572204, notes: "isEnabled: () => it('tengu_sedge_lantern', …). Generate a one-line session recap now" }
+  - { name: "/voice",   aliases: [],  status: "conditional",  line: 572161, notes: "availability:[claude-ai]; isEnabled: () => BZt(); hidden unless terminal+platform support. Toggle voice mode" }
+  - { name: "/tui",     aliases: [],  status: "enabled",      line: 545006, notes: "Set terminal UI renderer (default | fullscreen)" }
+  - { name: "/scroll-speed", aliases: [], status: "conditional", line: 537370, notes: "isEnabled getter (terminal-dependent). Adjust mouse-wheel scroll speed" }
+  - { name: "/fast",    aliases: [],  status: "conditional",  line: 547068, notes: "local-jsx isHidden getter !uc(); immediate YHt(); requires ink. Toggle fast mode. Headless local twin at 547086" }
+
+  # --- onboarding / insights / discovery ---
+  - { name: "/insights", aliases: [], status: "enabled",      line: 581084, notes: "type:prompt. Generate a report analyzing your Claude Code sessions" }
+  - { name: "/powerup", aliases: [],  status: "enabled",      line: 525069, notes: "Discover Claude Code features through quick interactive lessons" }
+  - { name: "/team-onboarding", aliases: [], status: "conditional", line: 573678, notes: "type:prompt; isEnabled: () => js('allow_team_onboarding'); isHidden getter. Build a teammate ramp-up guide" }
+
+  # --- review / security / provider setup ---
+  - { name: "/review",  aliases: [],  status: "conditional",  line: 536905, notes: "type:prompt; isEnabled: () => yz(). Review a GitHub pull request" }
+  - { name: "/security-review", aliases: [],                  status: "enabled",     notes: "Security review of pending branch changes" }
+  - { name: "/setup-bedrock", aliases: [], status: "conditional", line: 535088, notes: "isHidden getter: !CLAUDE_CODE_USE_BEDROCK. Reconfigure Bedrock auth/region/model" }
+  - { name: "/setup-vertex",  aliases: [], status: "conditional", line: 535151, notes: "isHidden getter: !CLAUDE_CODE_USE_VERTEX. Reconfigure Vertex AI auth/project/region/model" }
+  - { name: "/feedback", aliases: [], status: "enabled",      line: 479757, notes: "Submit feedback, report a bug, or share your conversation" }
+  - { name: "/install-slack-app", aliases: [], status: "disabled", line: 506168, notes: "availability:[claude-ai]; isEnabled: () => !1, isHidden:!0. Shipped off" }
+
+  # --- NEW vs 2.1.169 ---
+  - { name: "/design-login", aliases: [], status: "conditional", line: 503666, notes: "NEW (0 occurrences in 2.1.169). isEnabled: () => RSt() = js('allow_design_sync') && !Ki() && (xc() || it('tengu_slate_quill',!1)). Authorize design-system access for /design-sync" }
+
+  # --- fun ---
+  - { name: "/stickers", aliases: [], status: "enabled",      line: 556514, notes: "Order Claude Code stickers (opens stickermule.com/claudecode)" }
+
+skill_commands:
+  # Registered via Bd({...}) as userInvocable skill-commands — a SEPARATE mechanism from the
+  # type:local registry above (NOT counted in the 93).
+  - name: "/loop"
+    aliases: ["/proactive"]
+    status: "skill"
+    line: 664632
+    notes: "isEnabled: R$. 'Run a prompt or slash command on a recurring interval (e.g. /loop 5m /foo).' Distinct from the disabled /loops registry command."
+  - name: "/schedule"
+    aliases: ["/routines"]
+    status: "skill"
+    line: 665031
+    notes: "isEnabled: () => xc() && Ao() && !CLAUDE_CODE_REMOTE && it('tengu_surreal_dali',!1) && js('allow_remote_sessions'). Create/manage scheduled cloud agents (cron). Model offers it via tengu_orchid_mantis(_v2)/tengu_mocha_barista flags. A type:local upsell-stub copy also exists."
+
+hidden_commands:
+  - name: "/radio"
+    aliases: []
+    status: "conditional"
+    line: 556542
+    notes: "EASTER EGG. isEnabled: () => it('tengu_velvet_static', !1) (default OFF); NO isHidden field this build. Opens https://clau.de/radio — 'Claude FM lo-fi radio'. Only loadable/listed when the flag is on."
+  - name: "/heapdump"
+    aliases: []
+    status: "hidden"
+    line: 554934
+    notes: "isHidden:!0; supportsNonInteractive:!0; no isEnabled (always loadable). Now via fleetHostCall. Dumps JS heap to ~/Desktop via performHeapDump() (554730)."
+  - name: "/pause-memory"
+    aliases: ["/memory-pause", "/toggle-memory"]
+    status: "disabled"
+    line: 501509
+    notes: "NEW. isEnabled: () => !1, isHidden:!1. Absorbs old /toggle-memory as alias. 'Pause automemory for this session'. Shipped off (config key pause-memory)."
+  - name: "/pro-trial-expired"
+    aliases: []
+    status: "hidden"
+    line: 560380
+    notes: "isHidden:!0; isEnabled:()=>!0. System screen shown when the Pro-plan trial ends (upsell). Not for manual use."
+  - name: "/rate-limit-options"
+    aliases: []
+    status: "conditional"
+    line: 560711
+    notes: "isHidden:!0; isEnabled: () => Ao() || !1 (first-party only). System screen shown at rate limit."
+  - name: "/version"
+    aliases: []
+    status: "disabled"
+    line: 555138
+    notes: "Both variants isEnabled:()=>!1, isHidden:!0 (555138 + 555150). Compiled binary owns version reporting; use /status."
+  - name: "/update"
+    aliases: []
+    status: "disabled"
+    line: 558118
+    notes: "isEnabled:()=>!1, isHidden:!0. Headless 'Switch to the latest version' variant shipped off."
+  - name: "/wellbeing"
+    aliases: ["/breaks", "/break-reminder", "/downtime"]
+    status: "disabled"
+    line: 561795
+    notes: "isEnabled:()=>!1. Break reminders / quiet-hours nudges. Still off."
+  - name: "/bridge-kick"
+    aliases: []
+    status: "absent"
+    notes: "REMOVED — the 2.1.169 Remote-Control fault-injection test harness is gone (0 occurrences in 2.1.197)."
+  - name: "/toggle-memory"
+    aliases: []
+    status: "absent"
+    notes: "REMOVED as a standalone command — now only an alias of /pause-memory (501511)."
+
+# Enterprise upsell-stubs (uTt() wrapper, 556786): hidden, isEnabled: () => !QXf() && XXf()
+#   QXf() = Ao() (first-party); XXf() = vNe() && !Cr() && it('tengu_c4e_slash_upsell', !1)  [flag default off; NOT new — present in 2.1.169 too, 2.1.169:524643]
+#   description suffixed '— available with Claude for Enterprise'; fires tengu_c4e_slash_upsell_shown.
+# These are SECOND copies of features that also exist as real commands above (set unchanged vs 2.1.169):
+upsell_stub_commands:
+  - { name: "/ultraplan",      status: "upsell-stub", line: 556816 }
+  - { name: "/ultrareview",    status: "upsell-stub" }
+  - { name: "/teleport",       aliases: ["/tp"],       status: "upsell-stub" }
+  - { name: "/remote-control", aliases: ["/rc"],       status: "upsell-stub" }
+  - { name: "/schedule",       aliases: ["/routines"], status: "upsell-stub" }
+  - { name: "/autofix-pr",     status: "upsell-stub" }
+
+availability_gating:
+  meetsAvailabilityRequirement: "VTt(cmd), 581268 — true if cmd has no availability[], else true if any token matches: 'claude-ai' => Ao(); 'console' => !Ao() && !j7() && Eu(). Unknown tokens fail (default break -> !1)."
+  values_seen: ["claude-ai", "console"]
+  notes: "Commands carrying availability:['claude-ai'] only appear for users authed to claude.ai (first-party OAuth). 'console' targets API/console (non-claude-ai) enterprise users."
+
+command_filtering_pipeline:
+  getCommands_gA: "581288 — loads builtins (yen) + skills + plugins, filters by VTt(availability) && rx(isEnabled), merges MCP/plugin commands not already present, de-dupes by name/skillRoot."
+  getBuiltinCommands_EVo: "581237 -> yen() (581712), a memoized array of ~93 command-object const refs with conditional spreads (e.g. gateway-only o3l, first-party-only entries)."
+  isCommandEnabled_rx: "387319 — return cmd.isEnabled?.() ?? !0 (absent isEnabled = enabled)."
+  immediate_resolver_B$e: "387325 — typeof immediate === 'function' ? immediate(ctx) : immediate === !0."
+  filterCommandsForHeadless: "Yme — drops commands unsuited to non-interactive (Cr()) runs."
+  filterCommandsForRemoteMode: "CVo — restricts to REMOTE_SAFE_COMMANDS when running as a remote/cloud agent."
+  REMOTE_SAFE_COMMANDS: "Zcr (581747) — Set of command const refs usable inside a remote/cloud session."
+  BRIDGE_SAFE_COMMANDS: "TVo (581747) — Set of command const refs dispatchable over the Remote Control bridge."
+  INTERNAL_ONLY_COMMANDS: "Tsm (581712) — internal/system commands incl. the disabled 'stub' (WNo, 478399)."
+  ANT_GATED_COMMANDS: "vsm (581562) = [hen, yVo, _Vo, bVo].filter(Boolean) — all four are null (581562-581565), so ANT_GATED is EMPTY (same as 2.1.169)."
+
+interesting_properties:
+  immediate: "Run the moment Enter is pressed without sending a turn to the model (e.g. /usage, /btw, /fast via YHt())."
+  supportsNonInteractive: "Command allowed in headless/-p runs (e.g. /clear, /compact, /usage, /heapdump, /config-headless, /reload-skills)."
+  thinClientDispatch: "Some commands route over the thin-client bridge: control-request (/config-jsx, /usage-jsx, /fast, /remote-control) or post-text (/reload-skills)."
+  requires: "Capability prerequisites, e.g. /daemon, /usage, /fast require {ink:!0} (needs the TUI renderer)."
+  fleetHostCall: "/heapdump uses fleetHostCall instead of a plain load (runs on the fleet host)."
+  dual_variants: "/config, /usage, /context, /autocompact, /usage-credits, /goal, /effort, /exit, /model, /stop, /rename, /color ship interactive local-jsx + headless local twins gated by Cr()/!Cr(); the unfit one is isHidden."
+
+deltas_vs_2_1_169:
+  registry_total: "93 -> 93 (net 0). NEW: design-login, pause-memory. REMOVED: bridge-kick, standalone toggle-memory."
+  status_changes:
+    - "/desktop: gate Cg4()=()=>!1 -> lAt()=V$f()&&js('allow_desktop_handoff') with V$f()=()=>!1 (still always off, now capability-staged)."
+    - "Upsell wrapper renamed w1$ -> uTt; gate (incl. flag tengu_c4e_slash_upsell, default off) UNCHANGED vs 2.1.169 (2.1.169:524643). Flag is NOT new."
+  unchanged_not_a_delta:
+    - "/btw: already a fully active local-jsx command in 2.1.169 (const l7q, in cu$ registry array). No status change."
+  symbol_renames:
+    getCommands: "mL -> gA"
+    isCommandEnabled: "Uk -> rx"
+    meetsAvailabilityRequirement: "du$ -> VTt"
+    getBuiltinCommands: "cu$ -> yen (EVo)"
+    INTERNAL_ONLY_COMMANDS: "jof -> Tsm"
+    ANT_GATED_COMMANDS: "Dof -> vsm"
+    REMOTE_SAFE_COMMANDS: "Ip8 -> Zcr"
+    BRIDGE_SAFE_COMMANDS: "Q3q -> TVo"
+    upsell_wrapper: "w1$ -> uTt"
+    first_party_gate: "hq -> Ao"
+    headless_gate: "F6 -> Cr"
+    remote_gate: "z4 -> _a"
+    coordinator_gate: "K2 -> Jv"
+    capability_gate: "b7 -> js"
