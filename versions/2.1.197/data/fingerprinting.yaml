@@ -1,0 +1,435 @@
+version: 2.1.197
+build: 2026-06-29T19:08:42Z
+git_sha: c8fd8048f30950a21d28734718275aa7e97f5143
+runtime: Bun v1.4.0 standalone
+platform_analyzed: linux-x86_64
+scope: full_device_fingerprint
+note: >-
+  Device fingerprinting for Claude Code 2.1.197. Symbols are per-build minified
+  names (change every release); 2.1.169 equivalents given as was_*. The marquee
+  delta vs 2.1.169 is the NEW machineID random token (z5t) sent only as a
+  12-char redacted hostname in error reports. Identity model shape is otherwise
+  unchanged. Soft env/runtime/network signals (entrypoint/terminal/shell/locale)
+  are owned by the env/telemetry analysis and only summarised here.
+
+machine_identity:
+
+  device_id:
+    # What is actually transmitted as device_id / user_id / user.id.
+    getter: vW
+    was: cU
+    alias: getOrCreateUserID
+    line: cli.beauty.js:606434
+    source: persisted random token in global config
+    generation: crypto.randomBytes(32).toString("hex")   # 64 hex chars, 256-bit
+    crypto_module: require("crypto")   # b6o
+    storage: global config (Pt() read / yn() write); ~/.claude.json or $CLAUDE_CONFIG_DIR
+    config_field: userID
+    in_process_cache: p6o
+    stable: across sessions
+    scope: per-install / per-config-dir   # NOT per-hardware
+    derived_from_hardware: false
+    hashed_before_transmission: false
+    salted: false
+    truncated: false
+    survives_logout: true
+    local_hash_only:
+      where: Datadog sampling bucket
+      function: zdm
+      was: XS_
+      line: cli.beauty.js:606744
+      formula: parseInt(sha256(vW()).slice(0,8),16) % 30   # Vdm = 30
+      transmitted: false   # only the 0-29 integer is sent
+    transmitted_as:
+      - { field: device_id, context: "Messages API metadata blob, JSON.stringify into user_id", line: cli.beauty.js:594865 }
+      - { field: deviceId,  context: "central metadata bundle nit", line: cli.beauty.js:135412 }
+      - { field: user_id,   context: "first-party event sink", line: cli.beauty.js:144700 }
+      - { field: device_id, context: "GrowthBook experiment event", line: cli.beauty.js:144755 }
+      - { field: id/deviceID, context: "GrowthBook attributes", line: cli.beauty.js:145083 }
+      - { field: "user.id", context: "third-party OTel resource attrs", line: cli.beauty.js:191299 }
+
+  machine_id_random_token:
+    # NEW in 2.1.197 — a SECOND persisted random token, NOT hardware-derived.
+    new_in: 2.1.197
+    getter: z5t
+    alias: getOrCreateMachineID
+    line: cli.beauty.js:606453
+    export: cli.beauty.js:605582
+    generated_eagerly_at_startup: cli.beauty.js:617835
+    generation: crypto.randomBytes(32).toString("hex")   # same construction as userID
+    config_field: machineID
+    in_process_cache: f6o
+    derived_from_hardware: false
+    hardware_machine_id: false   # despite the name, no ioreg/registry/etc.-machine-id read
+    transmitted_as:
+      - field: host_name_redacted
+        value: z5t().slice(0,12)   # first 12 hex chars only
+        context: error/crash report payload (Datadog-style ddtags/ddsource)
+        line: cli.beauty.js:299471
+        purpose: privacy-redacted stand-in for the real hostname; correlates crashes per-install without exposing hostname/hw-uuid
+    sent_raw_anywhere_else: false
+
+  hardware_machine_id:
+    purpose: OpenTelemetry host.id (vendored node-machine-id style detector)
+    getter: getMachineId
+    dispatcher: { function: zBd, line: cli.beauty.js:141115, behaviour: lazy require per process.platform, memoised (nGe) }
+    bundled_at:
+      - cli.beauty.js:141016   # first copy of @opentelemetry/resources
+      - cli.beauty.js:335462   # second copy (byte-identical)
+    hashed: false
+    salted: false
+    truncated: false
+    transmitted_by_default: false
+    notes: >-
+      Raw platform UUID/GUID returned unmodified. Read only by the OTel hostDetector.
+      Even with OTel enabled, the 3P resource builder (cli.beauty.js:337605) keeps ONLY
+      host.arch and discards host.id and host.name, so the hardware id never leaves.
+    platforms:
+      darwin:
+        command: 'ioreg -rd1 -c "IOPlatformExpertDevice"'
+        parse: 'find line containing IOPlatformUUID, split on the " = " separator, value minus trailing quote'
+        line: cli.beauty.js:141018
+      linux:
+        files: [/etc/machine-id, /var/lib/dbus/machine-id]
+        parse: readFile(utf8).trim(), first existing wins
+        line: cli.beauty.js:141037
+      freebsd:
+        sources:
+          - { file: /etc/hostid }
+          - { command: kenv -q smbios.system.uuid }
+        parse: trim()
+        line: cli.beauty.js:141058
+      win32:
+        command: '%windir%\System32\REG.exe QUERY HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography /v MachineGuid'
+        registry_key: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography
+        registry_value: MachineGuid
+        wow64_shim: 'uses %windir%\sysnative\cmd.exe when arch==ia32 and PROCESSOR_ARCHITEW6432 in env'
+        parse: 'split on "REG_SZ", take [1].trim()'
+        line: cli.beauty.js:141083
+      default:
+        result: undefined
+        log: 'could not read machine-id: unsupported platform'
+        line: cli.beauty.js:141102
+    error_handling: 'try/catch each read; on failure only diag.debug("error reading machine id: ...")'
+
+  third_party_resource_builder:
+    function_line: cli.beauty.js:337585
+    was: Kf4 (cli.beauty.js:325308)
+    gate_env: CLAUDE_CODE_ENABLE_TELEMETRY   # checked at cli.beauty.js:337808
+    behaviour: >-
+      Merges service.name/version, osDetector (os.type, os.version), and from hostDetector
+      ONLY host.arch. host.id and host.name are explicitly dropped at cli.beauty.js:337608.
+    keeps_only_host_arch_line: cli.beauty.js:337608
+
+  first_party_resource_builder:
+    function_line: cli.beauty.js:144794
+    behaviour: hand-builds {service.name:"claude-code", service.version:"2.1.197", wsl.version?}; no host/os/process detectors run
+    transport: { url: "{baseUrl}/api/event_logging/v2/batch", batch: 200, delay_ms: 100, line: cli.beauty.js:144253 }
+
+  host_resource_attributes:
+    detectors:
+      hostDetector: { class: SNi, line: cli.beauty.js:141176, emits: ["host.name", "host.arch", "host.id"] }
+      osDetector:   { class: TNi, line: cli.beauty.js:141197, emits: ["os.type", "os.version"] }
+    attributes:
+      - { name: host.id,   source: getMachineId() hardware UUID, transmitted: false, identifying: high }   # stripped
+      - { name: host.name, source: os.hostname(), transmitted: false, identifying: high }                  # stripped
+      - { name: host.arch, source: normalizeArch(os.arch()), transmitted: true, identifying: low }
+      - { name: os.type,   source: normalizeType(os.platform()), transmitted: true, identifying: low }
+      - { name: os.version, source: os.release(), transmitted: true, identifying: medium }
+      - { name: wsl.version, source: "Wt()==wsl -> H2e()", transmitted: true, identifying: low, line: cli.beauty.js:337603 }
+      - { name: terminal.type, source: iP.terminal, transmitted: true, identifying: low, line: cli.beauty.js:191331 }
+
+hashing_primitives:
+  createHash_call_sites: { sha256: 47, sha1: 6, md5: 2 }
+  only_identity_hash: "Datadog sampling bucket sha256(vW())%30 (zdm, cli.beauty.js:606744); never transmitted, only the 0-29 integer"
+  reversible_encodings:
+    - "user.account_id = iJi('user', accountUuid) -> user_01<base58> (cli.beauty.js:191264)"
+  all_other_identifiers: plaintext   # device_id, accountUuid, organizationUuid, email, sessionId
+
+identity_fields:
+  - name: userID
+    aka: [device_id, distinctId, "user.id"]
+    role: canonical anonymous/distinct id (device-scoped)
+    accessor: "vW() cli.beauty.js:606434"
+    persisted_to: "~/.claude.json key userID"
+    hashed: false
+    sent_to: [anthropic_api, growthbook, datadog_bucket, otel, first_party_events]
+  - name: machineID
+    aka: [host_name_redacted]
+    role: NEW second random token; redacted hostname stand-in for error reports
+    accessor: "z5t() cli.beauty.js:606453"
+    persisted_to: "~/.claude.json key machineID"
+    hashed: false
+    transmitted: "only z5t().slice(0,12) in error payload (cli.beauty.js:299471)"
+  - name: accountUuid
+    aka: [account_uuid, "user.account_uuid"]
+    source: "oauthAccount (Oc()); env CLAUDE_CODE_ACCOUNT_UUID"
+    validator: "$xi() length>=8 passthrough, NOT a hash (cli.beauty.js:135383, r$d=8)"
+    hashed: false
+    sent_to: [anthropic_api, growthbook, datadog, otel, first_party_events, trusted_device_enroll]
+  - name: organizationUuid
+    aka: [organization_uuid, "organization.id"]
+    source: oauthAccount; env CLAUDE_CODE_ORGANIZATION_UUID
+    hashed: false
+    sent_to: [growthbook, datadog, otel, first_party_events, trusted_device_enroll]
+  - name: emailAddress
+    aka: [email, "user.email"]
+    role: account email (PII)
+    source: "oauthAccount.emailAddress; env CLAUDE_CODE_USER_EMAIL"
+    central_getter: "t$d() is a STUB returning undefined (cli.beauty.js:135376)"
+    hashed: false
+    plaintext_pii: true
+    sent_to: [otel, oidc_gateway]
+    not_sent_to: [growthbook, first_party_events, anthropic_api_metadata]
+    otel_emit: "unconditional, no env gate (cli.beauty.js:191324)"
+  - name: sessionId
+    aka: [session_id, "session.id", CLAUDE_CODE_SESSION_ID]
+    source: "randomUUID(); accessor Lt()"
+    hashed: false
+    sent_to: [anthropic_api, growthbook, datadog, otel, first_party_events]
+  - name: user.account_id
+    role: base58-encoded reversible tagged account id (user_01<base58>)
+    source: "iJi('user', accountUuid) cli.beauty.js:191264"
+    env_override: CLAUDE_CODE_ACCOUNT_TAGGED_ID
+    hashed: false
+    encoding: base58
+    sent_to: [otel]
+    gate: OTEL_METRICS_INCLUDE_ACCOUNT_UUID
+  - name: userBucket
+    role: sampling bucket 0-29 (only hashed identity derivative)
+    source: "parseInt(sha256(vW()).slice(0,8),16) % 30 (zdm cli.beauty.js:606744)"
+    hashed: true
+    hash_algo: sha256
+    sent_to: [datadog, error_reports]
+  - name: userType
+    value: external   # hard-coded
+    sent_to: [growthbook, datadog, otel, first_party_events]
+  - name: messages_api_user_id
+    aka: [metadata.user_id]
+    role: per-request identity blob on Anthropic Messages API
+    source: "JSON.stringify({...CLAUDE_CODE_EXTRA_METADATA, device_id:vW(), account_uuid, session_id:Lt()}) cli.beauty.js:594863"
+    hashed: false
+    plaintext_structured: true
+    sent_to: [anthropic_api]
+
+central_metadata_bundle:
+  function: nit
+  was: gnH
+  line: cli.beauty.js:135398
+  device_id_source: "let t = vW() (cli.beauty.js:135399); deviceId: t (cli.beauty.js:135412)"
+  fields:
+    - deviceId
+    - sessionId
+    - "email (stub -> undefined)"
+    - appVersion
+    - platform
+    - organizationUuid
+    - accountUuid
+    - "userType: external"
+    - subscriptionType
+    - rateLimitTier
+    - firstTokenTime
+    - "githubActionsMetadata?"
+
+service_identity_matrix:
+  anthropic_messages_api:
+    active: true
+    builder_line: cli.beauty.js:594863
+    fields: { id: "device_id=vW()", account: account_uuid, session: session_id, extra: CLAUDE_CODE_EXTRA_METADATA }
+    serializer: "JSON.stringify (De)"
+    hashed: false
+    gate: always
+  growthbook:
+    active: true
+    attrs_builder_line: cli.beauty.js:145083
+    event_builder_line: cli.beauty.js:144741
+    fields: { id: "deviceId=vW()", account: accountUUID, organization: organizationUUID, session: sessionId, email: "ABSENT (stub)" }
+    hashed: false
+    gates: [DISABLE_GROWTHBOOK]
+  first_party_event_sink:
+    active: true
+    endpoint: "{baseUrl}/api/event_logging/v2/batch"
+    builder_line: cli.beauty.js:144700
+    fields: { id: "user_id=vW()", account: core.auth.account_uuid, organization: core.auth.organization_uuid, session: core.session_id, user_metadata: "full nit() bundle" }
+    hashed: false
+  datadog:
+    active: true
+    endpoint: "https://http-intake.logs.us5.datadoghq.com/api/v2/logs"
+    client_token: pubea5604404508cdd34afb69e6f42a05bc   # unchanged from 2.1.169
+    region: us5
+    flush_ms: 15000
+    batch: 100
+    bucket_mod: 30
+    flush_env: CLAUDE_CODE_DATADOG_FLUSH_INTERVAL_MS
+    builder_line: cli.beauty.js:606655
+    static: { service: claude-code, hostname: claude-code, env: external, ddsource: nodejs }
+    fields: { id: "userBucket=sha256(vW())%30", tags: [account_uuid, organization_uuid, model, platform, subscriptionType, userType] }
+    hashed: "userBucket only"
+    gates: ["yr()==='firstParty'"]
+  error_reports:
+    active: true
+    style: Datadog-style (ddtags / ddsource:nodejs / sourcemap_group)
+    payload_line: cli.beauty.js:299450
+    redacted_host_field: "host_name_redacted = z5t().slice(0,12) (cli.beauty.js:299471)"
+    other_fields:
+      - user_bucket
+      - host_platform
+      - host_os_release
+      - entrypoint
+      - "bun_version: 1.4.0"
+      - node_version
+      - "error.{kind,message,stack,fingerprint}"
+      - feature_flags
+    real_hostname_sent: false
+  opentelemetry:
+    active: opt-in
+    builder_line: cli.beauty.js:191288
+    oidc_builder_line: cli.beauty.js:191218
+    fields:
+      id: "user.id = vW() (cli.beauty.js:191299)"
+      account: ["user.account_uuid", "user.account_id (base58 user_01...)"]
+      organization: organization.id
+      email: "user.email (oauthAccount.emailAddress, plaintext, UNCONDITIONAL cli.beauty.js:191324)"
+      session: "session.id"
+      oidc: ["user.id=jwt.sub", "user.email=jwt.email", "user.groups", "identity.source=gateway-oidc"]
+    include_flag_defaults:   # eZd cli.beauty.js:191367
+      OTEL_METRICS_INCLUDE_SESSION_ID: true
+      OTEL_METRICS_INCLUDE_VERSION: false
+      OTEL_METRICS_INCLUDE_ACCOUNT_UUID: true
+      OTEL_METRICS_INCLUDE_ENTRYPOINT: false
+      OTEL_METRICS_INCLUDE_RESOURCE_ATTRIBUTES: true
+    hashed: false
+  segment:
+    active: false
+    status: REMOVED
+
+trust_mechanisms:
+  trusted_device_token:
+    summary: >
+      Opaque server-issued bearer string gating Remote-Control / bridge features. NOT
+      computed locally, NOT derived from machine id. Only the hostname is sent at enrollment.
+    enroll_fn_line: cli.beauty.js:298940
+    env_override: CLAUDE_TRUSTED_DEVICE_TOKEN   # takes precedence (cli.beauty.js:298951)
+    obtained_via:
+      method: POST
+      url: "{BASE_API_URL}/api/auth/trusted_devices"
+      auth: "Bearer <oauth access_token>"
+      request_body: { display_name: "Claude Code on ${os.hostname()} · linux" }
+      line: cli.beauty.js:298974
+      response_field: device_token
+    stored_in: ".credentials.json -> trustedDeviceToken (plaintext, chmod 0600)"
+    stored_reader_line: cli.beauty.js:299036
+    sent_as_header: X-Trusted-Device-Token
+    header_injection_sites: [cli.beauty.js:297738, cli.beauty.js:358458, cli.beauty.js:361591, cli.beauty.js:567412, cli.beauty.js:623109]
+    scope: "Remote Control / bridge ONLY (never inference traffic)"
+    machine_bound: false
+    gates:
+      - { name: tengu_sessions_elevated_auth_enforcement, const: F3n, default: false, line: cli.beauty.js:299014 }
+      - { name: require_trusted_devices, const: N5t, check: "isPolicyAllowed / isPolicyEnforced", line: cli.beauty.js:299015 }
+      - { name: tengu_sessions_elevated_auth_disable_proactive_enrollment, const: MUa, default: false, line: cli.beauty.js:299016 }
+    telemetry: "bridge_trusted_device_enroll (request_failed|http_error|missing_token|storage_failed|unexpected_error)"
+
+  oauth:
+    client_id_prod: "9d1c250a-e61b-44d9-88ed-5944d1962f5e"   # cli.beauty.js:40771 (unchanged)
+    client_id_local_dev: "22422756-60c9-4084-8eb7-27705fd5cf9a"   # cli.beauty.js:40704 (unchanged)
+    client_id_env_override: CLAUDE_CODE_OAUTH_CLIENT_ID   # cli.beauty.js:40742
+    endpoints:
+      console_authorize: "https://platform.claude.com/oauth/authorize"
+      claude_ai_authorize: "https://claude.com/cai/oauth/authorize"
+      token: "https://platform.claude.com/v1/oauth/token"
+      create_api_key: "https://api.anthropic.com/api/oauth/claude_cli/create_api_key"
+      profile: "{BASE_API_URL}/api/oauth/profile (cli.beauty.js:95085)"
+      claude_cli_profile: "{BASE_API_URL}/api/claude_cli_profile (cli.beauty.js:95064)"
+    pkce:
+      method: S256
+      challenge_append_line: cli.beauty.js:95175
+      code_verifier: base64url(randomBytes(32))
+      code_challenge: base64url(sha256(verifier))
+      state: base64url(randomBytes(32))
+    scopes:
+      user_inference: "user:inference"
+      user_profile: "user:profile"
+      org_create_api_key: "org:create_api_key"
+      remote_control: "user:sessions:claude_code"
+      mcp_servers: "user:mcp_servers"
+      file_upload: "user:file_upload"
+      design: ["user:design:read", "user:design:write"]   # NEW design scopes (cli.beauty.js:40759)
+      projects: ["user:projects:read", "user:projects:write"]
+      def_line: cli.beauty.js:40750
+    device_identifiers_sent: "NONE (no machine-id/MAC/hw-uuid); only hostname in trusted-device display_name"
+    client_platform_header: anthropic-client-platform   # entrypoint-derived
+
+  provider_selector:
+    fn: yr
+    line: cli.beauty.js:94637
+    order: [gateway, bedrock, foundry, anthropicAws, mantle, vertex, firstParty]   # NEW: gateway plane first via Lm()
+    env_map: { CLAUDE_CODE_USE_BEDROCK: bedrock, CLAUDE_CODE_USE_FOUNDRY: foundry, CLAUDE_CODE_USE_ANTHROPIC_AWS: anthropicAws, CLAUDE_CODE_USE_MANTLE: mantle, CLAUDE_CODE_USE_VERTEX: vertex, default: firstParty }
+    role: provider data-residency routing; gates OAuth/trusted-device/Datadog; NOT an IP/country geo-block
+
+credential_storage:
+  effective_backend: plaintext
+  backend_name_string: "plaintext (cli.beauty.js:104537)"
+  file_path: "{CLAUDE_SECURESTORAGE_CONFIG_DIR | ~/.claude}/.credentials.json"
+  path_lines: [cli.beauty.js:104521, cli.beauty.js:95893]
+  on_disk_format: "JSON, chmod 0600 (mode 384) (cli.beauty.js:104573)"
+  encryption_at_rest: none
+  machine_bound: false
+  machine_id_used_as_key_or_salt: false
+  write_warning_string: "Warning: Storing credentials in plaintext. (cli.beauty.js:104575)"
+  stored_keys: [claudeAiOauth, trustedDeviceToken, enterpriseGateway, organizationUuid, designOauth]
+  logout_clears: [claudeAiOauth, organizationUuid, trustedDeviceToken, enterpriseGateway, designOauth]   # cli.beauty.js:338135
+  macos_keychain:
+    status: "save is DEAD CODE in this Bun build"
+    save_dead_code: "g2r(): let t=!1; if(t){security add-generic-password}else q('tengu_api_key_saved_to_config') (cli.beauty.js:133991-134010)"
+    reader: "security find-generic-password -a <user> -w -s <service> (cli.beauty.js:104626)"
+
+geo_network:
+  ip_or_country_collection: false
+  notes: "No client-IP, no country list, no cf-ipcountry. Geo == provider data-residency routing via yr()."
+
+config_storage:
+  dir_resolver: "CLAUDE_CONFIG_DIR ?? ~/.claude (cli.beauty.js:4505)"
+  file: ".claude.json (cli.beauty.js:45949)"
+  reader: "Pt()"
+  writer: "yn()"
+  keys: [userID, machineID, oauthAccount, firstStartTime, numStartups, installMethod]
+
+kill_switches:
+  - DISABLE_TELEMETRY
+  - DISABLE_GROWTHBOOK
+  - DISABLE_ERROR_REPORTING
+  - DO_NOT_TRACK
+  - CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+
+env_identity_overrides:
+  - CLAUDE_CODE_ACCOUNT_UUID
+  - CLAUDE_CODE_ORGANIZATION_UUID
+  - CLAUDE_CODE_USER_EMAIL
+  - CLAUDE_CODE_ACCOUNT_TAGGED_ID
+  - CLAUDE_CODE_SESSION_ID
+  - CLAUDE_CODE_EXTRA_METADATA
+  - CLAUDE_TRUSTED_DEVICE_TOKEN
+  - CLAUDE_CODE_HOST_PLATFORM
+
+what_leaves_the_machine:
+  transmitted_unique_default: device_id (random 256-bit vW(), install-scoped, unhashed)
+  new_low_risk: "machineID via z5t() — only sent as 12-char host_name_redacted in error reports"
+  hardware_uuid_transmitted: false
+  plaintext_pii_default: ["user.email (OTel, unconditional)", accountUuid, organizationUuid]
+  low_entropy_host_signals_sent: [host.arch, os.type, os.version, wsl.version, terminal.type, platform]
+  read_but_not_transmitted: [real_hostname, host.id, cpu_count, free_memory, timezone, locale, git_committer_email]
+  cross_install_correlator: account/org uuid + email (not hardware)
+
+deltas_vs_2_1_169:
+  - "NEW machineID random token (z5t, cli.beauty.js:606453); sent only as host_name_redacted 12-char slice (cli.beauty.js:299471)"
+  - "Runtime Bun 1.3.14 -> 1.4.0 (bun_version:1.4.0 hardcoded cli.beauty.js:299451)"
+  - "Provider selector yr() now checks gateway plane first (cli.beauty.js:94637)"
+  - "NEW OAuth design/projects scopes (cli.beauty.js:40759)"
+  - "Symbol renames: cU->vW, gnH->nit, DQK->$xi, eV_->t$d, XS_->zdm, Kf4->337585 builder"
+  - "Unchanged: Datadog client token pubea5604404508cdd34afb69e6f42a05bc; OAuth client ids; plaintext creds; dead keychain save; Segment absent"
+
+uncertainties:
+  - "t$d() returns undefined (email stub); no other path repopulating central-bundle email was found"
+  - "Server-side schema of trusted-device device_token is opaque to client"
+  - "Exact URL receiving the host_name_redacted error payload not pinned (Datadog-style intake; payload shape + z5t().slice(0,12) verified)"
+  - "Soft env/runtime/network probe line numbers not exhaustively re-derived for 2.1.197"

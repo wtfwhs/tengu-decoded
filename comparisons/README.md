@@ -4,7 +4,8 @@ This directory contains changelogs documenting differences between Claude Code v
 
 ## Available Comparisons
 
-*No comparisons yet. Comparisons will be added as additional versions are analysed.*
+- [2.1.169 → 2.1.197](2.1.169-to-2.1.197.md) — Fable 5 / Mythos 5 / Sonnet 5, credits & Frame artifacts, vaults + memory stores; Bun 1.4.0. (~3 weeks, 28 patches)
+- [2.1.32 → 2.1.169](2.1.32-to-2.1.169.md) — cloud backend, background daemon, agent teams, kairos loops; Node SEA → Bun. (~4 months, 137 patches)
 
 ## How Comparisons Work
 

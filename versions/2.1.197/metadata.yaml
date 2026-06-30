@@ -1,0 +1,40 @@
+version: "2.1.197"
+build_timestamp: "2026-06-29T19:08:42Z"
+git_sha: "c8fd8048f30950a21d28734718275aa7e97f5143"
+analysis_date: "2026-06-30"
+platform: "linux-x86_64"
+binary_path: "~/.local/share/claude/versions/2.1.197"
+binary_format: "ELF"
+binary_size_bytes: 245517112
+runtime: "Bun v1.4.0 (compiled standalone executable)"
+analyst: "whs"
+analysis_method: "claude-code-self-analysis + bundle-extraction + multi-agent-workflow"
+claude_code_version_used: "2.1.197"
+model_used: "claude-opus-4-8"
+notes: >-
+  Deep analysis going beyond strings(). The binary is a Bun-compiled standalone executable; the Bun
+  runtime was bumped from v1.3.14 (2.1.169) to v1.4.0. It embeds the full plaintext minified JS source
+  (header `// @bun @bytecode @bun-cjs`) as an 18 MB contiguous printable run at byte offset
+  225,406,600–243,504,418. That source was carved out and beautified with js-beautify to 733k readable
+  lines (cli.beauty.js), so findings are grounded in real function bodies, not isolated strings. The
+  13 topic docs were produced by a multi-agent workflow (one specialist per topic, each adversarially
+  verified against the source), then an overview + comparison were synthesised.
+extraction:
+  strings_tool: "GNU strings -n 6 -> 456,251 lines"
+  source_carve: "byte range 225406600..243504418 -> cli.min.js (18.1 MB, 33,697 lines)"
+  beautified: "js-beautify -> cli.beauty.js (27 MB, 733,394 lines)"
+accessors_this_build:
+  feature_flag_get: "it(name, default)"            # was j$ in 2.1.169, kL in 2.1.32
+  feature_flag_get_wrapper: "J7(name, default)"    # was cS
+  feature_flag_bool_async: "QYr(name) / $U(name)"  # was lS / OG6
+  telemetry_event_fire: "q(eventName, payload)"    # was d in 2.1.169
+  device_id_generator: "vW()  (crypto.randomBytes(32).toString('hex'), persisted to ~/.claude.json userID)"
+  provider_plane_selector: "yr()  (returns 'gateway' via Lm() before the bedrock/.../firstParty ternary)"
+headline_deltas_vs_2_1_169:
+  feature_flags: "218 -> 243 (+25)"
+  telemetry_events: "1086 -> 1163 (+77)"
+  builtin_tools: "46 -> 49 (+3)"
+  env_vars: "490 -> 526 (+36; same-method 474 -> 526 = +52)"
+  api_path_templates: "144 -> 164 (+20)"
+  model_ids: "56 -> 61 (+5; new: claude-fable-5, claude-fable-5-mythos-5, claude-sonnet-5, claude-opus-4-7-fast)"
+  runtime: "Bun 1.3.14 -> Bun 1.4.0"
