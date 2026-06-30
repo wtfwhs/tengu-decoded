@@ -1,0 +1,77 @@
+checks:
+  - id: 1
+    name: "INCOMPLETE_COMMANDS"
+    description: "Commands that appear truncated or incomplete"
+    behaviour: "ask"
+  - id: 2
+    name: "JQ_SYSTEM_FUNCTION"
+    description: "jq commands using the system() function"
+    behaviour: "ask"
+    notes: "Always flagged (can execute arbitrary commands)"
+  - id: 3
+    name: "JQ_FILE_ARGUMENTS"
+    description: "jq commands with suspicious file arguments"
+    behaviour: "ask"
+  - id: 4
+    name: "OBFUSCATED_FLAGS"
+    description: "Quoted characters in flag names, ANSI-C quoting ($'...'), locale quoting ($\"...\"), empty quotes before dashes"
+    behaviour: "ask"
+    notes: "ANSI-C quoting can hide characters via escape sequences"
+  - id: 5
+    name: "SHELL_METACHARACTERS"
+    description: "Semicolons, pipes, ampersands in arguments, especially in find -name/-path/-regex patterns"
+    behaviour: "ask"
+  - id: 6
+    name: "DANGEROUS_VARIABLES"
+    description: "Variables used in dangerous contexts (redirections or pipes)"
+    behaviour: "ask"
+  - id: 7
+    name: "NEWLINES"
+    description: "Embedded newlines that could hide additional commands"
+    behaviour: "ask"
+  - id: 8
+    name: "DANGEROUS_PATTERNS_COMMAND_SUBSTITUTION"
+    description: "$(...)  backtick substitution, zsh-style glob qualifiers, PowerShell syntax"
+    behaviour: "ask"
+  - id: 9
+    name: "DANGEROUS_PATTERNS_INPUT_REDIRECTION"
+    description: "< input redirection (could read files)"
+    behaviour: "ask"
+  - id: 10
+    name: "DANGEROUS_PATTERNS_OUTPUT_REDIRECTION"
+    description: "> output redirection (could overwrite files)"
+    behaviour: "ask"
+  - id: 11
+    name: "IFS_INJECTION"
+    description: "$IFS or ${...IFS} usage to bypass validation"
+    behaviour: "ask"
+  - id: 12
+    name: "GIT_COMMIT_SUBSTITUTION"
+    description: "Command substitution inside git commit messages"
+    behaviour: "ask"
+  - id: 13
+    name: "PROC_ENVIRON_ACCESS"
+    description: "/proc/*/environ access (exposes environment variables)"
+    behaviour: "ask"
+  - id: 14
+    name: "MALFORMED_TOKEN_INJECTION"
+    description: "Ambiguous syntax with command separators"
+    behaviour: "ask"
+
+behaviours:
+  allow: "Command is safe, proceed"
+  ask: "Potentially dangerous, ask user for permission"
+  passthrough: "Not applicable, continue to next check"
+
+special_cases:
+  - pattern: "echo without pipes/redirects"
+    behaviour: "passthrough"
+    notes: "Always passes through (safe)"
+  - pattern: "Git commit with quoted -m message"
+    behaviour: "allow"
+    notes: "Allowed if message is simple (no command substitution)"
+  - pattern: "Heredocs with quoted/escaped delimiters"
+    behaviour: "allow"
+    notes: "Safe pattern for multi-line content"
+
+disable_env_var: "CLAUDE_CODE_DISABLE_COMMAND_INJECTION_CHECK"

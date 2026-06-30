@@ -1,0 +1,33 @@
+name: Correction
+description: Report an error in existing analysis
+title: "[Correction]: "
+labels: ["correction"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Affected Version
+      description: Which version analysis contains the error
+      placeholder: "e.g., 2.1.32"
+    validations:
+      required: true
+  - type: input
+    id: section
+    attributes:
+      label: Affected Section
+      description: Which section or file contains the error
+      placeholder: "e.g., feature-flags, telemetry, security-model"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs correcting?
+      description: Describe what is incorrect and what the correct information should be
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: How did you verify the correction? (e.g., binary analysis, observable behaviour)

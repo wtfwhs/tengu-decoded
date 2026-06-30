@@ -1,0 +1,335 @@
+# Feature Flags — Claude Code (tengu) v2.1.32
+# Extracted from minified binary analysis
+# Platform: GrowthBook (https://cdn.growthbook.io)
+# Accessor functions: kL(flag, default), df(flag), Cu(flag, defaultObj)
+
+flags:
+  # ── Agent Teams ──────────────────────────────────────────────────────
+
+  - name: "tengu_amber_flint"
+    default: false
+    category: "agent-teams"
+    accessor: "kL"
+    description: "Agent Teams feature"
+    related_env_var: "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS"
+    notes: "Both env var opt-in and GrowthBook flag must pass"
+
+  # ── System Prompt ────────────────────────────────────────────────────
+
+  - name: "tengu_vinteuil_phrase"
+    default: false
+    category: "system-prompt"
+    accessor: "kL"
+    description: "Alternative 'simple proactive' system prompt variant"
+
+  - name: "tengu_system_prompt_global_cache"
+    default: false
+    category: "system-prompt"
+    accessor: "kL"
+    description: "Global caching for system prompt blocks"
+
+  - name: "tengu_cork_m4q"
+    default: false
+    category: "system-prompt"
+    accessor: "kL"
+    description: "<policy_spec> injection into BashTool pre-flight check"
+
+  # ── Context Management ──────────────────────────────────────────────
+
+  - name: "tengu_cache_plum_violet"
+    default: false
+    category: "context-management"
+    accessor: "kL"
+    description: "Kill switch for microcompact — disables it when enabled"
+    notes: "Kill switch: enabling this flag turns OFF the feature"
+
+  - name: "tengu_compact_cache_prefix"
+    default: false
+    category: "context-management"
+    accessor: "kL"
+    description: "Prompt caching during compaction"
+
+  - name: "tengu_compact_streaming_retry"
+    default: false
+    category: "context-management"
+    accessor: "kL"
+    description: "Retry logic for compaction streaming failures"
+
+  - name: "tengu_marble_anvil"
+    default: false
+    category: "context-management"
+    accessor: "kL"
+    description: "clear_thinking API beta and context management"
+
+  # ── Session Memory ──────────────────────────────────────────────────
+
+  - name: "tengu_session_memory"
+    default: false
+    category: "session-memory"
+    accessor: "kL"
+    description: "Session memory (MEMORY.md) for cross-session persistence"
+
+  - name: "tengu_sm_compact"
+    default: false
+    category: "session-memory"
+    accessor: "kL"
+    description: "Session memory compaction"
+    notes: "Requires tengu_session_memory AND this flag"
+
+  - name: "tengu_oboe"
+    default: false
+    category: "session-memory"
+    accessor: "kL"
+    description: "Auto-memory via MEMORY.md"
+    related_env_var: "CLAUDE_CODE_DISABLE_AUTO_MEMORY"
+
+  # ── Tool Search ─────────────────────────────────────────────────────
+
+  - name: "tengu_mcp_tool_search"
+    default: true
+    category: "tool-search"
+    accessor: "kL"
+    description: "MCP tool search mode ('tst-auto' when true, 'standard' when false)"
+    notes: "Default ON"
+
+  - name: "tengu_tst_kx7"
+    default: false
+    category: "tool-search"
+    accessor: "kL"
+    description: "Tool search when below threshold but deferred MCP tools present"
+
+  - name: "tengu_tst_names_in_messages"
+    default: false
+    category: "tool-search"
+    accessor: "kL"
+    description: "Include tool names in messages for tool search"
+
+  - name: "tengu_kv7_prompt_sort"
+    default: false
+    category: "tool-search"
+    accessor: "kL"
+    description: "Alphabetically sort deferred tool names in tool search prompt"
+
+  - name: "tengu_tool_search_unsupported_models"
+    default: null
+    category: "tool-search"
+    accessor: "kL"
+    description: "Array of model names that don't support tool search"
+
+  # ── File Operations ─────────────────────────────────────────────────
+
+  - name: "tengu_marble_kite"
+    default: false
+    category: "file-operations"
+    accessor: "kL"
+    description: "Removes 'must read before write/edit' requirement"
+
+  - name: "tengu_file_write_optimization"
+    default: false
+    category: "file-operations"
+    accessor: "kL"
+    description: "Short success messages instead of echoing full file contents"
+
+  - name: "tengu_quartz_lantern"
+    default: false
+    category: "file-operations"
+    accessor: "kL"
+    description: "Diff computation for file operations in remote mode"
+
+  # ── UI / UX ─────────────────────────────────────────────────────────
+
+  - name: "tengu_code_diff_cli"
+    default: false
+    category: "ui-ux"
+    accessor: "kL"
+    description: "Code diff view in CLI with diff statistics"
+
+  - name: "tengu_pr_status_cli"
+    default: false
+    category: "ui-ux"
+    accessor: "kL"
+    description: "PR status in CLI footer bar"
+
+  - name: "tengu_chomp_inflection"
+    default: true
+    category: "ui-ux"
+    accessor: "kL"
+    description: "Prompt suggestions"
+    notes: "Default ON"
+
+  - name: "tengu_plank_river_frost"
+    default: "config"
+    category: "ui-ux"
+    accessor: "Cu"
+    description: "Prompt suggestion mode configuration"
+
+  - name: "tengu_permission_explainer"
+    default: false
+    category: "ui-ux"
+    accessor: "kL"
+    description: "AI-powered permission explanations with risk levels"
+
+  - name: "tengu_keybinding_customization_release"
+    default: false
+    category: "ui-ux"
+    accessor: "kL"
+    description: "Custom keybinding support"
+
+  - name: "tengu_chrome_auto_enable"
+    default: false
+    category: "ui-ux"
+    accessor: "kL"
+    description: "Auto-enable Claude-in-Chrome integration"
+
+  - name: "tengu_silver_lantern"
+    default: false
+    category: "ui-ux"
+    accessor: "kL"
+    description: "Promotional/launch feed banners (Opus 4.6 launch)"
+
+  # ── API / Networking ────────────────────────────────────────────────
+
+  - name: "tengu_attribution_header"
+    default: true
+    category: "api-networking"
+    accessor: "kL"
+    description: "Attribution header on API requests"
+    notes: "Default ON"
+
+  - name: "tengu_remote_backend"
+    default: false
+    category: "api-networking"
+    accessor: "kL"
+    description: "Remote backend mode (--remote flag)"
+
+  - name: "tengu_scarf_coffee"
+    default: false
+    category: "api-networking"
+    accessor: "kL"
+    description: "Unlisted API beta flag for first-party authenticated users"
+
+  - name: "tengu_tool_pear"
+    default: null
+    category: "api-networking"
+    accessor: "df"
+    description: "Enables strict: true on tool schemas and pushes an additional API beta"
+
+  # ── Model Access ────────────────────────────────────────────────────
+
+  - name: "tengu_marble_lantern_disabled"
+    default: false
+    category: "model-access"
+    accessor: "kL"
+    description: "Kill switch for Sonnet/Opus 1M context access"
+    notes: "Kill switch: enabling this flag turns OFF the feature"
+
+  - name: "tengu_marble_lantern_3p_disabled"
+    default: false
+    category: "model-access"
+    accessor: "kL"
+    description: "Kill switch for third-party 1M context access"
+    notes: "Kill switch: enabling this flag turns OFF the feature"
+
+  - name: "tengu_workout2"
+    default: false
+    category: "model-access"
+    accessor: "kL"
+    description: "Opus 4.6-specific feature"
+    notes: "Checked alongside opus-4-6 model name"
+
+  # ── Subscription / Upsells ─────────────────────────────────────────
+
+  - name: "tengu_copper_lantern"
+    default: false
+    category: "subscription-upsells"
+    accessor: "kL"
+    description: "Extra usage upsell promo"
+    notes: "Checks plan type, visit history, creation date"
+
+  - name: "tengu_copper_lantern_config"
+    default: "config"
+    category: "subscription-upsells"
+    accessor: "Cu"
+    description: "Upsell config with meridian cutoff date"
+
+  # ── Plan Mode ───────────────────────────────────────────────────────
+
+  - name: "tengu_plan_mode_interview_phase"
+    default: false
+    category: "plan-mode"
+    accessor: "kL"
+    description: "Interview phase in plan mode"
+
+  - name: "tengu_coral_fern"
+    default: false
+    category: "plan-mode"
+    accessor: "kL"
+    description: "'Accessing Past Sessions' section in system prompt"
+
+  # ── Streaming / Performance ─────────────────────────────────────────
+
+  - name: "tengu_plum_vx3"
+    default: false
+    category: "streaming-performance"
+    accessor: "kL"
+    description: "Disables thinking tokens for WebSearch (sets maxThinkingTokens to 0)"
+
+  - name: "tengu_streaming_tool_execution2"
+    default: null
+    category: "streaming-performance"
+    accessor: "df"
+    description: "Parallel/streaming tool execution in main query loop"
+
+  # ── Version Management ──────────────────────────────────────────────
+
+  - name: "tengu_pid_based_version_locking"
+    default: false
+    category: "version-management"
+    accessor: "kL"
+    description: "PID-based locking to prevent update conflicts"
+
+  # ── VS Code / IDE ──────────────────────────────────────────────────
+
+  - name: "tengu_quiet_fern"
+    default: false
+    category: "vscode-ide"
+    accessor: "kL"
+    description: "VS Code experiment gate"
+
+  - name: "tengu_vscode_review_upsell"
+    default: null
+    category: "vscode-ide"
+    accessor: "df"
+    description: "VS Code review upsell experiment"
+
+  - name: "tengu_vscode_onboarding"
+    default: null
+    category: "vscode-ide"
+    accessor: "df"
+    description: "VS Code onboarding experiment"
+
+  # ── Configuration Object Flags (Cu accessor) ───────────────────────
+
+  - name: "tengu_sm_config"
+    default: "config"
+    category: "configuration-objects"
+    accessor: "Cu"
+    description: "Session memory configuration"
+
+  - name: "tengu_event_sampling_config"
+    default: "config"
+    category: "configuration-objects"
+    accessor: "Cu"
+    description: "Telemetry event sampling rates"
+
+  - name: "tengu_feedback_survey_config"
+    default: "config"
+    category: "configuration-objects"
+    accessor: "Cu"
+    description: "Feedback survey configuration"
+
+  - name: "tengu_1p_event_batch_config"
+    default: "config"
+    category: "configuration-objects"
+    accessor: "Cu"
+    description: "First-party event batching config"

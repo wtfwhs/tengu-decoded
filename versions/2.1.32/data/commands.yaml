@@ -1,0 +1,97 @@
+hidden_commands:
+  - name: "/files"
+    aliases: []
+    status: "disabled"
+    notes: "Lists files in context (isEnabled: () => false)"
+  - name: "/thinkback-play"
+    aliases: []
+    status: "hidden"
+    notes: "Plays a thinkback animation"
+  - name: "/btw"
+    aliases: []
+    status: "gated"
+    notes: "Side-question feature, requires ENABLE_BTW env var"
+  - name: "/stickers"
+    aliases: []
+    status: "active"
+    notes: "Order Claude Code stickers"
+  - name: "/think-back"
+    aliases: []
+    status: "gated"
+    notes: "2025 Year in Review, gated by tengu_thinkback flag"
+
+active_commands:
+  - name: "/help"
+    aliases: []
+  - name: "/config"
+    aliases: ["/settings"]
+  - name: "/login"
+    aliases: []
+  - name: "/logout"
+    aliases: []
+  - name: "/compact"
+    aliases: []
+  - name: "/resume"
+    aliases: ["/continue"]
+  - name: "/memory"
+    aliases: []
+  - name: "/plan"
+    aliases: []
+  - name: "/permissions"
+    aliases: ["/allowed-tools"]
+  - name: "/hooks"
+    aliases: []
+  - name: "/agents"
+    aliases: []
+  - name: "/skills"
+    aliases: []
+  - name: "/tasks"
+    aliases: ["/bashes"]
+  - name: "/todos"
+    aliases: []
+  - name: "/usage"
+    aliases: []
+  - name: "/cost"
+    aliases: []
+  - name: "/status"
+    aliases: []
+  - name: "/feedback"
+    aliases: ["/bug"]
+  - name: "/ide"
+    aliases: []
+  - name: "/mcp"
+    aliases: []
+  - name: "/fork"
+    aliases: []
+  - name: "/add-dir"
+    aliases: []
+  - name: "/extra-usage"
+    aliases: []
+  - name: "/passes"
+    aliases: []
+  - name: "/privacy-settings"
+    aliases: []
+  - name: "/theme"
+    aliases: []
+  - name: "/terminal-setup"
+    aliases: []
+  - name: "/install-github-app"
+    aliases: []
+  - name: "/install-slack-app"
+    aliases: []
+  - name: "/session"
+    aliases: ["/remote"]
+  - name: "/mobile"
+    aliases: ["/ios", "/android"]
+  - name: "/stickers"
+    aliases: []
+  - name: "/chrome"
+    aliases: []
+  - name: "/clear"
+    aliases: ["/reset", "/new"]
+  - name: "/copy"
+    aliases: []
+  - name: "/color"
+    aliases: []
+  - name: "/rename"
+    aliases: []

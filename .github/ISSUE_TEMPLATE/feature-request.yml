@@ -1,0 +1,29 @@
+name: Feature Request
+description: Suggest an improvement to the repository or documentation
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Documentation structure
+        - Data format
+        - Methodology
+        - Repository organisation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the improvement you would like to see
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Why would this improvement be valuable?

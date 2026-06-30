@@ -1,0 +1,39 @@
+version: "2.1.169"
+build_timestamp: "2026-06-08T03:22:12Z"
+git_sha: "eb44edf196b8a320135d5a27a3cfba37773ce0cd"
+analysis_date: "2026-06-09"
+platform: "linux-x86_64"
+binary_path: "~/.local/share/claude/versions/2.1.169"
+binary_format: "ELF"
+binary_size_bytes: 247297744
+runtime: "Bun v1.3.14 (compiled standalone executable)"
+analyst: "whs"
+analysis_method: "claude-code-self-analysis + bundle-extraction"
+claude_code_version_used: "2.1.169"
+model_used: "claude-opus-4-8"
+notes: >-
+  Deep analysis going beyond strings(). The binary is a Bun-compiled standalone executable
+  (NOT Node SEA as in 2.1.32). It embeds two copies of the application: a JavaScriptCore
+  bytecode/snapshot (~105MB offset, UTF-16) and the full plaintext minified JS source
+  (16.5MB contiguous run at byte offset 228,732,376–245,287,391, header `// @bun @bytecode @bun-cjs`).
+  The plaintext source was carved out and beautified with js-beautify to 662k readable lines
+  (cli.beauty.js), so findings are grounded in real function bodies, not isolated strings.
+extraction:
+  strings_tool: "GNU strings -n 6 → 466,102 lines"
+  source_carve: "dd byte range 228732376..245287391 → cli.min.js (16.5 MB, 30,771 lines)"
+  beautified: "js-beautify → cli.beauty.js (27 MB, 661,910 lines)"
+accessors_this_build:
+  feature_flag_get: "j$(name, default)"        # was kL in 2.1.32
+  feature_flag_get_wrapper: "cS(name, default)"
+  feature_flag_bool_async: "lS(name) / OG6(name)"  # was df
+  telemetry_event_fire: "d(eventName, payload)"    # was c
+  system_prompt_composer: "iT(tools, msgState, ...)"  # was G3
+  device_id_generator: "cU()  (crypto.randomBytes(32).toString('hex'), persisted to ~/.claude.json userID)"
+  provider_plane_selector: "Mq()"
+headline_deltas_vs_2_1_32:
+  feature_flags: "48 → 218"
+  telemetry_events: "239 → 1086"
+  builtin_tools: "17 → ~46"
+  env_vars: "54 → 490"
+  runtime: "Node SEA → Bun 1.3.14"
+  segment_analytics: "present → removed"

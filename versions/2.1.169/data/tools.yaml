@@ -1,0 +1,434 @@
+# Tool catalog for Claude Code v2.1.169
+# Build 2026-06-08T03:22:12Z | Bun 1.3.14 standalone | linux-x86_64
+#
+# Every built-in tool is constructed via the factory rK({...}) (was the tool-object
+# literal in 2.1.32). Each tool object carries: name (a string constant), searchHint
+# (one-liner used by ToolSearch), async description()/prompt(), get inputSchema()
+# (Zod schema, lazily built), and trait methods isReadOnly()/isConcurrencySafe()/
+# isEnabled()/isOpenWorld()/shouldDefer. Tool names are stored as mangled top-level
+# const vars (e.g. tq="Bash"); internal_name below is the FACTORY var (the object),
+# name_const is the string-constant var that holds the user-facing name.
+
+tools:
+  # ---- Always-on core file/shell tools ----
+  - name: "Bash"
+    internal_name: "Y9"           # name const: tq
+    description: "Execute shell commands (with optional run_in_background)"
+    category: "read-only-or-write" # isReadOnly() is DYNAMIC: true only if the command classifies as allow
+    notes: "strict:!0. isConcurrencySafe == isReadOnly(cmd). Read-classified commands allowed in plan mode; write commands blocked. maxResultSizeChars 30000."
+  - name: "Read"
+    internal_name: "bY"           # name const: LK
+    description: "Read files, images, PDFs, notebooks from the local filesystem"
+    category: "read-only"
+  - name: "Write"
+    internal_name: "TD"           # name const: y1
+    description: "Write a file to the local filesystem (create or overwrite)"
+    category: "write"
+    notes: "strict:!0. Blocked in plan mode. Subagents blocked from writing REPORT/SUMMARY/FINDINGS/ANALYSIS*.md (tengu_subagent_md_report_blocked)."
+  - name: "Edit"
+    internal_name: "NJ"           # name const: V4
+    description: "Modify file contents in place (exact string replacement)"
+    category: "write"
+    notes: "Blocked in plan mode."
+  - name: "Glob"
+    internal_name: "Fb"           # name const: s5
+    description: "Find files by name pattern or wildcard"
+    category: "read-only"
+  - name: "Grep"
+    internal_name: "yk"           # name const: __
+    description: "Search file contents with regex (ripgrep)"
+    category: "read-only"
+  - name: "PowerShell"
+    internal_name: "Dt6"          # name const: dK
+    description: "Execute Windows PowerShell commands"
+    category: "read-only-or-write"
+    notes: "NEW vs 2.1.32. Gated by CLAUDE_CODE_USE_POWERSHELL_TOOL. Windows analogue of Bash."
+
+  # ---- Web tools ----
+  - name: "WebFetch"
+    internal_name: "ab"           # name const: VL
+    description: "Fetch and extract content from a URL"
+    category: "read-only"
+    notes: "shouldDefer:!0 (deferred). Beta web tools header."
+  - name: "WebSearch"
+    internal_name: "Zh8"          # name const: Tm
+    description: "Search the web for current information"
+    category: "read-only"
+    notes: "shouldDefer:!0 (deferred). Uses web-search-2025-03-05 beta."
+
+  # ---- Notebook ----
+  - name: "NotebookEdit"
+    internal_name: "kB"           # name const: hT
+    description: "Edit Jupyter notebook cells (.ipynb)"
+    category: "write"
+    notes: "shouldDefer:!0 (deferred). Blocked in plan mode."
+
+  # ---- Task list / todos ----
+  - name: "TodoWrite"
+    internal_name: "qZH"          # name const: Yk
+    description: "Manage the session task checklist"
+    category: "read-only"
+    notes: "shouldDefer:!0 (deferred). Allowed in plan mode."
+
+  # ---- Agent / sub-agent orchestration ----
+  - name: "Agent"
+    internal_name: "QE8"          # name const: PK ; alias GF="Task"
+    description: "Delegate work to a subagent (Launch a new agent)"
+    category: "read-only"
+    notes: "Aliased as 'Task'. NOT deferred unless fork-subagent experiment off. Handles teams (team_name), background (run_in_background), isolation, mode, cwd."
+
+  # ---- Plan mode ----
+  - name: "EnterPlanMode"
+    internal_name: "pv8"          # name const: Al
+    description: "Switch to plan mode to design an approach before coding"
+    category: "read-only"
+    notes: "shouldDefer:!0. Requires user approval to enter."
+  - name: "ExitPlanMode"
+    internal_name: "rb"           # name const: CN
+    description: "Present plan for approval and start coding (plan mode only)"
+    category: "read-only"
+    notes: "shouldDefer:!0."
+
+  # ---- User interaction ----
+  - name: "AskUserQuestion"
+    internal_name: "e6$"          # name const: fA
+    description: "Prompt the user with a multiple-choice question"
+    category: "read-only"
+
+  # ---- Skills ----
+  - name: "Skill"
+    internal_name: "_q$"          # name const: vL
+    description: "Invoke a slash-command skill"
+    category: "read-only"
+    notes: "shouldDefer:!0."
+
+  # ---- Structured output / final-answer ----
+  - name: "StructuredOutput"
+    internal_name: "QS6"          # name const: Iz
+    description: "Return the final response as structured JSON"
+    category: "read-only"
+    notes: "NEW vs 2.1.32. isReadOnly,isConcurrencySafe true; isOpenWorld false. Used to emit final structured output exactly once. structured-outputs-2025-12-15 beta."
+
+  # ---- Tool-search / deferred-tool infrastructure ----
+  - name: "ToolSearch"
+    internal_name: "TG$"          # name const: bO ; TOOL_SEARCH_TOOL_NAME
+    description: "Fetch full schema definitions for deferred tools so they can be called"
+    category: "read-only"
+    notes: "NEW vs 2.1.32. isEnabled() == wk(); never itself deferred. Query forms: select:A,B / keyword / +require. Beta advanced-tool-use-2025-11-20 + tool-search-tool-2025-10-19."
+
+  # ---- MCP resource access ----
+  - name: "ListMcpResourcesTool"
+    internal_name: "Sm"           # name const: pLH ; alias ListMcpResources
+    description: "List resources from connected MCP servers"
+    category: "read-only"
+    notes: "shouldDefer:!0."
+  - name: "ReadMcpResourceTool"
+    internal_name: "pm"           # name: literal "ReadMcpResourceTool" ; alias ReadMcpResource
+    description: "Read a specific MCP resource by URI"
+    category: "read-only"
+    notes: "shouldDefer:!0."
+  - name: "mcp"
+    internal_name: "Ab6"          # name: literal "mcp"
+    description: "Generic placeholder tool for dynamically-registered MCP tools"
+    category: "read-only"
+    notes: "isMcp:!0 ; checkPermissions returns 'passthrough'. Template object for MCP server tools."
+  - name: "WaitForMcpServers"
+    internal_name: "ic7"          # name const: OLH
+    description: "Block until (non-blocking) MCP servers finish connecting"
+    category: "read-only"
+    notes: "NEW vs 2.1.32. isConcurrencySafe false. Gated by YU6(z7())."
+
+  # ---- Background tasks / process tasks ----
+  - name: "TaskCreate"
+    internal_name: "ak4"          # name const: uP
+    description: "Create a task in the task list"
+    category: "write"
+    notes: "NEW. shouldDefer:!0. isEnabled()==LJ() (off if CLAUDE_CODE_ENABLE_TASKS falsy)."
+  - name: "TaskGet"
+    internal_name: "Hy4"          # name const: $n
+    description: "Retrieve a task by ID"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0. Gated by LJ()."
+  - name: "TaskUpdate"
+    internal_name: "_y4"          # name const: Mv
+    description: "Update a task"
+    category: "write"
+    notes: "NEW. shouldDefer:!0. Gated by LJ()."
+  - name: "TaskList"
+    internal_name: "Oy4"          # name const: yT
+    description: "List all tasks"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0. Gated by LJ()."
+  - name: "TaskOutput"
+    internal_name: "Wh8"          # name const: ns ; aliases AgentOutputTool/BashOutputTool/AgentOutput/BashOutput
+    description: "Read output/logs from a background task"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0. Subsumes 2.1.32's separate BashOutput (now an alias)."
+  - name: "TaskStop"
+    internal_name: "cK$"          # name const: wv
+    description: "Kill a running background task"
+    category: "write"
+    notes: "NEW vs 2.1.32. shouldDefer:!0. (Replaces KillShell role; 'KillShell' name not present as a distinct tool.)"
+
+  # ---- Monitoring ----
+  - name: "Monitor"
+    internal_name: "CKf"          # name const: DX (base obj IKf)
+    description: "Watch/monitor a process/log/command; stream each stdout line as a live notification"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0. isEnabled()==Gm()&&n1() (Gm()==tengu_amber_sentinel flag). persistent runs until TaskStop/session end."
+
+  # ---- Scheduling / wakeups / cron ----
+  - name: "ScheduleWakeup"
+    internal_name: "gN4"          # name const: F3
+    description: "Self-pace next iteration: pick a delay before resuming work / next /loop tick"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0; not deferred when rfH() (loop context). Drives /loop self-pacing."
+  - name: "CronCreate"
+    internal_name: "nff"          # name const: q2
+    description: "Schedule a recurring or one-shot prompt"
+    category: "write"
+    notes: "NEW. shouldDefer:!0."
+  - name: "CronDelete"
+    internal_name: "off"          # name const: Nb
+    description: "Cancel a scheduled cron job"
+    category: "write"
+    notes: "NEW. shouldDefer:!0."
+  - name: "CronList"
+    internal_name: "tff"          # name const: aZ$
+    description: "List active cron jobs"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0."
+  - name: "RemoteTrigger"
+    internal_name: "$Af"          # name const: FxH
+    description: "Manage scheduled cloud-agent routines"
+    category: "write"
+    notes: "NEW. shouldDefer:!0."
+
+  # ---- Notifications / file delivery ----
+  - name: "PushNotification"
+    internal_name: "YAf"          # name const: SF
+    description: "Send a notification to the user via terminal and optionally mobile"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0; not deferred when wn$()."
+  - name: "SendUserFile"
+    internal_name: "_Af"          # name const: rZ$ (Z85 = SEND_USER_FILE_TOOL_NAME)
+    description: "Deliver files (screenshots, reports, artifacts) to the user"
+    category: "read-only"
+    notes: "NEW. Never deferred (excluded in isDeferredTool)."
+
+  # ---- Teams / messaging ----
+  - name: "TeamCreate"
+    internal_name: "RAf"          # name const: Kn
+    description: "Create a multi-agent team"
+    category: "write"
+    notes: "NEW. shouldDefer:!0. Teams gated by _4() (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS env or tengu_amber_flint flag)."
+  - name: "TeamDelete"
+    internal_name: "CAf"          # name const: rs
+    description: "Disband a team and clean up"
+    category: "write"
+    notes: "NEW. shouldDefer:!0. Teams gated by _4()."
+  - name: "SendMessage"
+    internal_name: "nAf"          # name const: Q3
+    description: "Send messages to agent teammates"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0. Teams feature."
+  - name: "SendUserMessage"
+    internal_name: "$N4"          # name const: DR ; alias bS6="Brief" (W85=BRIEF_TOOL_NAME)
+    description: "Send a message to the user (Brief)"
+    category: "read-only"
+    notes: "NEW. Brief alias never deferred (excluded in isDeferredTool)."
+  - name: "ShareOnboardingGuide"
+    internal_name: "aAf"          # name const: XR$
+    description: "Upload ONBOARDING.md and get a team share link"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0."
+
+  # ---- Worktrees ----
+  - name: "EnterWorktree"
+    internal_name: "xk4"          # name const: ofH
+    description: "Create an isolated git worktree and switch into it"
+    category: "write"
+    notes: "NEW. shouldDefer:!0; not deferred when CLAUDE_CODE_SESSION_KIND=bg."
+  - name: "ExitWorktree"
+    internal_name: "gk4"          # name const: e38
+    description: "Exit a worktree session and return to the original directory"
+    category: "write"
+    notes: "NEW. shouldDefer:!0."
+
+  # ---- Code intelligence ----
+  - name: "LSP"
+    internal_name: "eHq"          # name const: wH$
+    description: "Code intelligence (definitions, references, symbols, hover)"
+    category: "read-only"
+    notes: "NEW vs 2.1.32. shouldDefer:!0."
+
+  # ---- Workflow / REPL / loop / design ----
+  - name: "Workflow"
+    internal_name: "ZKf"          # name const: gG ; alias RunWorkflow
+    description: "Orchestrate subagents with a deterministic JavaScript workflow"
+    category: "read-only"
+    notes: "NEW. isEnabled()==RP() (launch gate; disabled by managed disableWorkflows)."
+  - name: "REPL"
+    internal_name: "gHq"          # name const: Jw
+    description: "Execute JavaScript with programmatic tool access"
+    category: "read-only"
+    notes: "NEW. shouldDefer:!0."
+  - name: "Loop"
+    internal_name: "gN4-related" # see ScheduleWakeup; /loop self-pacing tool
+    description: "(see ScheduleWakeup) self-pace next /loop iteration"
+    category: "read-only"
+    notes: "Listed for completeness; the /loop mechanism is driven by ScheduleWakeup (F3)."
+  - name: "DesignSync"
+    internal_name: "kAf"          # name const: aV$
+    description: "Sync local design-system components to a claude.ai/design project"
+    category: "write"
+    notes: "NEW. shouldDefer:!0. Gated by CLAUDE_CODE_ENABLE_DESIGN_SYNC."
+
+  # ---- Test-only ----
+  - name: "TestingPermission"
+    internal_name: "No3"          # name const: aN4
+    description: "Internal test tool for the permission system"
+    category: "read-only"
+    notes: "Test/dev only."
+
+deferred_tools:
+  # Tools with shouldDefer:!0 (surfaced lazily via ToolSearch when tool search is active).
+  # All MCP tools are also deferred (isMcp===true). isDeferredTool(bF) returns false for
+  # alwaysLoad tools, ToolSearch itself, Brief, SendUserFile, and a few context-specific cases.
+  mechanism: "isDeferredTool() == bF(H) in module qR6"
+  rule: |
+    bF(H):
+      if H.alwaysLoad === true            -> NOT deferred
+      if H.isMcp === true                 -> deferred
+      if H.name === ToolSearch (bO)       -> NOT deferred
+      if H.name === Agent (PK) && fork-subagent experiment on -> NOT deferred
+      if H.name === Brief (W85)           -> NOT deferred
+      if H.name === SendUserFile (Z85)    -> NOT deferred
+      if H.name === PushNotification (SF) && wn$()             -> NOT deferred
+      if H.name === ScheduleWakeup (F3)  && rfH()              -> NOT deferred
+      if H.name === EnterWorktree (ofH) && SESSION_KIND==bg    -> NOT deferred
+      else -> deferred iff H.shouldDefer === true
+  always_deferred_builtin:
+    - WebFetch
+    - WebSearch
+    - NotebookEdit
+    - TodoWrite
+    - Skill
+    - EnterPlanMode
+    - ExitPlanMode
+    - ListMcpResourcesTool
+    - ReadMcpResourceTool
+    - Monitor
+    - ScheduleWakeup
+    - TaskCreate
+    - TaskGet
+    - TaskUpdate
+    - TaskList
+    - TaskOutput
+    - TaskStop
+    - CronCreate
+    - CronDelete
+    - CronList
+    - RemoteTrigger
+    - PushNotification
+    - TeamCreate
+    - TeamDelete
+    - SendMessage
+    - ShareOnboardingGuide
+    - EnterWorktree
+    - ExitWorktree
+    - LSP
+    - REPL
+    - DesignSync
+  never_deferred:
+    - Bash
+    - Read
+    - Write
+    - Edit
+    - Glob
+    - Grep
+    - PowerShell
+    - Agent          # unless fork-subagent experiment off
+    - AskUserQuestion
+    - StructuredOutput
+    - ToolSearch      # the search tool itself
+    - SendUserMessage # Brief
+    - SendUserFile
+
+tool_search:
+  # ToolSearch / deferred-tool system. Master predicate wk() in module containing mR6().
+  beta_headers:
+    - "advanced-tool-use-2025-11-20"   # X36 = tj("tool_search", ...)
+    - "tool-search-tool-2025-10-19"    # Ij$ = tj("tool_search", ...)
+  modes:
+    - mode: "standard"
+      meaning: "All non-deferred tools loaded; no tool search."
+    - mode: "tst"
+      meaning: "Tool search always on (deferred tools surfaced only by name, fetched via ToolSearch)."
+    - mode: "tst-auto"
+      meaning: "Tool search auto-engaged when deferred-tool prompt size exceeds a char threshold."
+  env_var: "ENABLE_TOOL_SEARCH"
+  env_semantics:
+    - "unset / falsy -> 'tst' on first-party Anthropic (optimistic default); 'standard' on Vertex / non-first-party."
+    - "'auto'        -> 'tst-auto'"
+    - "'auto:N'      -> 'tst-auto' with threshold percentage N (clamped 0..100)"
+    - "'0' (auto:0)  -> 'tst' (always search)"
+    - "'100'         -> 'standard' (never search)"
+    - "truthy        -> 'tst'"
+  gating:
+    - "mR6() decides mode; wk() returns false in 'standard' mode or on Vertex / non-first-party hosts unless ENABLE_TOOL_SEARCH is set."
+    - "ts(model) -> false if model in tengu_tool_search_unsupported_models (only Sonnet 4+/Opus 4+/newer support tool_reference blocks)."
+    - "hyH() (experimental betas disabled) forces 'standard'."
+  threshold:
+    "Uu4(tools) = floor(pu4(tools) * EJf); pu4 = floor(promptChars * (Fqq()/100)); Fqq() reads ENABLE_TOOL_SEARCH auto:N (default Uqq)."
+  discovery:
+    "Discovered tool names are extracted from tool_reference blocks in message history (t7H) and carried across compact boundaries (compactMetadata.preCompactDiscoveredTools)."
+  telemetry:
+    - "tengu_tool_search_mode_decision (enabled, mode, reason, checkedModel, mcpToolCount, mcpNonBlocking)"
+    - "tengu_tool_search_outcome (totalDeferredTools, ...)"
+    - "tengu_tool_search_mcp_wait"
+    - "tengu_deferred_tool_schema_not_sent"
+    - "tengu_deferred_tools_pool_change"
+
+schema_serialisation:
+  function: "QR8()"   # was SC$() in 2.1.32
+  helper_description_fn: "lsf()"  # returns searchHint when tool search active, else first paragraph of prompt()
+  fields:
+    - "name"
+    - "description (lsf(): searchHint when CLAUDE_CODE_SIMPLE/lwq, else first paragraph of async prompt())"
+    - "input_schema (oZH(inputSchema) -> JSON Schema, or inputJSONSchema verbatim; memoised per (model,name) in lFK())"
+    - "strict (only when tengu_tool_pear AND tool.strict===true AND model supports it via SyH(model))"
+    - "eager_input_streaming (NEW: tengu_fgts / CLAUDE_CODE_ENABLE_FINE_GRAINED_TOOL_STREAMING / vertex|bedrock eagerInputStreaming)"
+    - "defer_loading (when ctx.deferLoading)"
+    - "cache_control (when ctx.cacheControl)"
+  removed_vs_2_1_32:
+    - "input_examples (scarf_coffee beta) -- NOT present in 2.1.169"
+  beta_stripping: "hyH() (experimental betas disabled) strips everything except name/description/input_schema/cache_control via nsf()."
+
+permission_modes:
+  # Canonical enum (line 55067 / Zod enum at 279352). 'delegate' from the 2.1.32 doc is NOT
+  # in the real enum; 'auto' (classifier) and 'dontAsk' are. 'bubble' exists internally for
+  # the fork-subagent (permissionMode:"bubble") but is not a user-selectable mode.
+  enum: ["default", "acceptEdits", "bypassPermissions", "plan", "dontAsk", "auto"]
+  modes:
+    - mode: "default"
+      description: "Standard behavior; prompts for dangerous operations."
+    - mode: "acceptEdits"
+      description: "Auto-accept file edit operations; still asks for other writes/bash."
+    - mode: "bypassPermissions"
+      description: "Bypass all permission checks (requires allowDangerouslySkipPermissions). Tool calls auto-allow."
+    - mode: "plan"
+      description: "Planning mode; no actual tool execution. Write/create tools return behavior:'ask' with 'Cannot write ... while in plan mode.' Read-only tools and read-classified Bash run."
+    - mode: "dontAsk"
+      description: "Never prompt; deny anything not pre-approved (returns 'deny')."
+    - mode: "auto"
+      description: "NEW vs 2.1.32 doc. Use a model classifier to approve/deny permission prompts (afk-mode-2026-01-31 beta)."
+  internal:
+    - mode: "bubble"
+      description: "Internal-only permissionMode for the implicit fork subagent (yb agent def). Not user-selectable."
+  read_only_restriction: |
+    In plan mode, a tool's checkPermissions returns behavior:'ask' (decisionReason type:'mode',
+    mode:'plan') for any write/create action. Bash is dynamically classified: isReadOnly(cmd)
+    determines whether the command is treated as read-only (allowed) or write (blocked) in plan
+    mode. Suggestions offer setMode->acceptEdits to escape. acceptEdits auto-allows edits within
+    allowed working dirs; bypassPermissions short-circuits to 'allow'.

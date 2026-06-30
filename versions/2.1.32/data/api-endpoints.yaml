@@ -1,0 +1,115 @@
+# Claude Code Internal API Endpoints
+# Extracted from reverse-engineering analysis of Claude Code v2.1.32
+
+endpoints:
+  # ── Production API (api.anthropic.com) ──────────────────────────────
+  - url: "/api/hello"
+    host: "api.anthropic.com"
+    purpose: "Health check / connectivity test"
+    category: "production"
+
+  - url: "/api/claude_cli_feedback"
+    host: "api.anthropic.com"
+    purpose: "Feedback submission"
+    category: "production"
+
+  - url: "/api/claude_code/link_vcs_account"
+    host: "api.anthropic.com"
+    purpose: "GitHub account linking"
+    category: "production"
+
+  - url: "/api/claude_code/metrics"
+    host: "api.anthropic.com"
+    purpose: "Metrics reporting"
+    category: "production"
+
+  - url: "/api/claude_code/organizations/metrics_enabled"
+    host: "api.anthropic.com"
+    purpose: "Org metrics opt-in check"
+    category: "production"
+
+  - url: "/api/oauth/claude_cli/create_api_key"
+    host: "api.anthropic.com"
+    purpose: "Create API key via OAuth"
+    category: "production"
+
+  - url: "/api/oauth/claude_cli/roles"
+    host: "api.anthropic.com"
+    purpose: "Fetch OAuth user roles"
+    category: "production"
+
+  - url: "/api/organization/"
+    host: "api.anthropic.com"
+    purpose: "Organization info"
+    category: "production"
+
+  - url: "/api/web/domain_info"
+    host: "api.anthropic.com"
+    purpose: "Domain info"
+    category: "production"
+
+  - url: "/api/claude_cli_profile"
+    host: "api.anthropic.com"
+    purpose: "User profile"
+    category: "production"
+
+  - url: "/api/oauth/profile"
+    host: "api.anthropic.com"
+    purpose: "OAuth profile"
+    category: "production"
+
+  - url: "/api/oauth/usage"
+    host: "api.anthropic.com"
+    purpose: "Usage data"
+    category: "production"
+
+  # ── OAuth ───────────────────────────────────────────────────────────
+  - url: "/oauth/authorize"
+    host: "platform.claude.com"
+    purpose: "Console OAuth"
+    category: "oauth"
+
+  - url: "/oauth/authorize"
+    host: "claude.ai"
+    purpose: "Claude.ai OAuth"
+    category: "oauth"
+
+  - url: "/v1/oauth/token"
+    host: "platform.claude.com"
+    purpose: "Token exchange"
+    category: "oauth"
+
+  - url: "/v1/oauth/hello"
+    host: "platform.claude.com"
+    purpose: "OAuth health check"
+    category: "oauth"
+
+  # ── Other ───────────────────────────────────────────────────────────
+  - url: "/"
+    host: "api-staging.anthropic.com"
+    purpose: "Staging API"
+    category: "staging"
+
+  - url: "/v1/mcp/{server_id}"
+    host: "mcp-proxy.anthropic.com"
+    purpose: "MCP server proxy"
+    category: "other"
+
+  - url: "/claude-code-dist-*/claude-code-releases"
+    host: "storage.googleapis.com"
+    purpose: "Binary distribution (Google Cloud Storage)"
+    category: "other"
+
+  - url: "/"
+    host: "claude.fedstart.com"
+    purpose: "FedRAMP government instance"
+    category: "other"
+
+  - url: "/"
+    host: "beacon.claude-ai.staging.ant.dev"
+    purpose: "Staging telemetry beacon"
+    category: "staging"
+
+oauth_client_ids:
+  production: "9d1c250a-e61b-44d9-88ed-5944d1962f5e"
+  staging: "22422756-60c9-4084-8eb7-27705fd5cf9a"

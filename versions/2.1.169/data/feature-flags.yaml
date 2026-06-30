@@ -1,0 +1,1643 @@
+# Feature Flags — Claude Code (tengu) v2.1.169
+# Extracted from beautified binary source (cli.beauty.js, Bun v1.3.14 standalone)
+# Build: 2026-06-08T03:22:12Z | GIT_SHA: eb44edf196b8a320135d5a27a3cfba37773ce0cd | Platform: Linux x86-64
+# Backend: GrowthBook (https://cdn.growthbook.io), cachedGrowthBookFeatures
+#
+# Accessor functions in THIS build (minified names rotate every build):
+#   j$(flag, default)            primary flag get (was kL in 2.1.32). Resolution: HP$ override map ->
+#                                $P$ managed/remote map -> ru() default if GB not ready -> track exposure ->
+#                                cachedGrowthBookFeatures[flag] else default.
+#   cS(flag, default, _)         thin wrapper around j$ (3rd arg is a fallback/const, usually ignored)
+#   gS(flag, default)            thin wrapper around j$  (was Cu for config objects)
+#   Cg8(flag, default)           thin wrapper around j$ (survey configs)
+#   lS(flag) / OG6(flag)         async boolean flag check (was df)
+#
+# Default encodings observed: !0=true, !1=false, null, {}=object, []=array, ""=string, number,
+#   or a minified var = a computed/config default (resolved value noted in `default` + `notes`).
+#
+# Codenames: most non-descriptive flag names (amber_*, slate_*, velvet_*, cobalt_*, cedar_*, pewter_*,
+#   etc.) are auto-generated from internal word lists (adjective_noun). The name carries no meaning;
+#   behavior is inferred from call sites only.
+
+flags:
+  # ── Agent Teams / Coordination ───────────────────────────────────────
+
+  - name: "tengu_amber_flint"
+    default: true
+    category: "agent-teams"
+    accessor: "j$"
+    description: "Agent Teams (agent swarms / teammate mode) GrowthBook rollout gate"
+    related_env_var: "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS"
+    notes: "Default flipped to TRUE vs 2.1.32 (was false). isAgentSwarmsEnabled() requires env var OR --agent-teams flag AND this flag. cli.beauty.js:273739"
+
+  - name: "tengu_coordinator_panel"
+    default: true
+    category: "agent-teams"
+    accessor: "j$"
+    description: "Coordinator panel UI for Agent Teams (task list / teammate view)"
+    notes: "Default TRUE. cli.beauty.js:387046"
+
+  - name: "tengu_copper_thistle"
+    default: false
+    category: "agent-teams"
+    accessor: "j$"
+    description: "Rename teammate tasks from 'task' to 'job' nomenclature in coordinator UI"
+    notes: "cli.beauty.js:391154"
+
+  - name: "tengu_amber_sentinel"
+    default: false
+    category: "agent-teams"
+    accessor: "j$"
+    description: "Gate (Gm()) near the Monitor tool / event-monitoring code path"
+    notes: "cli.beauty.js:209624"
+
+  - name: "tengu_idle_amber_finch"
+    default: false
+    category: "agent-teams"
+    accessor: "j$"
+    description: "Idle-detection behavior for teammate/agent sessions (mn())"
+    notes: "cli.beauty.js:273757"
+
+  - name: "tengu_quiet_slate_wren"
+    default: false
+    category: "agent-teams"
+    accessor: "j$"
+    description: "Teammate-mode quiet variant gate (near agent-swarm snapshot code)"
+    notes: "cli.beauty.js:273761"
+
+  # ── Background Agents (bg daemon / supervisor) ───────────────────────
+
+  - name: "tengu_auto_background_agents"
+    default: false
+    category: "background-agents"
+    accessor: "j$"
+    description: "Auto-dispatch long tasks to background agents (sets 120s threshold)"
+    related_env_var: "CLAUDE_AUTO_BACKGROUND_TASKS"
+    notes: "Either env var OR flag enables auto-backgrounding. cli.beauty.js:396302"
+
+  - name: "tengu_bg_binary_takeover"
+    default: true
+    category: "background-agents"
+    accessor: "j$"
+    description: "Allow a newer client binary to retire a stale background daemon/supervisor running an older version"
+    notes: "Default TRUE. Kills (SIGKILL) older daemon pid so new sessions use current binary. cli.beauty.js:541824"
+
+  - name: "tengu_bg_spare_enable"
+    default: true
+    category: "background-agents"
+    accessor: "j$"
+    description: "Enable pre-warmed spare background worker pool (claim/spawn spares)"
+    notes: "Default TRUE. cli.beauty.js:659698"
+
+  - name: "tengu_bg_prewarm_per_sweep"
+    default: 3
+    category: "background-agents"
+    accessor: "j$"
+    description: "Number of spare bg workers to pre-warm per supervisor sweep"
+    notes: "Numeric. cli.beauty.js:659906"
+
+  - name: "tengu_bg_low_mem_mb"
+    default: 1024
+    category: "background-agents"
+    accessor: "j$"
+    description: "Free-memory floor (MB) below which bg dispatch is throttled (low-mem guard). 0 on macOS."
+    notes: "Multiplied by 1024*1024 to bytes; freemem() compared. cli.beauty.js:542069"
+
+  - name: "tengu_bg_retire_grace_bridged_min"
+    default: 480
+    category: "background-agents"
+    accessor: "j$"
+    description: "Grace period (minutes) before retiring a bridged background session"
+    notes: "Multiplied by 60000 to ms (default 8h). cli.beauty.js:542078"
+
+  - name: "tengu_bg_attach_upgrade"
+    default: true
+    category: "background-agents"
+    accessor: "j$"
+    description: "Allow attaching to / upgrading an existing background session"
+    notes: "Default TRUE. cli.beauty.js:542082"
+
+  - name: "tengu_bg_attach_stall_ms"
+    default: 5000
+    category: "background-agents"
+    accessor: "j$"
+    description: "Stall timeout (ms) when attaching to a background session (default var UJA=5000)"
+    notes: "cli.beauty.js:658868"
+
+  - name: "tengu_bg_leftarrow_inprocess"
+    default: true
+    category: "background-agents"
+    accessor: "j$"
+    description: "Handle left-arrow (detach/back) in-process for attached bg sessions"
+    notes: "Default TRUE. cli.beauty.js:629995"
+
+  - name: "tengu_bg_classifier_config"
+    default: "{useSmallFastModel:true,disableThinking:true}"
+    category: "background-agents"
+    accessor: "j$"
+    description: "Model config for the background-session event classifier (small/fast model, no thinking)"
+    notes: "Config object. Drives Ox4()/wx4() model + thinking selection. cli.beauty.js:427722"
+
+  # ── Loops / Scheduling (kairos) ──────────────────────────────────────
+
+  - name: "tengu_kairos_loop_persistent"
+    default: false
+    category: "loops-kairos"
+    accessor: "j$"
+    description: "Persistent /loop preamble variant (loop survives across turns)"
+    related_env_var: "CLAUDE_CODE_LOOP_PERSISTENT"
+    notes: "Env var OR flag. Selects WX7 vs vS6 autonomous-loop preamble. cli.beauty.js:209690"
+
+  - name: "tengu_kairos_loop_prompt"
+    default: false
+    category: "loops-kairos"
+    accessor: "j$"
+    description: "Enables autonomous-loop tick prompt resolution (sentinel <<autonomous-loop>> / -dynamic)"
+    notes: "Gates SX7() autonomous-loop fire. cli.beauty.js:209728"
+
+  - name: "tengu_kairos_loop_dynamic"
+    default: false
+    category: "loops-kairos"
+    accessor: "j$"
+    description: "Dynamic-pacing /loop mode (ScheduleWakeup self-paced iterations)"
+    notes: "cli.beauty.js:209875"
+
+  - name: "tengu_kairos_loop_keepalive"
+    default: false
+    category: "loops-kairos"
+    accessor: "j$"
+    description: "Keepalive scheduling for /loop (re-schedules wakeup to keep loop alive)"
+    related_env_var: "CLAUDE_CODE_LOOP_KEEPALIVE"
+    notes: "Env var OR flag. cli.beauty.js:209880"
+
+  - name: "tengu_kairos_brief"
+    default: false
+    category: "loops-kairos"
+    accessor: "cS"
+    description: "Brief mode (plain assistant text hidden; only a dedicated reply tool reaches the user)"
+    related_env_var: "CLAUDE_CODE_BRIEF"
+    notes: "rx() OR env OR flag enables brief mode. cli.beauty.js:398123"
+
+  - name: "tengu_kairos_brief_config"
+    default: "{...}"
+    category: "loops-kairos"
+    accessor: "j$"
+    description: "Brief-mode configuration object (default var mz9)"
+    notes: "cli.beauty.js:529332"
+
+  - name: "tengu_kairos_brief_stop_hook_text"
+    default: ""
+    category: "loops-kairos"
+    accessor: "j$"
+    description: "Override text for the brief-mode stop-hook nudge"
+    notes: "Falls back to built-in f5f text when empty. cli.beauty.js:398131"
+
+  - name: "tengu_kairos_push_notifications"
+    default: false
+    category: "loops-kairos"
+    accessor: "j$"
+    description: "Enable agent PushNotification tool (terminal + mobile push when Remote Control connected)"
+    notes: "Gated again by user pref agentPushNotifEnabled. cli.beauty.js:209584"
+
+  - name: "tengu_kairos_input_needed_push"
+    default: false
+    category: "loops-kairos"
+    accessor: "j$"
+    description: "Push a notification when the loop/agent needs user input"
+    notes: "cli.beauty.js:209588"
+
+  - name: "tengu_kairos_cron"
+    default: true
+    category: "loops-kairos"
+    accessor: "cS"
+    description: "Cron-based scheduling (CronCreate/CronList, recurring routines) availability"
+    related_env_var: "CLAUDE_CODE_DISABLE_CRON"
+    notes: "Default TRUE; disabled by env var. Not in flags-j.txt. cli.beauty.js:210390"
+
+  - name: "tengu_kairos_cron_durable"
+    default: true
+    category: "loops-kairos"
+    accessor: "cS"
+    description: "Durable (persisted) cron jobs across sessions"
+    notes: "Default TRUE. Not in flags-j.txt. cli.beauty.js:210394"
+
+  - name: "tengu_kairos_cron_config"
+    default: "{recurringFrac:0.5,recurringCapMs:1800000,oneShotMaxMs:90000,...}"
+    category: "loops-kairos"
+    accessor: "cS"
+    description: "Timing config for cron scheduling (recurring fraction/caps, one-shot windows)"
+    notes: "Config object (default var hF). Not in flags-j.txt. cli.beauty.js:209509"
+
+  # ── Remote Control / Bridge ──────────────────────────────────────────
+
+  - name: "tengu_bridge_attestation_enforce"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Enforce bridge attestation (security gate for Remote Control bridge connections)"
+    notes: "cli.beauty.js:288328"
+
+  - name: "tengu_bridge_attestation_enforce_config"
+    default: "{}"
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Config object accompanying bridge attestation enforcement"
+    notes: "cli.beauty.js:288330"
+
+  - name: "tengu_bridge_repl_v2_cse_shim_enabled"
+    default: true
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "REPL v2 client-side-execution shim for the bridge"
+    notes: "Default TRUE. cli.beauty.js:368836"
+
+  - name: "tengu_bridge_requires_action_details"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Bridge requires detailed action descriptions for requires-action prompts"
+    notes: "cli.beauty.js:574606"
+
+  - name: "tengu_bridge_system_init"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Bridge sends a system_init message on connection"
+    notes: "cli.beauty.js:575285"
+
+  - name: "tengu_bridge_vivid"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Bridge 'vivid' rendering/feature variant (P6f())"
+    notes: "cli.beauty.js:368879"
+
+  - name: "tengu_bridge_min_version"
+    default: '{minVersion:"0.0.0"}'
+    category: "remote-bridge"
+    accessor: "gS"
+    description: "Minimum client version required for Remote Control; below it shows update message"
+    notes: "Config object. Not in flags-j.txt. cli.beauty.js:368844"
+
+  - name: "tengu_bridge_poll_interval_config"
+    default: "{...}"
+    category: "remote-bridge"
+    accessor: "cS"
+    description: "Bridge polling interval configuration (default var v1$, fallback 300000ms)"
+    notes: "Not in flags-j.txt. cli.beauty.js:535752"
+
+  - name: "tengu_amber_relay"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Bridge/relay-related gate (Ks6(), near REPL bridge enable code)"
+    notes: "cli.beauty.js:368871"
+
+  - name: "tengu_relay_chain_v1"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "When true, removes the multi-command bash chaining guidance from the system prompt"
+    notes: "Affects BashTool system-prompt section. cli.beauty.js:421590"
+
+  - name: "tengu_slate_harbor"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "REPL mode availability gate when entrypoint is cli or remote"
+    related_env_var: "CLAUDE_CODE_REPL"
+    notes: "cli.beauty.js:210358"
+
+  - name: "tengu_remote_backend"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Remote backend mode (carried over from 2.1.32)"
+    notes: "cli.beauty.js:657744"
+
+  - name: "tengu_slate_harbor_experiment"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "New /init experiment (CLAUDE.md generation flow)"
+    related_env_var: "CLAUDE_CODE_NEW_INIT"
+    notes: "Env var OR flag. cli.beauty.js:474596"
+
+  - name: "tengu_surreal_dali"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Remote-sessions onboarding/affordance gate (requires allow_remote_sessions capability)"
+    notes: "cli.beauty.js:404432"
+
+  - name: "tengu_cobalt_lantern"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Quick web setup for remote sessions (requires allow_remote_sessions + allow_quick_web_setup)"
+    notes: "cli.beauty.js:541085"
+
+  # ── CCR (Claude Code Remote / fanout / cloud) ────────────────────────
+
+  - name: "tengu_ccr_bridge"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$ / lS"
+    description: "CCR bridge mode (cloud-backed remote execution bridge)"
+    notes: "Sync (j$) and async (lS) checks. cli.beauty.js:368643"
+
+  - name: "tengu_ccr_v2_send_events_cli"
+    default: false
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Send CCR v2 events from the CLI"
+    notes: "cli.beauty.js:368840"
+
+  - name: "tengu_ccr_bundle_max_bytes"
+    default: null
+    category: "remote-bridge"
+    accessor: "j$"
+    description: "Max bytes for CCR session bundle upload (falls back to qqf=104857600 / 100MB)"
+    notes: "cli.beauty.js:370728"
+
+  - name: "tengu_ccr_bundle_seed_enabled"
+    default: false
+    category: "remote-bridge"
+    accessor: "lS"
+    description: "Enable CCR bundle seeding (upload conversation bundle for cloud session)"
+    related_env_var: "CCR_ENABLE_BUNDLE / CCR_FORCE_BUNDLE"
+    notes: "Async. Not in flags-j.txt. cli.beauty.js:371672"
+
+  # ── Auto Mode / Permissions / Classifier ─────────────────────────────
+
+  - name: "tengu_auto_mode_config"
+    default: "Symbol(no-cached-auto-mode-config)"
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Auto-mode (auto-accept) configuration object; field .enabled drives availability ('disabled' kills it)"
+    notes: "Default is a sentinel Symbol (DO7/oU4); presence of an object enables config. Appears 3x in flags-j.txt. cli.beauty.js:183675"
+
+  - name: "tengu_harbor_willow"
+    default: false
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Default the session into auto mode when permissions allow"
+    notes: "Combined with tengu_moss_anchor for non-interactive sessions. cli.beauty.js:183756"
+
+  - name: "tengu_moss_anchor"
+    default: false
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Permit auto-mode default in non-interactive sessions"
+    notes: "cli.beauty.js:183756"
+
+  - name: "tengu_iron_gate_closed"
+    default: true
+    category: "auto-mode"
+    accessor: "cS"
+    description: "Fail-closed behavior for auto-mode classifier: when classifier unavailable, DENY (rather than allow)"
+    notes: "Default TRUE = fail closed. Not in flags-j.txt. cli.beauty.js:450386"
+
+  - name: "tengu_classifier_disabled_surfaces"
+    default: ""
+    category: "classifier"
+    accessor: "j$"
+    description: "Comma-separated list of classifier surfaces (cli/bg/bridge/desktop/ccr/...) to disable"
+    notes: "cli.beauty.js:428434"
+
+  - name: "tengu_classifier_summary_kill"
+    default: false
+    category: "classifier"
+    accessor: "j$"
+    description: "Kill switch: removes the 'summary' classifier stage"
+    notes: "Kill switch (enabling drops the summary stage). cli.beauty.js:428440"
+
+  - name: "tengu_classifier_summary_llm_emit"
+    default: false
+    category: "classifier"
+    accessor: "j$"
+    description: "Force the classifier summary stage to emit via LLM"
+    notes: "cli.beauty.js:428462"
+
+  - name: "tengu_classifier_summary_heuristic_emit"
+    default: false
+    category: "classifier"
+    accessor: "j$"
+    description: "Force the classifier summary stage to emit via heuristic"
+    notes: "cli.beauty.js:428463"
+
+  - name: "tengu_cobalt_wren"
+    default: false
+    category: "classifier"
+    accessor: "j$"
+    description: "Downgrade classifier summary from 'llm' to 'heuristic' mode"
+    related_env_var: "CLAUDE_CODE_CLASSIFIER_SUMMARY"
+    notes: "cli.beauty.js:428458"
+
+  - name: "tengu_cfc_in_product_permissions"
+    default: false
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Claude-for-Chrome (CFC) in-product permissions handling"
+    notes: "cli.beauty.js:183326"
+
+  - name: "tengu_disable_bypass_permissions_mode"
+    default: false
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Kill switch: disables bypass-permissions (--dangerously-skip-permissions) mode"
+    notes: "Kill switch. cli.beauty.js:183695"
+
+  - name: "tengu_bash_allowlist_strip_all"
+    default: false
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Strip ALL flags when matching bash command against permission allowlist"
+    notes: "cli.beauty.js:450324"
+
+  - name: "tengu_ant_yolo_equiv_strip_config"
+    default: "{}"
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Config controlling which bash flags are stripped for permission-equivalence ('yolo equiv') matching"
+    notes: "cli.beauty.js:450584"
+
+  - name: "tengu_destructive_command_warning"
+    default: false
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Show a warning before running detected destructive shell commands"
+    notes: "cli.beauty.js:601017"
+
+  - name: "tengu_harbor_permissions"
+    default: false
+    category: "auto-mode"
+    accessor: "j$"
+    description: "Enable harbor permission rule engine (FNV-hashed allow/deny rules)"
+    notes: "cli.beauty.js:363411"
+
+  # ── Channels (harbor) ────────────────────────────────────────────────
+
+  - name: "tengu_harbor"
+    default: false
+    category: "channels"
+    accessor: "j$ / lS"
+    description: "Enable Channels feature (isChannelsEnabled)"
+    notes: "Sync + async. cli.beauty.js:363247"
+
+  - name: "tengu_harbor_ledger"
+    default: []
+    category: "channels"
+    accessor: "j$"
+    description: "Channel allowlist (array of {name, marketplace} entries, zod-validated)"
+    notes: "cli.beauty.js:363241"
+
+  - name: "tengu_harbor_prism"
+    default: false
+    category: "channels"
+    accessor: "j$"
+    description: "Channels prism variant gate"
+    notes: "cli.beauty.js:278395"
+
+  - name: "tengu_quiet_harbor"
+    default: false
+    category: "channels"
+    accessor: "j$"
+    description: "When true, daemon install prompt defaults to 'ask' (else 'transient')"
+    notes: "cli.beauty.js:140846"
+
+  # ── Cowork / Team Onboarding (flint_harbor / cedar_inlet) ────────────
+
+  - name: "tengu_flint_harbor_prompt"
+    default: "{}"
+    category: "cowork"
+    accessor: "j$"
+    description: "Config for the /team-onboarding command (prompt text, guide template, windowDays)"
+    notes: "cli.beauty.js:498816"
+
+  - name: "tengu_flint_harbor_share"
+    default: false
+    category: "cowork"
+    accessor: "j$"
+    description: "Team onboarding share affordance gate"
+    notes: "cli.beauty.js:407166"
+
+  - name: "tengu_cedar_inlet"
+    default: "off"
+    category: "cowork"
+    accessor: "j$"
+    description: "Team-onboarding discovery surface arm: 'off' | 'banner' | 'step'"
+    related_env_var: "CLAUDE_CODE_TEAM_ONBOARDING"
+    notes: "cli.beauty.js:498850"
+
+  - name: "tengu_herring_clock"
+    default: false
+    category: "cowork"
+    accessor: "j$"
+    description: "Team memory directory gate (when off, team memdir disabled telemetry fires)"
+    related_env_var: "CLAUDE_MEMORY_STORES"
+    notes: "cli.beauty.js:143322"
+
+  # ── Workflows ────────────────────────────────────────────────────────
+
+  - name: "tengu_workflows_enabled"
+    default: true
+    category: "workflows"
+    accessor: "j$"
+    description: "Enable Workflows feature (default-on for non-pro plans)"
+    related_env_var: "CLAUDE_CODE_WORKFLOWS"
+    notes: "Default TRUE. Env var forces on/off. cli.beauty.js:184020"
+
+  # ── Review / Bughunter / Ultraplan (plan-v2) ─────────────────────────
+
+  - name: "tengu_review_workflow_routing"
+    default: false
+    category: "review"
+    accessor: "j$"
+    description: "Route /code-review through the workflow router"
+    notes: "cli.beauty.js:605422"
+
+  - name: "tengu_review_bughunter_config"
+    default: null
+    category: "review"
+    accessor: "j$"
+    description: "Bughunter (fleet code-review) configuration object"
+    related_env_var: "BUGHUNTER_FLEET_SIZE"
+    notes: "cli.beauty.js:503814"
+
+  - name: "tengu_fleetview_pr_batch"
+    default: true
+    category: "review"
+    accessor: "j$"
+    description: "Batch PR fleet-view operations (bughunter/ultrareview cloud review)"
+    notes: "Default TRUE. cli.beauty.js:627979"
+
+  - name: "tengu_ultraplan_config"
+    default: null
+    category: "plan-v2"
+    accessor: "j$"
+    description: "Ultraplan (cloud plan phase) config; .enabled must be true (and not remote)"
+    notes: "cli.beauty.js:504466"
+
+  - name: "tengu_ultraplan_prompt_identifier"
+    default: "simple_plan"
+    category: "plan-v2"
+    accessor: "j$"
+    description: "Prompt identifier used for ultraplan (default var zK9='simple_plan')"
+    notes: "cli.beauty.js:504564"
+
+  - name: "tengu_ultraplan_timeout_seconds"
+    default: 5400
+    category: "plan-v2"
+    accessor: "j$"
+    description: "Ultraplan cloud timeout in seconds (default 90 min; multiplied to ms)"
+    notes: "cli.beauty.js:504552"
+
+  # ── Advisor ──────────────────────────────────────────────────────────
+
+  - name: "tengu_sage_compass2"
+    default: "{}"
+    category: "advisor"
+    accessor: "j$"
+    description: "Advisor tool config; .enabled gates the experimental Advisor tool (firstParty only)"
+    related_env_var: "CLAUDE_CODE_DISABLE_ADVISOR_TOOL / CLAUDE_CODE_ENABLE_EXPERIMENTAL_ADVISOR_TOOL"
+    notes: "cli.beauty.js:287322"
+
+  # ── System Prompt arms ───────────────────────────────────────────────
+
+  - name: "tengu_amber_sextant"
+    default: true
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Inject the 'operating autonomously' system-prompt section (don't ask permission mid-task)"
+    notes: "Default TRUE. Only injected for velvet-falcon/autonomous models. cli.beauty.js:558361"
+
+  - name: "tengu_verified_vs_assumed"
+    default: false
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Inject 'be accurate about verified vs assumed' guidance into system prompt"
+    notes: "cli.beauty.js:558406"
+
+  - name: "tengu_walnut_prism"
+    default: false
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Arm the 'ownership frame' system-prompt variant"
+    related_env_var: "CLAUDE_CODE_OWNERSHIP_FRAME"
+    notes: "cli.beauty.js:558740"
+
+  - name: "tengu_cedar_lantern"
+    default: true
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Arm the 'act, don't rederive' system-prompt variant"
+    related_env_var: "CLAUDE_CODE_ACT_DONT_REDERIVE"
+    notes: "Default TRUE. cli.beauty.js:558746"
+
+  - name: "tengu_sparrow_ledger"
+    default: false
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Arm the 'verify prompt' system-prompt variant"
+    related_env_var: "CLAUDE_CODE_VERIFY_PROMPT"
+    notes: "cli.beauty.js:558491"
+
+  - name: "tengu_orchid_mantis"
+    default: false
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Inject /schedule follow-up offer guidance (v1: offer when natural future follow-up, 75%+ yes odds)"
+    notes: "cli.beauty.js:558456"
+
+  - name: "tengu_orchid_mantis_v2"
+    default: false
+    category: "system-prompt"
+    accessor: "j$"
+    description: "More conservative /schedule follow-up guidance (v2: only when a named artifact has a quotable future obligation)"
+    notes: "Takes precedence over v1 when set. cli.beauty.js:558456"
+
+  - name: "tengu_relay_chain_v1 (see remote-bridge)"
+    default: false
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Removes the bash multi-command parallel/sequential guidance block from the system prompt"
+    notes: "Cross-listed under remote-bridge. cli.beauty.js:421590"
+
+  - name: "tengu_heron_brook"
+    default: ""
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Custom system-prompt notice string (Msf); also read from clientDataCache.tengu_heron_brook"
+    notes: "cli.beauty.js:558355"
+
+  - name: "tengu_cinder_plover"
+    default: ""
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Custom prompt override string for a specific tool/model path"
+    notes: "cli.beauty.js:344185"
+
+  - name: "tengu_chair_sermon"
+    default: false
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Alternate message/content mapping in prompt assembly (maps content via DPf)"
+    notes: "cli.beauty.js:445982"
+
+  - name: "tengu_chert_bezel"
+    default: false
+    category: "system-prompt"
+    accessor: "j$"
+    description: "Append an extra system-prompt block (o88) under certain conditions"
+    notes: "cli.beauty.js:130361"
+
+  # ── Model Access / Routing ───────────────────────────────────────────
+
+  - name: "tengu_velvet_falcon_model"
+    default: ""
+    category: "model-access"
+    accessor: "j$"
+    description: "Model-name substring that marks a model as 'velvet falcon' (autonomous-mode treatment)"
+    related_env_var: "CLAUDE_CODE_VELVET_FALCON"
+    notes: "Also read from clientDataCache.velvet_falcon_model. cli.beauty.js:101952"
+
+  - name: "tengu_velvet_cascade"
+    default: null
+    category: "model-access"
+    accessor: "j$"
+    description: "Config {models:[...]} marking models that get the 'simple system prompt' treatment"
+    notes: "cli.beauty.js:101984"
+
+  - name: "tengu_pewter_owl_model"
+    default: ""
+    category: "model-access"
+    accessor: "j$"
+    description: "Model override string (pewter owl) used in model selection"
+    notes: "cli.beauty.js:130076"
+
+  - name: "tengu_quartz_heron"
+    default: false
+    category: "model-access"
+    accessor: "j$"
+    description: "When true, a subagent/task inherits the parent model ('inherit') instead of haiku"
+    notes: "cli.beauty.js:286126"
+
+  - name: "tengu_amber_redwood2"
+    default: ""
+    category: "model-access"
+    accessor: "j$"
+    description: "Numeric config (parsed) applied only to claude-opus-4-8 (context/threshold tuning)"
+    notes: "cli.beauty.js:433069"
+
+  - name: "tengu_amber_redwood3"
+    default: ""
+    category: "model-access"
+    accessor: "j$"
+    description: "Boolean-ish gate (truthy string) tied to opus-4-8 behavior (pi())"
+    notes: "cli.beauty.js:433062"
+
+  - name: "tengu_penguins_off"
+    default: null
+    category: "model-access"
+    accessor: "j$"
+    description: "Fast mode kill switch: a non-null string is the reason Fast mode is unavailable"
+    notes: "Kill switch (non-null = disabled). cli.beauty.js:98960"
+
+  - name: "tengu_crimson_vector"
+    default: false
+    category: "model-access"
+    accessor: "j$"
+    description: "First-party model routing/affordance gate (returns JA7 when on)"
+    notes: "cli.beauty.js:177985"
+
+  - name: "tengu_marble_lark"
+    default: false
+    category: "model-access"
+    accessor: "j$"
+    description: "Model-related gate (carried marble_* lineage; behavior tied to model availability)"
+    notes: "cli.beauty.js:270163"
+
+  - name: "tengu_immediate_model_command"
+    default: false
+    category: "model-access"
+    accessor: "j$"
+    description: "Apply /model command immediately (without confirmation step)"
+    notes: "cli.beauty.js:514634"
+
+  - name: "tengu_amber_lark"
+    default: false
+    category: "subscription-upsells"
+    accessor: "j$"
+    description: "Append extra usage/status detail (S34) to the usage status message"
+    notes: "cli.beauty.js:511908"
+
+  - name: "tengu_gypsum_kite"
+    default: false
+    category: "model-access"
+    accessor: "j$"
+    description: "Show '~2x usage vs Sonnet' hint for pro-plan users on certain models"
+    notes: "cli.beauty.js:460191"
+
+  # ── Context Management / Caching ─────────────────────────────────────
+
+  - name: "tengu_amber_rokovoko"
+    default: 0.2
+    category: "context-management"
+    accessor: "j$"
+    description: "Autocompact precompute buffer fraction (must be 0 <= x < 1; default var hqq=0.2)"
+    notes: "cli.beauty.js:433180"
+
+  - name: "tengu_compact_cache_prefix"
+    default: true
+    category: "context-management"
+    accessor: "j$"
+    description: "Prompt caching during compaction"
+    notes: "Default flipped to TRUE vs 2.1.32. cli.beauty.js (compaction path)"
+
+  - name: "tengu_memory_bulk_inflate"
+    default: true
+    category: "context-management"
+    accessor: "j$"
+    description: "Bulk-inflate memory entries on load (vs lazy); when off, returns 'not-attempted'"
+    notes: "Default TRUE. cli.beauty.js:420334"
+
+  - name: "tengu_read_dedup_killswitch"
+    default: false
+    category: "context-management"
+    accessor: "j$"
+    description: "Kill switch: disables Read-tool result deduplication cache"
+    notes: "Kill switch. cli.beauty.js:435747"
+
+  - name: "tengu_prompt_cache_1h_config"
+    default: '{allowlist:["repl_main_thread*",...]}'
+    category: "context-management"
+    accessor: "j$"
+    description: "1-hour prompt-cache config (allowlist of cache keys eligible for 1h TTL)"
+    notes: "cli.beauty.js:559592"
+
+  - name: "tengu_prompt_cache_diagnostics"
+    default: false
+    category: "context-management"
+    accessor: "j$"
+    description: "Emit prompt-cache diagnostics"
+    notes: "cli.beauty.js:559923"
+
+  - name: "tengu_amber_prism"
+    default: false
+    category: "context-management"
+    accessor: "j$"
+    description: "Append extra block (fPf) to context/system content when in a particular mode (t1())"
+    notes: "cli.beauty.js:444864"
+
+  - name: "tengu_hazel_osprey"
+    default: false
+    category: "context-management"
+    accessor: "j$"
+    description: "Context-window flooring behavior gate"
+    notes: "cli.beauty.js:559347"
+
+  - name: "tengu_hazel_osprey_floor"
+    default: 75000
+    category: "context-management"
+    accessor: "j$"
+    description: "Token floor value used by hazel_osprey (default var tsf=75000)"
+    notes: "cli.beauty.js:559351"
+
+  - name: "tengu_paper_halyard"
+    default: false
+    category: "context-management"
+    accessor: "j$"
+    description: "Context/message assembly variant gate"
+    notes: "cli.beauty.js:214730"
+
+  - name: "tengu_moth_copse"
+    default: false
+    category: "context-management"
+    accessor: "j$"
+    description: "Transform applied to message history (when off, returns history unchanged)"
+    notes: "cli.beauty.js:214627"
+
+  - name: "tengu_velvet_ibis"
+    default: "{}"
+    category: "context-management"
+    accessor: "j$"
+    description: "Tool-result clearing/limits config; .mcp_tool sets MCP output token cap"
+    related_env_var: "MAX_MCP_OUTPUT_TOKENS"
+    notes: "cli.beauty.js:223033"
+
+  # ── Session Memory / Dream ───────────────────────────────────────────
+
+  - name: "tengu_ochre_finch"
+    default: false
+    category: "session-memory"
+    accessor: "j$"
+    description: "Session-memory feature gate (memory types / save flow, tG6())"
+    notes: "cli.beauty.js:143187"
+
+  - name: "tengu_onyx_plover"
+    default: null
+    category: "session-memory"
+    accessor: "j$"
+    description: "Thresholds config for 'dream'/memory sessions (minHours, minSessions)"
+    notes: "cli.beauty.js:426840"
+
+  - name: "tengu_bramble_lintel"
+    default: null
+    category: "session-memory"
+    accessor: "j$"
+    description: "Numeric config for memory/dream pacing (defaults to 1 when null)"
+    notes: "cli.beauty.js:426600"
+
+  - name: "tengu_passport_quail"
+    default: false
+    category: "session-memory"
+    accessor: "j$"
+    description: "Memory/dream-related capability gate (also gates a slate_thimble path)"
+    notes: "cli.beauty.js:140698"
+
+  - name: "tengu_sepia_cormorant"
+    default: null
+    category: "session-memory"
+    accessor: "j$"
+    description: "Memory/dream config object (read in same cluster as passport_quail/billiard_aviary)"
+    notes: "cli.beauty.js:140689"
+
+  - name: "tengu_sepia_moth"
+    default: false
+    category: "session-memory"
+    accessor: "j$"
+    description: "Memory/dream-related gate (xm4 cluster)"
+    notes: "cli.beauty.js:424237"
+
+  - name: "tengu_billiard_aviary"
+    default: false
+    category: "session-memory"
+    accessor: "j$"
+    description: "Selects alternate memory artifact set (Qh_ vs Fh_)"
+    notes: "cli.beauty.js:140712"
+
+  - name: "tengu_umber_petrel"
+    default: false
+    category: "session-memory"
+    accessor: "j$"
+    description: "Memory/dream-related gate in the same cluster (umber petrel)"
+    notes: "cli.beauty.js:140694"
+
+  - name: "tengu_shale_finch"
+    default: false
+    category: "session-memory"
+    accessor: "j$"
+    description: "Memory-related gate (returned directly; near memory permission code)"
+    notes: "cli.beauty.js:285480"
+
+  - name: "tengu_tussock_oriole"
+    default: false
+    category: "session-memory"
+    accessor: "j$"
+    description: "Gate for projectSettings-scoped memory store behavior"
+    notes: "cli.beauty.js:286183"
+
+  # ── File / Tool Operations ───────────────────────────────────────────
+
+  - name: "tengu_velvet_hammer"
+    default: false
+    category: "file-operations"
+    accessor: "j$"
+    description: "Skip the 'must read file before Edit' guard (Edit tool)"
+    notes: "Successor to 2.1.32 tengu_marble_kite (Edit half). cli.beauty.js:416363"
+
+  - name: "tengu_velvet_mallet"
+    default: false
+    category: "file-operations"
+    accessor: "j$"
+    description: "Skip the 'must read file before Write' guard (Write tool)"
+    notes: "Successor to 2.1.32 tengu_marble_kite (Write half). cli.beauty.js:343411"
+
+  - name: "tengu_velvet_static"
+    default: false
+    category: "file-operations"
+    accessor: "j$"
+    description: "Enables a 'velvet static' tool/feature (isEnabled gate)"
+    notes: "cli.beauty.js:524189"
+
+  - name: "tengu_edit_minimalanchor_jrn"
+    default: false
+    category: "file-operations"
+    accessor: "j$"
+    description: "Use the 'minimal anchor' variant of the Edit tool description (keep old_string 1-3 lines)"
+    notes: "Alters Edit tool description text. cli.beauty.js:415903"
+
+  - name: "tengu_amber_wren"
+    default: "{}"
+    category: "file-operations"
+    accessor: "j$"
+    description: "Read tool config: maxSizeBytes, maxTokens, includeMaxSizeInPrompt, targetedRangeNudge"
+    notes: "cli.beauty.js:255593"
+
+  - name: "tengu_tab_read_sep"
+    default: false
+    category: "file-operations"
+    accessor: "j$"
+    description: "Tab/separator handling option for Read tool output"
+    notes: "cli.beauty.js:255605"
+
+  - name: "tengu_hawthorn_steeple"
+    default: false
+    category: "file-operations"
+    accessor: "j$"
+    description: "Gate for an early-return file/tool-results behavior (when off, returns early)"
+    notes: "cli.beauty.js:255753"
+
+  - name: "tengu_send_user_file"
+    default: true
+    category: "file-operations"
+    accessor: "j$"
+    description: "Enable the SendUserFile tool (remote/bridge sessions, firstParty)"
+    notes: "Default TRUE. cli.beauty.js:404604"
+
+  # ── MCP ──────────────────────────────────────────────────────────────
+
+  - name: "tengu_mcp_skills"
+    default: false
+    category: "mcp"
+    accessor: "j$"
+    description: "Expose skills as MCP tools / MCP skills integration"
+    notes: "cli.beauty.js:259432"
+
+  - name: "tengu_mcp_singleton_unwrap"
+    default: true
+    category: "mcp"
+    accessor: "j$"
+    description: "Unwrap singleton MCP tool results"
+    notes: "Default TRUE. cli.beauty.js:264530"
+
+  - name: "tengu_mcp_stateless_skip_init"
+    default: false
+    category: "mcp"
+    accessor: "j$"
+    description: "Skip init handshake for stateless MCP servers"
+    notes: "cli.beauty.js:252034"
+
+  - name: "tengu_mcp_subagent_prompt"
+    default: false
+    category: "mcp"
+    accessor: "j$"
+    description: "Use new (non-legacy) subagent MCP prompt"
+    notes: "cli.beauty.js:256000"
+
+  - name: "tengu_mcp_directory_bff"
+    default: false
+    category: "mcp"
+    accessor: "j$"
+    description: "Use BFF endpoint for the MCP directory"
+    notes: "cli.beauty.js:138897"
+
+  - name: "tengu_mcp_directory_visibility"
+    default: '["commercial","gsuite","enterprise","health"]'
+    category: "mcp"
+    accessor: "j$"
+    description: "Org categories allowed to see the MCP directory (default var CtK)"
+    notes: "cli.beauty.js:138840"
+
+  - name: "tengu_mcp_local_oauth_blocked_hosts"
+    default: '{hosts:["microsoft365.mcp.claude.com","gmail.mcp.claude.com","gcal.mcp.claude.com"]}'
+    category: "mcp"
+    accessor: "j$"
+    description: "Hosts blocked from local MCP OAuth (default var VE7)"
+    notes: "cli.beauty.js:240931"
+
+  # ── Plugins / Skills / Dashboard ─────────────────────────────────────
+
+  - name: "tengu_plugin_official_mkt_git_fallback"
+    default: true
+    category: "plugins"
+    accessor: "j$"
+    description: "Allow git fallback when official marketplace GCS fetch fails"
+    notes: "Default TRUE; when off, throws on GCS failure. cli.beauty.js:440581"
+
+  - name: "tengu_skills_dashboard_enabled"
+    default: false
+    category: "plugins"
+    accessor: "j$"
+    description: "Enable the skills dashboard UI"
+    notes: "cli.beauty.js:485089"
+
+  - name: "tengu_slim_subagent_claudemd"
+    default: true
+    category: "plugins"
+    accessor: "j$"
+    description: "Omit CLAUDE.md from subagent context (slim subagent) when omitClaudeMd and no userContext"
+    notes: "Default TRUE. cli.beauty.js:394834"
+
+  # ── UI / UX ──────────────────────────────────────────────────────────
+
+  - name: "tengu_chomp_inflection"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Prompt suggestions feature"
+    notes: "Default flipped to FALSE vs 2.1.32 (was true). cli.beauty.js:274303"
+
+  - name: "tengu_keybinding_customization_release"
+    default: true
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Custom keybinding support"
+    notes: "Default flipped to TRUE vs 2.1.32 (was false). cli.beauty.js:169359"
+
+  - name: "tengu_chrome_auto_enable"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Auto-enable Claude-in-Chrome (CFC) integration"
+    related_env_var: "CLAUDE_CODE_ENABLE_CFC"
+    notes: "cli.beauty.js:497905"
+
+  - name: "tengu_native_cursor"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Use native cursor rendering in the TUI"
+    notes: "cli.beauty.js:166193"
+
+  - name: "tengu_terminal_sidebar"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Terminal sidebar UI (status in terminal tab)"
+    notes: "cli.beauty.js:462411"
+
+  - name: "tengu_silk_hinge"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Message timestamp display + related footer option"
+    notes: "cli.beauty.js:501675"
+
+  - name: "tengu_mint_lanes"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Menu 'kind lanes' grouping in selection menus"
+    related_env_var: "CLAUDE_CODE_ENABLE_MENU_KIND_LANES"
+    notes: "cli.beauty.js:580375"
+
+  - name: "tengu_loggia_carousel"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Carousel UI element gate (loggia)"
+    notes: "cli.beauty.js:102052"
+
+  - name: "tengu_amber_lynx"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI variant gate in a session/columns view component"
+    notes: "cli.beauty.js:454816"
+
+  - name: "tengu_amber_anchor"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI/feature gate (_JH())"
+    notes: "cli.beauty.js:140838"
+
+  - name: "tengu_slate_finch"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Show 'high · burns fastest — medium handles most tasks' effort-level hint"
+    notes: "cli.beauty.js:184247"
+
+  - name: "tengu_slate_prism"
+    default: true
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Enable agent progress summaries rendering"
+    notes: "Default TRUE. cli.beauty.js:651903"
+
+  - name: "tengu_slate_quill"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI/feature gate (slate quill)"
+    notes: "cli.beauty.js:405068"
+
+  - name: "tengu_slate_thimble"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Gate that, with F6(), enables a UI path (returns !F6() || flag)"
+    notes: "cli.beauty.js:140699"
+
+  - name: "tengu_slate_harrier"
+    default: "off"
+    category: "ui-ux"
+    accessor: "j$"
+    description: "String-arm gate ('off' default) controlling a system/UI section"
+    notes: "cli.beauty.js:558672"
+
+  - name: "tengu_turtle_carbon"
+    default: true
+    category: "ui-ux"
+    accessor: "j$"
+    description: "Show thinking summaries (EyH())"
+    notes: "Default TRUE. cli.beauty.js:130112"
+
+  - name: "tengu_compass_dial"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI gate (compass dial)"
+    notes: "cli.beauty.js:579568"
+
+  - name: "tengu_gleaming_fair"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI/feature gate; when off returns null (feature hidden)"
+    notes: "cli.beauty.js:571952"
+
+  - name: "tengu_gouda_loop"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI behavior gate (gouda loop) in an effect/ref-guarded render path"
+    notes: "cli.beauty.js:579249"
+
+  - name: "tengu_maple_sundial"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI gate (maple sundial)"
+    notes: "cli.beauty.js:462037"
+
+  - name: "tengu_shining_fractals"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI/animation gate (shining fractals)"
+    notes: "cli.beauty.js:379830"
+
+  - name: "tengu_marlin_porch"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI/feature gate, memoized (marlin porch)"
+    notes: "cli.beauty.js:166178"
+
+  - name: "tengu_ochre_hollow"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI/feature gate (ochre hollow)"
+    notes: "cli.beauty.js:496699"
+
+  - name: "tengu_cedar_marsh"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI/feature gate requiring gw() (cedar marsh)"
+    notes: "cli.beauty.js:177867"
+
+  - name: "tengu_cobalt_thicket"
+    default: true
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI behavior enabled when gw() and flag (g67(true))"
+    notes: "Default TRUE. cli.beauty.js:656943"
+
+  - name: "tengu_cobalt_ridge"
+    default: false
+    category: "ui-ux"
+    accessor: "j$"
+    description: "UI/feature gate (cobalt ridge)"
+    notes: "cli.beauty.js:210167"
+
+  - name: "tengu_amber_lattice"
+    default: "{}"
+    category: "plugins"
+    accessor: "j$"
+    description: "Config {plugins:[...]} — allowlist of plugin names enabled via flag"
+    notes: "cli.beauty.js:555401"
+
+  # ── Terminal / Rendering internals ───────────────────────────────────
+
+  - name: "tengu_xterm_atlas_reset"
+    default: true
+    category: "terminal"
+    accessor: "j$"
+    description: "Reset the xterm glyph atlas cache (rendering correctness)"
+    notes: "Default TRUE. cli.beauty.js:595654"
+
+  - name: "tengu_basalt_meadow"
+    default: false
+    category: "terminal"
+    accessor: "j$"
+    description: "Terminal redraw/atlas behavior gate (works with xterm_atlas_reset)"
+    notes: "cli.beauty.js:595656"
+
+  - name: "tengu_malort_pedway"
+    default: "{enabled:false,pixelValidation:false,clipboardPasteMultiline:true,mouseAnimation:true,...}"
+    category: "terminal"
+    accessor: "gS"
+    description: "Terminal input config (pixel validation, multiline paste, mouse animation)"
+    notes: "Config object (default var QU7). Not in flags-j.txt. cli.beauty.js:263024"
+
+  - name: "tengu_cicada_nap_ms"
+    default: 0
+    category: "terminal"
+    accessor: "j$"
+    description: "Delay (ms) inserted in a render/idle loop (cicada nap)"
+    notes: "cli.beauty.js:657116"
+
+  - name: "tengu_byte_stream_idle_timeout_ms"
+    default: "computed"
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Idle timeout (ms) for the byte stream; default is a computed value (firstParty vs default)"
+    related_env_var: "CLAUDE_BYTE_STREAM_IDLE_TIMEOUT_MS / CLAUDE_STREAM_IDLE_TIMEOUT_MS"
+    notes: "Env vars override. cli.beauty.js:129594"
+
+  # ── Streaming / Watchdog / Networking ────────────────────────────────
+
+  - name: "tengu_stream_watchdog_default_on"
+    default: true
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Stream watchdog enabled by default"
+    related_env_var: "CLAUDE_ENABLE_STREAM_WATCHDOG"
+    notes: "Default TRUE. cli.beauty.js:129716"
+
+  - name: "tengu_event_watchdog_default_on"
+    default: false
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Event (SSE) watchdog enabled by default"
+    related_env_var: "CLAUDE_ENABLE_STREAM_WATCHDOG"
+    notes: "cli.beauty.js:560572"
+
+  - name: "tengu_disable_keepalive_on_econnreset"
+    default: false
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Disable HTTP keep-alive for retry after ECONNRESET (stale connection)"
+    notes: "cli.beauty.js:216292"
+
+  - name: "tengu_disable_streaming_to_non_streaming_fallback"
+    default: false
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Kill switch: disable the streaming -> non-streaming fallback"
+    related_env_var: "CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK"
+    notes: "Kill switch. cli.beauty.js:561026"
+
+  - name: "tengu_fgts"
+    default: false
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Eager input streaming for firstParty requests"
+    notes: "cli.beauty.js:558800"
+
+  - name: "tengu_drift_lantern"
+    default: false
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Start the event-loop stall detector"
+    notes: "cli.beauty.js:656314"
+
+  - name: "tengu_trace_lantern"
+    default: false
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Enable detailed beta tracing (with BETA_TRACING_ENDPOINT)"
+    related_env_var: "ENABLE_BETA_TRACING_DETAILED / BETA_TRACING_ENDPOINT"
+    notes: "cli.beauty.js:257846"
+
+  - name: "tengu_plum_vx3"
+    default: false
+    category: "streaming-performance"
+    accessor: "j$"
+    description: "Disables thinking tokens for WebSearch (carried over from 2.1.32)"
+    notes: "cli.beauty.js:401499"
+
+  - name: "tengu_tool_pear"
+    default: false
+    category: "api-networking"
+    accessor: "j$"
+    description: "Enable strict:true on tool schemas and push an extra API beta"
+    notes: "Default now explicitly false (was df/null in 2.1.32). cli.beauty.js:130366"
+
+  # ── Tool Search ──────────────────────────────────────────────────────
+
+  - name: "tengu_tool_search_unsupported_models"
+    default: null
+    category: "tool-search"
+    accessor: "j$"
+    description: "Array of model names that don't support tool search"
+    notes: "cli.beauty.js:215453"
+
+  # ── Subscription / Upsells / Billing ─────────────────────────────────
+
+  - name: "tengu_copper_lantern"
+    default: false
+    category: "subscription-upsells"
+    accessor: "j$"
+    description: "Extra-usage upsell promo gate"
+    notes: "cli.beauty.js:140842"
+
+  - name: "tengu_jade_anvil_4"
+    default: false
+    category: "subscription-upsells"
+    accessor: "j$"
+    description: "Upgrade/overage upsell UI variant gate"
+    notes: "cli.beauty.js:528135"
+
+  - name: "tengu_coral_beacon"
+    default: false
+    category: "subscription-upsells"
+    accessor: "j$"
+    description: "Upgrade-paths upsell UI variant gate"
+    notes: "cli.beauty.js:528135"
+
+  - name: "tengu_pewter_summit"
+    default: false
+    category: "subscription-upsells"
+    accessor: "j$"
+    description: "Overage-disabled upsell gate (org_level_disabled_until path)"
+    notes: "Flag name stored in var Uy8. Not in flags-j.txt. cli.beauty.js:386115/528135"
+
+  - name: "tengu_amber_creek"
+    default: false
+    category: "subscription-upsells"
+    accessor: "j$"
+    description: "TUI fullscreen 'downsell' gate (downsell_on) — part of fullscreen rollout logic"
+    notes: "cli.beauty.js:147287"
+
+  - name: "tengu_pewter_brook"
+    default: false
+    category: "subscription-upsells"
+    accessor: "j$"
+    description: "TUI fullscreen GrowthBook rollout gate (gb_on/gb_off)"
+    notes: "cli.beauty.js:147283"
+
+  - name: "tengu_c4e_slash_upsell"
+    default: false
+    category: "subscription-upsells"
+    accessor: "j$"
+    description: "Claude-for-Enterprise (c4e) slash-command upsell"
+    notes: "cli.beauty.js:524643"
+
+  - name: "tengu_desktop_upsell"
+    default: "{enable_shortcut_tip:false,enable_startup_dialog:false,enable_contextual_tip:false}"
+    category: "subscription-upsells"
+    accessor: "gS"
+    description: "Claude Desktop upsell config (shortcut tip / startup dialog / contextual tip)"
+    notes: "Config object (default var H3A). Not in flags-j.txt. cli.beauty.js:632844"
+
+  # ── Tips / Promo Carousel ────────────────────────────────────────────
+
+  - name: "tengu_alder_compass"
+    default: false
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Startup tip: '/powerup' interactive tutorial (new-user carousel item)"
+    notes: "cli.beauty.js:633184"
+
+  - name: "tengu_birch_kettle"
+    default: false
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Startup tip carousel item gate"
+    notes: "cli.beauty.js:624361"
+
+  - name: "tengu_dune_wren"
+    default: false
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Startup tip carousel item gate"
+    notes: "cli.beauty.js:633612"
+
+  - name: "tengu_garnet_finch"
+    default: false
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Startup tip carousel item gate"
+    notes: "cli.beauty.js:633624"
+
+  - name: "tengu_cedar_plume"
+    default: false
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Startup tip: Claude Design ('mock 5 versions of your screen') promo"
+    notes: "cli.beauty.js:633514"
+
+  - name: "tengu_kestrel_arch"
+    default: "off"
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Tip/promo arm; enabled when value == 'on'"
+    notes: "cli.beauty.js:633560"
+
+  - name: "tengu_pewter_lark"
+    default: "off"
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Tip/promo string-arm (switch on value; 'off' disables)"
+    notes: "cli.beauty.js:633631"
+
+  - name: "tengu_maple_pier"
+    default: false
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Auto-default-mode onboarding nudge gate (post-onboarding)"
+    notes: "cli.beauty.js:637739"
+
+  - name: "tengu_mocha_barista"
+    default: false
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Append one-time scheduled-run wording to the /schedule skill description"
+    notes: "cli.beauty.js:615035"
+
+  - name: "tengu_startup_notice"
+    default: ""
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Free-form startup notice text shown at launch"
+    notes: "cli.beauty.js:636846"
+
+  - name: "tengu_silk_hinge (see ui-ux)"
+    default: false
+    category: "tips-promo"
+    accessor: "j$"
+    description: "Cross-listed; primarily UI timestamps"
+    notes: "Primary entry under ui-ux"
+
+  # ── Feedback / Surveys ───────────────────────────────────────────────
+
+  - name: "tengu_feedback_survey_config"
+    default: "{...}"
+    category: "feedback-surveys"
+    accessor: "j$ / Cg8"
+    description: "Feedback survey configuration (default var mg8)"
+    notes: "cli.beauty.js:631680"
+
+  - name: "tengu_bad_survey_transcript_ask_config"
+    default: "{...}"
+    category: "feedback-surveys"
+    accessor: "Cg8"
+    description: "Config: whether to ask for transcript on a NEGATIVE survey response (default var pXq)"
+    notes: "Not in flags-j.txt. cli.beauty.js:631680"
+
+  - name: "tengu_good_survey_transcript_ask_config"
+    default: "{...}"
+    category: "feedback-surveys"
+    accessor: "Cg8"
+    description: "Config: whether to ask for transcript on a POSITIVE survey response (default var pXq)"
+    notes: "Not in flags-j.txt. cli.beauty.js:631680"
+
+  # ── VS Code / IDE ────────────────────────────────────────────────────
+
+  - name: "tengu_vscode_feedback_survey"
+    default: false
+    category: "vscode-ide"
+    accessor: "j$"
+    description: "VS Code feedback survey experiment"
+    notes: "cli.beauty.js:649542"
+
+  - name: "tengu_vscode_onboarding"
+    default: false
+    category: "vscode-ide"
+    accessor: "j$"
+    description: "VS Code onboarding experiment (now explicit boolean default)"
+    notes: "cli.beauty.js:219676"
+
+  - name: "tengu_vscode_review_upsell"
+    default: false
+    category: "vscode-ide"
+    accessor: "j$"
+    description: "VS Code review upsell experiment (now explicit boolean default)"
+    notes: "cli.beauty.js:219675"
+
+  # ── Sessions / Versioning / Diagnostics ──────────────────────────────
+
+  - name: "tengu_rename_full_session_fork"
+    default: false
+    category: "sessions"
+    accessor: "j$"
+    description: "Fork the full session when renaming (preferFork path)"
+    notes: "cli.beauty.js:494316"
+
+  - name: "tengu_agent_list_attach"
+    default: false
+    category: "sessions"
+    accessor: "j$"
+    description: "Attach behavior for the agent/session list"
+    notes: "cli.beauty.js:396128"
+
+  - name: "tengu_canary"
+    default: "{}"
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Canary config object (rollout canary / diagnostics payload)"
+    notes: "cli.beauty.js:328133"
+
+  - name: "tengu_scratch"
+    default: false
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Generic scratch/experimental gate (two call sites)"
+    notes: "cli.beauty.js:210527, 551545"
+
+  - name: "tengu_sedge_lantern"
+    default: true
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Enable the 'away summary' feature (summarize what happened while user was away)"
+    related_env_var: "CLAUDE_CODE_ENABLE_AWAY_SUMMARY"
+    notes: "Default TRUE. cli.beauty.js:273615"
+
+  - name: "tengu_sedge_lantern_config"
+    default: "{delayMs:180000}"
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Config for the away-summary feature (default var eXq=180000ms)"
+    notes: "cli.beauty.js:634301"
+
+  - name: "tengu_basalt_scarp"
+    default: false
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Diagnostics/feature gate requiring SN() (basalt scarp)"
+    notes: "cli.beauty.js:426333"
+
+  - name: "tengu_basalt_spur"
+    default: false
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Diagnostics/feature gate requiring SN() (basalt spur)"
+    notes: "cli.beauty.js:426329"
+
+  - name: "tengu_ember_latch"
+    default: false
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Gate OR'd with another condition (ember latch) in a coordinator/state path"
+    notes: "cli.beauty.js:385982"
+
+  - name: "tengu_brick_follow"
+    default: false
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Feature gate emitted into telemetry context; also a behavior gate (brick follow)"
+    notes: "cli.beauty.js:539291"
+
+  - name: "tengu_vellum_siding"
+    default: false
+    category: "diagnostics"
+    accessor: "j$"
+    description: "Feature gate emitted into telemetry context (vellum siding)"
+    notes: "cli.beauty.js:219681"

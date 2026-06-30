@@ -1,0 +1,3408 @@
+# Environment variables — Claude Code v2.1.169
+#
+# Source of truth: the typed env registry in cli.beauty.js (~line 40057-46196).
+# A single object `Y$` (cli.beauty.js:46241) merges 8 typed sub-maps and exposes
+# each var via a getter `() => parser.parse(process.env[NAME])`.
+#   parser types (mH, cli.beauty.js:40057):
+#     str     -> trimmed string | undefined
+#     bool    -> $$() truthy parse: ["1","true","yes","on"] => true, else false
+#     triBool -> true if truthy, false if ["0","false","no","off"], else undefined
+#     int     -> parsed integer, optional {min,max}
+#     enum    -> value if in allow-list, else undefined
+# `new=true` marks vars not present in the 2.1.32 dataset (54 -> 490 prefixed vars).
+# `opt_out=true` marks privacy/network/data-collection switches.
+# `danger=true` marks internal/testing/security-sensitive vars.
+
+meta:
+  version: "2.1.169"
+  build: "2026-06-08T03:22:12Z"
+  prefixed_var_count: 490        # CLAUDE_*/ANTHROPIC_* in data/raw/env-claude.txt
+  previous_count: 54             # 2.1.32
+  registry_function: "Y$ (cli.beauty.js:46241), maps s$6,t$6,G66,T66,V66,v66,N66,k66"
+  truthy_parser: "$$ (cli.beauty.js:1854): 1/true/yes/on"
+
+variables:
+  # ============================================================
+  # AUTH / IDENTITY / OAUTH  (map s$6, parser ORq)
+  # ============================================================
+  - name: ANTHROPIC_API_KEY
+    category: auth-identity
+    type: str
+    purpose: "Primary first-party API key"
+  - name: ANTHROPIC_AUTH_TOKEN
+    category: auth-identity
+    type: str
+    purpose: "Bearer auth token (alternative to API key)"
+  - name: CLAUDE_API_KEY
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Alternate API-key env (UI placeholder/ingest); maps to API key"
+  - name: ANTHROPIC_AWS_API_KEY
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "API key for the Anthropic-on-AWS (gateway) plane"
+  - name: ANTHROPIC_FOUNDRY_API_KEY
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "API key for Microsoft Foundry plane"
+  - name: AWS_BEARER_TOKEN_BEDROCK
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Bedrock bearer token auth"
+  - name: API_TOKEN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Generic API token (SDK/self-hosted worker)"
+  - name: AGENT_PROXY_AUTH_TOKEN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Auth token for the agent egress proxy"
+  - name: ANTHROPIC_PROFILE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Named credential/profile selector"
+  - name: ANTHROPIC_ORGANIZATION_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Organization id override (API metadata)"
+  - name: ANTHROPIC_FEDERATION_RULE_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Federation rule id (enterprise identity federation)"
+  - name: ANTHROPIC_IDENTITY_TOKEN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Workload identity token (OIDC) for token-exchange auth"
+  - name: ANTHROPIC_IDENTITY_TOKEN_FILE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "File path to read the workload identity token from"
+  - name: ANTHROPIC_SERVICE_ACCOUNT_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Service-account id (self-hosted worker auth)"
+  - name: ANTHROPIC_SCOPE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "OAuth/token scope (self-hosted worker)"
+  - name: ANTHROPIC_WORKSPACE_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Workspace id (self-hosted EnvironmentWorker)"
+  - name: ANTHROPIC_WORK_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Work id -> OTel work.id (self-hosted worker)"
+  - name: ANTHROPIC_SESSION_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Session id -> work.data.id (self-hosted worker)"
+  - name: ANTHROPIC_ENVIRONMENT_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Self-hosted environment id"
+  - name: ANTHROPIC_ENVIRONMENT_KEY
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Self-hosted environment key (config extraction)"
+  - name: ANTHROPIC_WEBHOOK_SIGNING_KEY
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Key for webhooks.unwrap() signature verification"
+  - name: ENVIRONMENT_SERVICE_KEY
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Service key for the environment runner"
+  - name: CLAUDE_CODE_USER_EMAIL
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "User email override (identity / attribution)"
+  - name: CLAUDE_CODE_ACCOUNT_UUID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Account UUID override"
+  - name: CLAUDE_CODE_ACCOUNT_TAGGED_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Tagged account id (analytics bucketing)"
+  - name: CLAUDE_CODE_ORGANIZATION_UUID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Organization UUID override"
+  - name: CLAUDE_CODE_SUBSCRIPTION_TYPE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Subscription tier override (pro/max/team/enterprise)"
+  - name: CLAUDE_CODE_RATE_LIMIT_TIER
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Rate-limit tier override"
+  - name: CLAUDE_TRUSTED_DEVICE_TOKEN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Trusted-device token (X-Trusted-Device-Token header)"
+  - name: CLAUDE_CODE_OAUTH_TOKEN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "OAuth access token (bypasses interactive login)"
+  - name: CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "FD to read OAuth token from (avoids env exposure)"
+  - name: CLAUDE_CODE_OAUTH_REFRESH_TOKEN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "OAuth refresh token"
+  - name: CLAUDE_CODE_OAUTH_CLIENT_ID
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Override OAuth client id (default 9d1c250a-...)"
+  - name: CLAUDE_CODE_OAUTH_SCOPES
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Override requested OAuth scopes"
+  - name: CLAUDE_CODE_OAUTH_401_WAIT_MS
+    category: auth-identity
+    type: int
+    new: true
+    purpose: "Wait before retrying after OAuth 401"
+  - name: CLAUDE_CODE_CUSTOM_OAUTH_URL
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Custom OAuth base URL (must be on approved allow-list)"
+  - name: CLAUDE_CODE_SESSION_ACCESS_TOKEN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Per-session access token"
+  - name: CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "FD to read API key from"
+  - name: CLAUDE_CODE_API_KEY_HELPER_TTL_MS
+    category: auth-identity
+    type: int
+    new: true
+    purpose: "TTL for apiKeyHelper-provided key cache"
+  - name: CLAUDE_CODE_HFI_BEARER_TOKEN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Bearer token for HFI (hosted first-party inference)"
+  - name: CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "FD with websocket auth token"
+  - name: CLAUDE_SESSION_INGRESS_TOKEN_FILE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "File with session-ingress auth token"
+  - name: CLAUDE_CODE_SDK_HAS_OAUTH_REFRESH
+    category: auth-identity
+    type: bool
+    new: true
+    purpose: "SDK signals it can refresh OAuth tokens itself"
+  - name: CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH
+    category: auth-identity
+    type: bool
+    new: true
+    purpose: "SDK/host signals it can refresh host auth"
+  - name: CLAUDE_CODE_HOST_AUTH_ENV_VAR
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Name of env var holding host-managed auth token"
+  - name: CLAUDE_CODE_HOST_AUTH_REFRESH_TIMEOUT_MS
+    category: auth-identity
+    type: int
+    new: true
+    purpose: "Timeout for host auth refresh"
+  - name: CLAUDE_CODE_PROXY_AUTH_HELPER_TTL_MS
+    category: auth-identity
+    type: int
+    new: true
+    purpose: "TTL for proxy auth helper credential cache"
+  - name: CLAUDE_CODE_ENABLE_PROXY_AUTH_HELPER
+    category: auth-identity
+    type: bool
+    new: true
+    purpose: "Enable external proxy-auth helper"
+  - name: CLAUDE_CODE_AUTH_FAIL_EXIT_MS
+    category: auth-identity
+    type: int
+    new: true
+    purpose: "Delay before exiting on auth failure"
+  - name: CLAUDE_CODE_SKIP_BEDROCK_AUTH
+    category: auth-identity
+    type: bool
+    new: true
+    danger: true
+    purpose: "Skip Bedrock auth (pre-authed gateway)"
+  - name: CLAUDE_CODE_SKIP_VERTEX_AUTH
+    category: auth-identity
+    type: bool
+    new: true
+    danger: true
+    purpose: "Skip Vertex auth"
+  - name: CLAUDE_CODE_SKIP_FOUNDRY_AUTH
+    category: auth-identity
+    type: bool
+    new: true
+    danger: true
+    purpose: "Skip Foundry auth"
+  - name: CLAUDE_CODE_SKIP_MANTLE_AUTH
+    category: auth-identity
+    type: bool
+    new: true
+    danger: true
+    purpose: "Skip Mantle auth"
+  - name: CLAUDE_CODE_SKIP_ANTHROPIC_AWS_AUTH
+    category: auth-identity
+    type: bool
+    new: true
+    danger: true
+    purpose: "Skip Anthropic-on-AWS gateway auth"
+  - name: ANTHROPIC_CONFIG_DIR
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Anthropic SDK config dir"
+  - name: CLAUDE_CONFIG_DIR
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Claude Code config dir (default ~/.claude)"
+  - name: CLAUDE_SECURESTORAGE_CONFIG_DIR
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Dir for OS secure-storage backed config/credentials"
+  - name: USE_LOCAL_OAUTH
+    category: auth-identity
+    type: bool
+    new: true
+    danger: true
+    purpose: "Use localhost OAuth endpoints (dev)"
+  - name: USE_STAGING_OAUTH
+    category: auth-identity
+    type: bool
+    new: true
+    danger: true
+    purpose: "Use staging OAuth endpoints (dev)"
+  - name: CLAUDE_LOCAL_OAUTH_API_BASE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Local OAuth API base (default localhost:8000)"
+  - name: CLAUDE_LOCAL_OAUTH_APPS_BASE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Local OAuth apps base (default localhost:4000)"
+  - name: CLAUDE_LOCAL_OAUTH_CONSOLE_BASE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Local OAuth console base (default localhost:3000)"
+  - name: CLAUDE_AI_AUTHORIZE_URL
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "claude.ai authorize URL (oauth config)"
+  - name: CLAUDE_AI_ORIGIN
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "claude.ai origin (oauth config)"
+  - name: CLAUDE_AI_OAUTH_SCOPES
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Full claude.ai OAuth scope list constant"
+  - name: CLAUDE_AI_INFERENCE_SCOPE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Inference OAuth scope (user:inference)"
+  - name: CLAUDE_AI_PROFILE_SCOPE
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Profile OAuth scope"
+  - name: SYSTEM_OIDCREQUESTURI
+    category: auth-identity
+    type: str
+    new: true
+    purpose: "Azure DevOps OIDC request URI (federated creds)"
+
+  # ============================================================
+  # PROVIDERS  (map k66, parser bxq)
+  # ============================================================
+  - name: CLAUDE_CODE_USE_BEDROCK
+    category: providers
+    type: bool
+    purpose: "Route inference through AWS Bedrock -> plane=bedrock"
+  - name: CLAUDE_CODE_USE_VERTEX
+    category: providers
+    type: bool
+    purpose: "Route through Google Vertex -> plane=vertex"
+  - name: CLAUDE_CODE_USE_FOUNDRY
+    category: providers
+    type: bool
+    purpose: "Route through Microsoft Foundry -> plane=foundry"
+  - name: CLAUDE_CODE_USE_MANTLE
+    category: providers
+    type: bool
+    new: true
+    purpose: "Route through Mantle (Bedrock-Mantle) -> plane=mantle"
+  - name: CLAUDE_CODE_USE_ANTHROPIC_AWS
+    category: providers
+    type: bool
+    new: true
+    purpose: "Route through Anthropic-on-AWS gateway -> plane=gateway"
+  - name: CLAUDE_CODE_USE_GATEWAY
+    category: providers
+    type: bool
+    new: true
+    purpose: "Use generic gateway plane"
+  - name: CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY
+    category: providers
+    type: bool
+    new: true
+    purpose: "Discover available models from the gateway"
+  - name: CLAUDE_GATEWAY_LOG_LEVEL
+    category: providers
+    type: str
+    new: true
+    purpose: "Gateway log verbosity"
+  - name: CLAUDE_GATEWAY_ALLOW_LOOPBACK
+    category: providers
+    type: bool
+    new: true
+    purpose: "Allow gateway to bind/connect loopback"
+  - name: ANTHROPIC_BASE_URL
+    category: providers
+    type: str
+    purpose: "First-party API base URL override"
+  - name: CLAUDE_CODE_API_BASE_URL
+    category: providers
+    type: str
+    purpose: "Alternate API base URL override"
+  - name: ANTHROPIC_BEDROCK_BASE_URL
+    category: providers
+    type: str
+    purpose: "Bedrock base URL"
+  - name: ANTHROPIC_BEDROCK_SERVICE_TIER
+    category: providers
+    type: str
+    new: true
+    purpose: "Bedrock service tier"
+  - name: ANTHROPIC_BEDROCK_MANTLE_BASE_URL
+    category: providers
+    type: str
+    new: true
+    purpose: "Bedrock-Mantle base URL"
+  - name: ANTHROPIC_BEDROCK_MANTLE_API_KEY
+    category: providers
+    type: str
+    new: true
+    purpose: "Bedrock-Mantle API key"
+  - name: ANTHROPIC_VERTEX_BASE_URL
+    category: providers
+    type: str
+    purpose: "Vertex base URL"
+  - name: ANTHROPIC_VERTEX_PROJECT_ID
+    category: providers
+    type: str
+    new: true
+    purpose: "GCP project id for Vertex"
+  - name: ANTHROPIC_FOUNDRY_BASE_URL
+    category: providers
+    type: str
+    purpose: "Foundry base URL"
+  - name: ANTHROPIC_FOUNDRY_RESOURCE
+    category: providers
+    type: str
+    new: true
+    purpose: "Azure Foundry resource name"
+  - name: ANTHROPIC_FOUNDRY_AUTH_TOKEN
+    category: providers
+    type: str
+    new: true
+    purpose: "Foundry auth token"
+  - name: ANTHROPIC_AWS_BASE_URL
+    category: providers
+    type: str
+    new: true
+    purpose: "Anthropic-on-AWS gateway base URL"
+  - name: ANTHROPIC_AWS_WORKSPACE_ID
+    category: providers
+    type: str
+    new: true
+    purpose: "Workspace id for Anthropic-on-AWS"
+  - name: ANTHROPIC_UNIX_SOCKET
+    category: providers
+    type: str
+    new: true
+    purpose: "Connect to API over a unix-domain socket"
+  - name: ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION
+    category: providers
+    type: str
+    new: true
+    purpose: "AWS region for the small/fast (Haiku) model"
+  - name: AWS_REGION
+    category: providers
+    type: str
+    new: true
+    purpose: "AWS region (Bedrock)"
+  - name: AWS_DEFAULT_REGION
+    category: providers
+    type: str
+    new: true
+    purpose: "AWS default region fallback"
+  - name: AWS_PROFILE
+    category: providers
+    type: str
+    new: true
+    purpose: "AWS named profile"
+  - name: CLOUD_ML_REGION
+    category: providers
+    type: str
+    new: true
+    purpose: "Vertex/GCP region for model serving"
+  - name: VERTEX_REGION_CLAUDE_*
+    category: providers
+    type: str
+    new: true
+    purpose: "Per-model Vertex region override (suffix = model id, e.g. VERTEX_REGION_CLAUDE_4_8_OPUS, _CLAUDE_HAIKU_4_5, _CLAUDE_4_5_SONNET...)"
+  # Model-id key constants (raw extract) -> resolve to VERTEX_REGION_CLAUDE_<ID> env vars, not standalone env vars.
+  - name: CLAUDE_4_8_OPUS
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_8_OPUS region override"
+  - name: CLAUDE_4_7_OPUS
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_7_OPUS"
+  - name: CLAUDE_4_6_OPUS
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_6_OPUS"
+  - name: CLAUDE_4_6_SONNET
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_6_SONNET"
+  - name: CLAUDE_4_5_OPUS
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_5_OPUS"
+  - name: CLAUDE_4_5_SONNET
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_5_SONNET"
+  - name: CLAUDE_4_1_OPUS
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_1_OPUS"
+  - name: CLAUDE_4_0_OPUS
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_0_OPUS"
+  - name: CLAUDE_4_0_SONNET
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_4_0_SONNET"
+  - name: CLAUDE_3_7_SONNET
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_3_7_SONNET"
+  - name: CLAUDE_3_5_SONNET
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_3_5_SONNET"
+  - name: CLAUDE_3_5_HAIKU
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_3_5_HAIKU"
+  - name: CLAUDE_HAIKU_4_5
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_HAIKU_4_5"
+  - name: CLAUDE_OPUS_4_6
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_OPUS_4_6"
+  - name: CLAUDE_SONNET_4_6
+    category: providers
+    type: str
+    new: true
+    purpose: "Model-id key -> VERTEX_REGION_CLAUDE_SONNET_4_6"
+  - name: CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST
+    category: providers
+    type: bool
+    new: true
+    purpose: "Host (IDE/wrapper) manages provider selection"
+  - name: CLAUDE_CODE_ASSUME_FIRST_PARTY_BASE_URL
+    category: providers
+    type: str
+    new: true
+    purpose: "Treat a base URL as first-party (enables telemetry/betas)"
+  # --- CCR (Claude Code Router / egress proxy) ---
+  - name: CLAUDE_CODE_USE_CCR_V2
+    category: providers
+    type: bool
+    new: true
+    purpose: "Use CCR v2 routing"
+  - name: CCR_ENABLE_BUNDLE
+    category: providers
+    type: bool
+    new: true
+    purpose: "Enable CCR bundled binary"
+  - name: CCR_FORCE_BUNDLE
+    category: providers
+    type: bool
+    new: true
+    purpose: "Force CCR bundle usage"
+  - name: CCR_EGRESS_GATEWAY_ENABLED
+    category: providers
+    type: bool
+    new: true
+    purpose: "Route egress through CCR gateway"
+  - name: CCR_AGENT_PROXY_ENABLED
+    category: providers
+    type: bool
+    new: true
+    purpose: "Enable CCR agent proxy"
+  - name: CCR_UPSTREAM_PROXY_ENABLED
+    category: providers
+    type: bool
+    new: true
+    purpose: "Enable CCR upstream proxy"
+  - name: CCR_SPAWN_TIMESTAMP_MS
+    category: providers
+    type: int
+    new: true
+    purpose: "CCR spawn timestamp"
+  - name: AGENT_PROXY_URL
+    category: providers
+    type: str
+    new: true
+    purpose: "Agent egress proxy URL"
+  - name: CLAUDE_CODE_SKIP_HFI_VERSION_CHECK
+    category: providers
+    type: bool
+    new: true
+    danger: true
+    purpose: "Skip hosted-inference version compatibility check"
+
+  # ============================================================
+  # MODEL / INFERENCE  (maps v66 [Ixq], N66 [Cxq])
+  # ============================================================
+  - name: ANTHROPIC_MODEL
+    category: model-inference
+    type: str
+    purpose: "Override primary model"
+  - name: ANTHROPIC_SMALL_FAST_MODEL
+    category: model-inference
+    type: str
+    purpose: "Override the small/fast (Haiku) model"
+  - name: ANTHROPIC_DEFAULT_OPUS_MODEL
+    category: model-inference
+    type: str
+    purpose: "Override Opus alias"
+  - name: ANTHROPIC_DEFAULT_SONNET_MODEL
+    category: model-inference
+    type: str
+    purpose: "Override Sonnet alias"
+  - name: ANTHROPIC_DEFAULT_HAIKU_MODEL
+    category: model-inference
+    type: str
+    purpose: "Override Haiku alias"
+  - name: ANTHROPIC_DEFAULT_OPUS_MODEL_NAME
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Display name for custom Opus model"
+  - name: ANTHROPIC_DEFAULT_OPUS_MODEL_DESCRIPTION
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Description for custom Opus model"
+  - name: ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Capability list for custom Opus model"
+  - name: ANTHROPIC_DEFAULT_SONNET_MODEL_NAME
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Display name for custom Sonnet model"
+  - name: ANTHROPIC_DEFAULT_SONNET_MODEL_DESCRIPTION
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Description for custom Sonnet model"
+  - name: ANTHROPIC_DEFAULT_SONNET_MODEL_SUPPORTED_CAPABILITIES
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Capability list for custom Sonnet model"
+  - name: ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Display name for custom Haiku model"
+  - name: ANTHROPIC_DEFAULT_HAIKU_MODEL_DESCRIPTION
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Description for custom Haiku model"
+  - name: ANTHROPIC_DEFAULT_HAIKU_MODEL_SUPPORTED_CAPABILITIES
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Capability list for custom Haiku model"
+  - name: ANTHROPIC_CUSTOM_MODEL_OPTION
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Register an extra selectable custom model id"
+  - name: ANTHROPIC_CUSTOM_MODEL_OPTION_NAME
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Display name for custom model option"
+  - name: ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Description for custom model option"
+  - name: ANTHROPIC_CUSTOM_MODEL_OPTION_SUPPORTED_CAPABILITIES
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Capability list for custom model option"
+  - name: CLAUDE_CODE_SUBAGENT_MODEL
+    category: model-inference
+    type: str
+    purpose: "Override model for subagents"
+  - name: CLAUDE_CODE_AUTO_MODE_MODEL
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Model used by the auto-mode classifier"
+  - name: CLAUDE_CODE_BG_CLASSIFIER_MODEL
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Model for the bash command background/safety classifier (Haiku)"
+  - name: CLAUDE_CONTEXT_COLLAPSE_MODEL
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Model used to collapse/summarize context"
+  - name: CLAUDE_CONTEXT_COLLAPSE
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Enable context-collapse summarization"
+  - name: CLAUDE_CODE_EFFORT_LEVEL
+    category: model-inference
+    type: str
+    purpose: "Reasoning effort level (low/medium/high)"
+  - name: CLAUDE_EFFORT
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Short alias for effort level"
+  - name: CLAUDE_CODE_ALWAYS_ENABLE_EFFORT
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Always expose the effort control"
+  - name: CLAUDE_CODE_ENABLE_OPUS_4_7_FAST_MODE
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Enable Opus 4.7 fast mode"
+  - name: CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Override Opus 4.6 fast-mode behavior"
+  - name: CLAUDE_CODE_DISABLE_FAST_MODE
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable fast mode"
+  - name: CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK
+    category: model-inference
+    type: bool
+    new: true
+    danger: true
+    purpose: "Skip org eligibility check for fast mode"
+  - name: CLAUDE_CODE_SKIP_FAST_MODE_NETWORK_ERRORS
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Ignore network errors gating fast mode"
+  - name: CLAUDE_CODE_DISABLE_1M_CONTEXT
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable 1M-token context window"
+  - name: CLAUDE_CODE_DISABLE_LEGACY_MODEL_REMAP
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable remapping of legacy model ids"
+  - name: FALLBACK_FOR_ALL_PRIMARY_MODELS
+    category: model-inference
+    type: str
+    purpose: "Force fallback model for all primaries"
+  - name: CLAUDE_CODE_PEWTER_OWL
+    category: model-inference
+    type: triBool
+    new: true
+    danger: true
+    purpose: "Internal codenamed model/feature toggle"
+  - name: CLAUDE_CODE_PEWTER_OWL_TOOL
+    category: model-inference
+    type: triBool
+    new: true
+    danger: true
+    purpose: "Internal codenamed tool toggle (PEWTER_OWL)"
+  - name: CLAUDE_CODE_VELVET_FALCON
+    category: model-inference
+    type: triBool
+    new: true
+    danger: true
+    purpose: "Internal codenamed model/feature toggle"
+  - name: MAX_THINKING_TOKENS
+    category: model-inference
+    type: int
+    new: true
+    purpose: "Cap thinking/reasoning tokens"
+  - name: MAX_STRUCTURED_OUTPUT_RETRIES
+    category: model-inference
+    type: int
+    new: true
+    purpose: "Retries for structured-output parsing"
+  - name: CLAUDE_CODE_MAX_OUTPUT_TOKENS
+    category: model-inference
+    type: int
+    purpose: "Max output tokens"
+  - name: CLAUDE_CODE_MAX_CONTEXT_TOKENS
+    category: model-inference
+    type: int
+    new: true
+    purpose: "Max context tokens"
+  - name: CLAUDE_CODE_MAX_TURNS
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Max agentic turns (SDK/headless)"
+  - name: CLAUDE_CODE_MAX_RETRIES
+    category: model-inference
+    type: int
+    purpose: "Max API retries"
+  - name: CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY
+    category: model-inference
+    type: int
+    purpose: "Concurrent tool executions"
+  - name: API_MAX_INPUT_TOKENS
+    category: model-inference
+    type: int
+    new: true
+    purpose: "Hard cap on input tokens"
+  - name: API_TARGET_INPUT_TOKENS
+    category: model-inference
+    type: int
+    new: true
+    purpose: "Target input-token budget"
+  - name: ANTHROPIC_BETAS
+    category: model-inference
+    type: str
+    purpose: "Comma-separated API beta headers"
+  - name: ANTHROPIC_CUSTOM_HEADERS
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Extra HTTP headers on API requests"
+  - name: CLAUDE_CODE_EXTRA_BODY
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Extra JSON merged into request body"
+  - name: CLAUDE_CODE_EXTRA_METADATA
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Extra metadata merged into request metadata"
+  - name: CLAUDE_CODE_ATTRIBUTION_HEADER
+    category: model-inference
+    type: str
+    purpose: "Override attribution header value"
+  - name: CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS
+    category: model-inference
+    type: int
+    new: true
+    purpose: "Max tokens emitted by Read tool"
+  - name: CLAUDE_CODE_FORCE_SYNC_OUTPUT
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Force synchronous (non-streaming) output"
+  - name: CLAUDE_CODE_EAGER_FLUSH
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Flush output eagerly"
+  - name: API_TIMEOUT_MS
+    category: model-inference
+    type: int
+    new: true
+    purpose: "API request timeout"
+  - name: API_FORCE_IDLE_TIMEOUT
+    category: model-inference
+    type: int
+    new: true
+    purpose: "Force idle timeout on API stream"
+  - name: MAX_MCP_OUTPUT_TOKENS
+    category: model-inference
+    type: int
+    new: true
+    purpose: "Cap MCP tool output tokens"
+  - name: USE_API_CONTEXT_MANAGEMENT
+    category: model-inference
+    type: bool
+    purpose: "API-side context management"
+  - name: USE_API_CLEAR_TOOL_USES
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "API-side clearing of tool-use blocks"
+  - name: USE_API_CLEAR_TOOL_RESULTS
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "API-side clearing of tool-result blocks"
+  - name: CLAUDE_CODE_INCLUDE_PARTIAL_MESSAGES
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Include partial streamed messages in transcript"
+  - name: CLAUDE_CODE_ENABLE_FINE_GRAINED_TOOL_STREAMING
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Stream tool input deltas fine-grained"
+  - name: CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable fallback to non-streaming on stream error"
+  - name: CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable fallback model on refusal"
+  - name: CLAUDE_CODE_DISABLE_THINKING
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable extended thinking"
+  - name: CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable adaptive thinking-budget selection"
+  - name: DISABLE_INTERLEAVED_THINKING
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable interleaved thinking beta"
+  - name: ENABLE_PROMPT_CACHING_1H
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Enable 1-hour prompt cache TTL"
+  - name: ENABLE_PROMPT_CACHING_1H_BEDROCK
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Enable 1h prompt cache on Bedrock"
+  - name: FORCE_PROMPT_CACHING_5M
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Force 5-minute prompt cache TTL"
+  - name: DISABLE_PROMPT_CACHING
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable prompt caching"
+  - name: DISABLE_PROMPT_CACHING_OPUS
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable prompt caching for Opus"
+  - name: DISABLE_PROMPT_CACHING_SONNET
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable prompt caching for Sonnet"
+  - name: DISABLE_PROMPT_CACHING_HAIKU
+    category: model-inference
+    type: bool
+    new: true
+    purpose: "Disable prompt caching for Haiku"
+  - name: CLAUDE_CODE_FORCE_GLOBAL_CACHE
+    category: model-inference
+    type: bool
+    purpose: "Force global prompt-cache scope"
+  - name: ANTHROPIC_LOG
+    category: model-inference
+    type: str
+    new: true
+    purpose: "Anthropic SDK log level"
+
+  # ============================================================
+  # TELEMETRY / OTEL / DEBUG  (map t$6, parser wRq)
+  # ============================================================
+  - name: CLAUDE_CODE_ENABLE_TELEMETRY
+    category: telemetry
+    type: bool
+    purpose: "Master enable for OTel telemetry export"
+  - name: CLAUDE_CODE_ENHANCED_TELEMETRY_BETA
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Enable enhanced telemetry beta"
+  - name: ENABLE_ENHANCED_TELEMETRY_BETA
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Enable enhanced telemetry beta (alias)"
+  - name: CLAUDE_CODE_BYOC_ENABLE_DATADOG
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Enable Datadog export in BYOC environments"
+  - name: CLAUDE_CODE_DATADOG_FLUSH_INTERVAL_MS
+    category: telemetry
+    type: int
+    new: true
+    purpose: "Datadog log flush interval"
+  - name: CLAUDE_CODE_DD_ERROR_TRACKING_FLUSH_INTERVAL_MS
+    category: telemetry
+    type: int
+    new: true
+    purpose: "Datadog error-tracking flush interval"
+  - name: CLAUDE_CODE_METRICS_ENDPOINT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Custom metrics endpoint (ANT_CLAUDE_CODE_METRICS_ENDPOINT)"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP exporter endpoint"
+  - name: OTEL_EXPORTER_OTLP_HEADERS
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP exporter headers"
+  - name: OTEL_EXPORTER_OTLP_PROTOCOL
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP protocol (grpc/http/protobuf)"
+  - name: OTEL_EXPORTER_OTLP_INSECURE
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Allow insecure OTLP transport"
+  - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP traces endpoint"
+  - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP traces protocol"
+  - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP metrics endpoint"
+  - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP metrics protocol"
+  - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP metrics temporality preference"
+  - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP logs endpoint"
+  - name: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+    category: telemetry
+    type: str
+    new: true
+    purpose: "OTLP logs protocol"
+  - name: OTEL_EXPORTER_PROMETHEUS_HOST
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Prometheus exporter host"
+  - name: OTEL_EXPORTER_PROMETHEUS_PORT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Prometheus exporter port"
+  - name: OTEL_METRICS_EXPORTER
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Metrics exporter type"
+  - name: OTEL_LOGS_EXPORTER
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Logs exporter type"
+  - name: OTEL_TRACES_EXPORTER
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Traces exporter type"
+  - name: OTEL_METRIC_EXPORT_INTERVAL
+    category: telemetry
+    type: int
+    new: true
+    purpose: "Metrics export interval"
+  - name: OTEL_LOGS_EXPORT_INTERVAL
+    category: telemetry
+    type: int
+    new: true
+    purpose: "Logs export interval"
+  - name: OTEL_TRACES_EXPORT_INTERVAL
+    category: telemetry
+    type: int
+    new: true
+    purpose: "Traces export interval"
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Extra OTel resource attributes"
+  - name: OTEL_LOG_USER_PROMPTS
+    category: telemetry
+    type: bool
+    new: true
+    danger: true
+    purpose: "Include user prompt text in OTel logs (off by default)"
+  - name: OTEL_LOG_TOOL_CONTENT
+    category: telemetry
+    type: bool
+    new: true
+    danger: true
+    purpose: "Include tool content in OTel logs"
+  - name: OTEL_LOG_TOOL_DETAILS
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Include tool details in OTel logs"
+  - name: OTEL_LOG_RAW_API_BODIES
+    category: telemetry
+    type: bool
+    new: true
+    danger: true
+    purpose: "Log raw API request/response bodies"
+  - name: ANT_OTEL_EXPORTER_OTLP_ENDPOINT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Anthropic-internal OTLP endpoint override"
+  - name: ANT_OTEL_EXPORTER_OTLP_HEADERS
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Anthropic-internal OTLP headers"
+  - name: ANT_OTEL_EXPORTER_OTLP_PROTOCOL
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Anthropic-internal OTLP protocol"
+  - name: ANT_OTEL_METRICS_EXPORTER
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Anthropic-internal metrics exporter"
+  - name: ANT_OTEL_LOGS_EXPORTER
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Anthropic-internal logs exporter"
+  - name: ANT_OTEL_TRACES_EXPORTER
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Anthropic-internal traces exporter"
+  - name: ANT_OTEL_RESOURCE_ATTRIBUTES
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Anthropic-internal OTel resource attributes"
+  - name: ANT_CLAUDE_CODE_METRICS_ENDPOINT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Anthropic-internal metrics endpoint"
+  - name: BETA_TRACING_ENDPOINT
+    category: telemetry
+    type: int
+    new: true
+    purpose: "Beta tracing endpoint toggle/port"
+  - name: ENABLE_BETA_TRACING_DETAILED
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Detailed beta tracing"
+  - name: CLAUDE_CODE_OTEL_FLUSH_TIMEOUT_MS
+    category: telemetry
+    type: int
+    new: true
+    purpose: "OTel flush timeout"
+  - name: CLAUDE_CODE_OTEL_SHUTDOWN_TIMEOUT_MS
+    category: telemetry
+    type: int
+    new: true
+    purpose: "OTel shutdown timeout"
+  - name: CLAUDE_CODE_OTEL_HEADERS_HELPER_DEBOUNCE_MS
+    category: telemetry
+    type: int
+    new: true
+    purpose: "Debounce for OTel headers helper"
+  - name: CLAUDE_CODE_PROPAGATE_TRACEPARENT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Propagate W3C traceparent to API/subprocesses"
+  - name: CLAUDE_CODE_PERFETTO_TRACE
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Write a local Perfetto trace file"
+  - name: CLAUDE_CODE_PERFETTO_WRITE_INTERVAL_S
+    category: telemetry
+    type: int
+    new: true
+    purpose: "Perfetto write interval"
+  - name: CLAUDE_CODE_PROFILE_STARTUP
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Profile process startup"
+  - name: CLAUDE_CODE_PROFILE_QUERY
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Profile a single query"
+  - name: CLAUDE_FORCE_DISPLAY_SURVEY
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Force display of feedback survey (testing)"
+  - name: CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Enable feedback survey in OTel deployments"
+  - name: CLAUDE_DEBUG
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Verbose debug logging"
+  - name: CLAUDE_CODE_DEBUG_LOG_LEVEL
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Debug log level"
+  - name: CLAUDE_CODE_DEBUG_LOGS_DIR
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Directory for debug logs"
+  - name: CLAUDE_CODE_DEBUG_REPAINTS
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Log TUI repaints"
+  - name: CLAUDE_CODE_DIAGNOSTICS_FILE
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Write diagnostics to file"
+  - name: CLAUDE_CODE_SESSION_LOG
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Path to write a session log"
+  - name: CLAUDE_CODE_COMMIT_LOG
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Log of commits created"
+  - name: CLAUDE_CODE_JSONL_TRANSCRIPT
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Write JSONL transcript to path"
+  - name: CLAUDE_CODE_TERMINAL_RECORDING
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Record terminal session"
+  - name: CLAUDE_PTY_RECORD
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Record PTY I/O"
+  - name: CLAUDE_CODE_TEE_SDK_STDOUT
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Tee SDK stdout to a log"
+  - name: CLAUDE_CODE_FRAME_TIMING_LOG
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Log render-frame timings"
+  - name: CLAUDE_CODE_BENCH_LIVE_COUNTS
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Live benchmark counters"
+  - name: DEBUG_SDK
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "SDK debug logging"
+  - name: DEBUG_CLAUDE_AGENT_SDK
+    category: telemetry
+    type: bool
+    new: true
+    purpose: "Agent SDK debug logging"
+  - name: DEBUG
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Generic debug namespace (lib convention)"
+  - name: DEBUG_AUTH
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Auth-flow debug logging"
+  - name: SRT_DEBUG
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Screen-recording/tooling debug"
+  - name: NODE_DEBUG
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Node core debug namespaces"
+  - name: AUTOMODE_DECISION_LOG
+    category: telemetry
+    type: str
+    new: true
+    purpose: "Log auto-mode classifier decisions"
+
+  # ============================================================
+  # TELEMETRY / NETWORK / PRIVACY OPT-OUTS
+  # ============================================================
+  - name: DISABLE_TELEMETRY
+    category: privacy-optout
+    type: bool
+    opt_out: true
+    purpose: "Master kill switch for telemetry/analytics"
+  - name: DO_NOT_TRACK
+    category: privacy-optout
+    type: str
+    new: true
+    opt_out: true
+    purpose: "Standard do-not-track signal; disables telemetry"
+  - name: DISABLE_ERROR_REPORTING
+    category: privacy-optout
+    type: bool
+    opt_out: true
+    purpose: "Disable error reporting (Datadog error tracking)"
+  - name: DISABLE_GROWTHBOOK
+    category: privacy-optout
+    type: bool
+    new: true
+    opt_out: true
+    purpose: "Disable GrowthBook feature-flag fetch/exposure"
+  - name: CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+    category: privacy-optout
+    type: bool
+    opt_out: true
+    purpose: "Restrict network to essential traffic only (no telemetry/surveys/updates pings)"
+  - name: CLAUDE_CODE_SUPPRESS_SESSION_ATTRIBUTION
+    category: privacy-optout
+    type: bool
+    new: true
+    opt_out: true
+    purpose: "Suppress session attribution metadata"
+  - name: CLAUDE_CODE_SKIP_PROMPT_HISTORY
+    category: privacy-optout
+    type: bool
+    new: true
+    opt_out: true
+    purpose: "Do not persist prompt history"
+  - name: CLAUDE_CODE_SKIP_REPO_UPLOAD
+    category: privacy-optout
+    type: bool
+    new: true
+    opt_out: true
+    purpose: "Do not upload repo contents (remote/cloud)"
+  - name: CLAUDE_CODE_SKIP_PROJECT_BACKFILL
+    category: privacy-optout
+    type: bool
+    new: true
+    opt_out: true
+    purpose: "Skip project metadata backfill"
+  - name: DISABLE_AUTOUPDATER
+    category: privacy-optout
+    type: bool
+    new: true
+    opt_out: true
+    purpose: "Disable auto-updater (no update network calls)"
+  - name: DISABLE_UPDATES
+    category: privacy-optout
+    type: bool
+    new: true
+    opt_out: true
+    purpose: "Disable update checks"
+  - name: DISABLE_UPGRADE_COMMAND
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Hide /upgrade command"
+  - name: DISABLE_INSTALLATION_CHECKS
+    category: privacy-optout
+    type: bool
+    new: true
+    opt_out: true
+    purpose: "Skip installation/version checks"
+  - name: DISABLE_COST_WARNINGS
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Hide cost warnings"
+  - name: DISABLE_BUG_COMMAND
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Disable /bug reporting command"
+  - name: DISABLE_FEEDBACK_COMMAND
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Disable /feedback command"
+  - name: DISABLE_DOCTOR_COMMAND
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Disable /doctor command"
+  - name: DISABLE_EXTRA_USAGE_COMMAND
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Disable extra-usage command"
+  - name: DISABLE_LOGIN_COMMAND
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Disable /login command"
+  - name: DISABLE_LOGOUT_COMMAND
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Disable /logout command"
+  - name: DISABLE_INSTALL_GITHUB_APP_COMMAND
+    category: privacy-optout
+    type: bool
+    new: true
+    purpose: "Disable install-github-app command"
+  - name: CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY
+    category: privacy-optout
+    type: bool
+    opt_out: true
+    purpose: "Disable feedback surveys"
+  - name: CLAUDE_CODE_DISABLE_TERMINAL_TITLE
+    category: privacy-optout
+    type: bool
+    purpose: "Do not change terminal title"
+
+  # ============================================================
+  # CONTEXT / COMPACTION / MEMORY
+  # ============================================================
+  - name: CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE
+    category: context-compaction
+    type: str
+    purpose: "Auto-compact threshold (% of context)"
+  - name: CLAUDE_AUTOCOMPACT_PCT_OVERRIDE
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Auto-compact threshold (alias)"
+  - name: CLAUDE_CODE_AUTO_COMPACT_WINDOW
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Auto-compact window size"
+  - name: DISABLE_AUTO_COMPACT
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Disable auto-compaction"
+  - name: DISABLE_COMPACT
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Disable compaction entirely"
+  - name: CLAUDE_CODE_COLD_COMPACT
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Cold (full) compaction mode"
+  - name: CLAUDE_CODE_DISABLE_PRECOMPACT_SKIP
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Do not skip the pre-compact step"
+  - name: CLAUDE_AFTER_LAST_COMPACT
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Marker for content after last compaction"
+  - name: CLAUDE_CODE_CLASSIFIER_SUMMARY
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Summary used by compaction classifier"
+  - name: CLAUDE_CODE_DISABLE_AUTO_MEMORY
+    category: context-compaction
+    type: bool
+    purpose: "Disable automatic memory"
+  - name: CLAUDE_BG_MEMORY_TOGGLED_OFF
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Background session memory disabled flag"
+  - name: CLAUDE_CODE_FORCE_EVALUATE_MEMORY
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Force memory evaluation pass"
+  - name: CLAUDE_CODE_FORCE_MEMORY_SURVEY
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Force memory survey (testing)"
+  - name: CLAUDE_CODE_DISABLE_MEMORY_BULK_INFLATE
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Disable bulk memory inflation"
+  - name: CLAUDE_MEMORY_STORES
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Configure memory store backends"
+  - name: TEAM_MEMORY_SYNC_URL
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "URL to sync team memory"
+  - name: CLAUDE_CODE_DISABLE_CLAUDE_MDS
+    category: context-compaction
+    type: bool
+    purpose: "Disable CLAUDE.md loading"
+  - name: CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Extra dirs to load CLAUDE.md from"
+  - name: CLAUDE_MD_TOKEN_CONTEXT_RATIO
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Ratio of context budget for CLAUDE.md"
+  - name: CLAUDE_CODE_DISABLE_ATTACHMENTS
+    category: context-compaction
+    type: bool
+    purpose: "Disable file attachments"
+  - name: CLAUDE_IMPORT_CONVERSATIONS
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Enable import-conversations feature"
+  - name: CLAUDE_CODE_RESUME_FROM_SESSION
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Resume from a session id"
+  - name: CLAUDE_CODE_RESUME_PROMPT
+    category: context-compaction
+    type: str
+    new: true
+    purpose: "Prompt injected on resume"
+  - name: CLAUDE_CODE_RESUME_INTERRUPTED_TURN
+    category: context-compaction
+    type: bool
+    new: true
+    purpose: "Resume an interrupted turn"
+  - name: CLAUDE_CODE_RESUME_THRESHOLD_MINUTES
+    category: context-compaction
+    type: int
+    new: true
+    purpose: "Idle minutes before resume offered"
+  - name: CLAUDE_CODE_RESUME_TOKEN_THRESHOLD
+    category: context-compaction
+    type: int
+    new: true
+    purpose: "Token threshold for resume"
+  - name: CLAUDE_CODE_IDLE_THRESHOLD_MINUTES
+    category: context-compaction
+    type: int
+    new: true
+    purpose: "Idle-threshold minutes"
+  - name: CLAUDE_CODE_IDLE_TOKEN_THRESHOLD
+    category: context-compaction
+    type: int
+    new: true
+    purpose: "Idle token threshold"
+
+  # ============================================================
+  # BACKGROUND AGENTS / DAEMON  (CLAUDE_BG_*, daemon, async)
+  # ============================================================
+  - name: CLAUDE_BG_BACKEND
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Background backend selector (e.g. 'daemon')"
+  - name: CLAUDE_BG_ISOLATION
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Background isolation mode marker (presence => bg child)"
+  - name: CLAUDE_BG_SOURCE
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Origin of the background session (scrubbed from child env)"
+  - name: CLAUDE_BG_CLAIM_AUTH
+    category: background-daemon
+    type: str
+    new: true
+    danger: true
+    purpose: "Auth token to claim a background session"
+  - name: CLAUDE_BG_PTY_AUTH
+    category: background-daemon
+    type: str
+    new: true
+    danger: true
+    purpose: "Auth token for the background PTY channel"
+  - name: CLAUDE_BG_RV_AUTH
+    category: background-daemon
+    type: str
+    new: true
+    danger: true
+    purpose: "Auth token for the rendezvous channel"
+  - name: CLAUDE_BG_RENDEZVOUS_SOCK
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Path to background rendezvous unix socket"
+  - name: CLAUDE_BG_SOCKET_TOKENS_PATH
+    category: background-daemon
+    type: str
+    new: true
+    danger: true
+    purpose: "File with background socket auth tokens"
+  - name: CLAUDE_BG_AUTH_SNAPSHOT_PATH
+    category: background-daemon
+    type: str
+    new: true
+    danger: true
+    purpose: "Snapshot of auth state passed to bg session"
+  - name: CLAUDE_BG_SESSION_PERMISSION_RULES
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Permission rules for a background session"
+  - name: CLAUDE_BG_STARTUP_WEDGE_MS
+    category: background-daemon
+    type: int
+    new: true
+    purpose: "Artificial startup delay for bg session"
+  - name: CLAUDE_BG_TCC_DISCLAIMED
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "macOS TCC privacy prompt disclaimed marker"
+  - name: CLAUDE_CODE_DAEMON_COLD_START
+    category: background-daemon
+    type: bool
+    new: true
+    purpose: "Force daemon cold start"
+  - name: CLAUDE_AUTO_BACKGROUND_TASKS
+    category: background-daemon
+    type: bool
+    new: true
+    purpose: "Auto-background long-running tasks"
+  - name: CLAUDE_CODE_DISABLE_BACKGROUND_TASKS
+    category: background-daemon
+    type: bool
+    purpose: "Disable background tasks"
+  - name: CLAUDE_CODE_ENABLE_BACKGROUND_PLUGIN_REFRESH
+    category: background-daemon
+    type: bool
+    new: true
+    purpose: "Refresh plugins in the background"
+  - name: CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS
+    category: background-daemon
+    type: int
+    new: true
+    purpose: "Stall timeout for async agents"
+  - name: CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS_alias
+    category: background-daemon
+    type: int
+    new: true
+    purpose: "(see CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS)"
+  - name: CLAUDE_SUBAGENT_BG_SHELL_MAX_MS
+    category: background-daemon
+    type: int
+    new: true
+    purpose: "Max runtime for subagent background shell"
+  - name: CLAUDE_CODE_WORKER_EPOCH
+    category: background-daemon
+    type: int
+    new: true
+    purpose: "Worker epoch counter"
+  - name: CLAUDE_CODE_SPAWN_TIMESTAMP_MS
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Process spawn timestamp"
+  - name: CLAUDE_AGENTS_AUTO_RELAUNCHED_AT
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Timestamp at which agents were auto-relaunched"
+  - name: CLAUDE_PTY_HEARTBEAT_MS
+    category: background-daemon
+    type: int
+    new: true
+    purpose: "PTY heartbeat interval"
+  - name: CLAUDE_PTY_ORPHAN_CHECK_MS
+    category: background-daemon
+    type: int
+    new: true
+    purpose: "PTY orphan check interval"
+  - name: CLAUDE_PTY_HOST_EXEC
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Exec PTY on host (vs sandbox)"
+  - name: CLAUDE_JOB_DIR
+    category: background-daemon
+    type: str
+    new: true
+    purpose: "Directory for background job state"
+  - name: CLAUDE_SERVE_DRAIN_TIMEOUT_MS
+    category: background-daemon
+    type: int
+    new: true
+    purpose: "Drain timeout for serve mode"
+
+  # ============================================================
+  # BRIDGE / REMOTE / SESSION INGRESS
+  # ============================================================
+  - name: CLAUDE_BRIDGE_BASE_URL
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Bridge service base URL"
+  - name: CLAUDE_BRIDGE_OAUTH_TOKEN
+    category: bridge-remote
+    type: str
+    new: true
+    danger: true
+    purpose: "OAuth token for the bridge connection"
+  - name: CLAUDE_BRIDGE_SESSION_INGRESS_URL
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Bridge session-ingress URL"
+  - name: CLAUDE_BRIDGE_REATTACH_SESSION
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Reattach to bridge session id"
+  - name: CLAUDE_BRIDGE_REATTACH_SEQ
+    category: bridge-remote
+    type: int
+    new: true
+    purpose: "Reattach sequence number"
+  - name: CLAUDE_BRIDGE_REATTACH_OUTBOUND_ONLY
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Reattach outbound-only mode"
+  - name: CLAUDE_BRIDGE_USE_CCR_V2
+    category: bridge-remote
+    type: bool
+    new: true
+    purpose: "Bridge uses CCR v2 routing"
+  - name: CLAUDE_CODE_FORCE_BRIDGE
+    category: bridge-remote
+    type: bool
+    new: true
+    purpose: "Force use of the bridge"
+  - name: LOCAL_BRIDGE
+    category: bridge-remote
+    type: bool
+    new: true
+    purpose: "Use a local bridge instance"
+  - name: SESSION_INGRESS_URL
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Session ingress URL"
+  - name: CLAUDE_CODE_POST_FOR_SESSION_INGRESS_V2
+    category: bridge-remote
+    type: bool
+    new: true
+    purpose: "Use v2 POST for session ingress"
+  - name: CLAUDE_CODE_REMOTE
+    category: bridge-remote
+    type: bool
+    new: true
+    purpose: "Running as a remote/cloud session"
+  - name: CLAUDE_CODE_REMOTE_SESSION_ID
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Remote session id"
+  - name: CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Remote environment type"
+  - name: CLAUDE_CODE_REMOTE_HERMETIC_MODE
+    category: bridge-remote
+    type: bool
+    new: true
+    purpose: "Hermetic remote execution mode"
+  - name: CLAUDE_CODE_REMOTE_MEMORY_DIR
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Memory dir for remote sessions"
+  - name: CLAUDE_CODE_REMOTE_RAW_EVENTS_FILE
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "File to write raw remote events"
+  - name: CLAUDE_CODE_REMOTE_SEND_KEEPALIVES
+    category: bridge-remote
+    type: bool
+    new: true
+    purpose: "Send keepalives on remote connection"
+  - name: CLAUDE_CODE_REMOTE_SETTINGS_PATH
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Path to remote settings file"
+  - name: CLAUDE_CODE_REMOTE_SETTINGS_POLL_MS
+    category: bridge-remote
+    type: int
+    new: true
+    purpose: "Poll interval for remote settings"
+  - name: CLAUDE_REMOTE_CONTROL_SESSION_NAME_PREFIX
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Prefix for remote-control session names"
+  - name: CLAUDE_CODE_MOCK_REMOTE_SETTINGS
+    category: bridge-remote
+    type: bool
+    new: true
+    danger: true
+    purpose: "Mock remote settings (testing)"
+  - name: CLAUDE_CODE_SSE_PORT
+    category: bridge-remote
+    type: int
+    new: true
+    purpose: "Port for SSE server"
+  - name: CLAUDE_CODE_SESSION_NAME
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Session name"
+  - name: CLAUDE_CODE_SESSION_KIND
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Session kind (cli/remote/cowork/...)"
+  - name: CLAUDE_CODE_SESSION_ID
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Session id"
+  - name: CLAUDE_SESSION_ID
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Session id (alias)"
+  - name: SPACE_CREATOR_USER_ID
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Remote space creator user id"
+  - name: VOICE_STREAM_BASE_URL
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Base URL for voice streaming"
+  - name: CLAUDE_CODE_VOICE_FORWARD_INTERIMS_TYPED
+    category: bridge-remote
+    type: str
+    new: true
+    purpose: "Forward interim voice transcripts as typed input"
+
+  # ============================================================
+  # LOOPS / CRON / KAIROS / WORKFLOWS
+  # ============================================================
+  - name: CLAUDE_CODE_LOOP_PERSISTENT
+    category: loops-workflows
+    type: bool
+    new: true
+    purpose: "Persistent loop mode (re-invoke on interval)"
+  - name: CLAUDE_CODE_LOOP_KEEPALIVE
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "Keepalive for loop mode"
+  - name: CLAUDE_CODE_DISABLE_CRON
+    category: loops-workflows
+    type: bool
+    new: true
+    purpose: "Disable cron/scheduled agents"
+  - name: CLAUDE_CODE_WORKFLOWS
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "Workflows config/selection"
+  - name: CLAUDE_CODE_DISABLE_WORKFLOWS
+    category: loops-workflows
+    type: bool
+    new: true
+    purpose: "Disable workflows feature"
+  - name: CLAUDE_CODE_ENABLE_TASKS
+    category: loops-workflows
+    type: bool
+    new: true
+    purpose: "Enable Tasks feature"
+  - name: CLAUDE_CODE_TASK_LIST_ID
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "Active task-list id"
+  - name: TASK_MAX_OUTPUT_LENGTH
+    category: loops-workflows
+    type: int
+    new: true
+    purpose: "Max output length for Task tool"
+  - name: CLAUDE_CODE_PLAN_MODE_REQUIRED
+    category: loops-workflows
+    type: bool
+    new: true
+    purpose: "Require plan mode"
+  - name: CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "Plan-mode interview phase marker"
+  - name: CLAUDE_CODE_PLAN_V2_AGENT_COUNT
+    category: loops-workflows
+    type: int
+    purpose: "Plan v2 teammate count (1-10)"
+  - name: CLAUDE_CODE_PLAN_V2_EXPLORE_AGENT_COUNT
+    category: loops-workflows
+    type: int
+    purpose: "Plan v2 explore-agent count (1-10)"
+  - name: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
+    category: loops-workflows
+    type: bool
+    purpose: "Enable agent teams (client-side)"
+  - name: CLAUDE_CODE_TEAM_ONBOARDING
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "Team onboarding flow marker"
+  - name: CLAUDE_CODE_TEAMMATE_COMMAND
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "Command to spawn a teammate agent (CLAUDE_CODE_TEAMMATE_COMMAND)"
+  - name: CLAUDE_INTERNAL_ASSISTANT_TEAM_NAME
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "Internal assistant team name"
+  - name: CLAUDE_CODE_COORDINATOR_MODE
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "Multi-agent coordinator mode (CLAUDE_CODE_COORDINATOR_MODE)"
+  - name: CLAUDE_CODE_FORK_SUBAGENT
+    category: loops-workflows
+    type: bool
+    new: true
+    purpose: "Fork subagents from current process"
+  - name: CLAUDE_CODE_INVESTIGATE_FIRST
+    category: loops-workflows
+    type: bool
+    new: true
+    purpose: "Investigate-before-acting mode"
+  - name: ULTRAPLAN_PROMPT_FILE
+    category: loops-workflows
+    type: str
+    new: true
+    purpose: "File with ultraplan prompt"
+  - name: CLAUDE_CODE_ULTRAREVIEW_PREFLIGHT_FIXTURE
+    category: loops-workflows
+    type: str
+    new: true
+    danger: true
+    purpose: "Ultrareview preflight test fixture"
+
+  # ============================================================
+  # COWORK
+  # ============================================================
+  - name: CLAUDE_CODE_IS_COWORK
+    category: cowork
+    type: bool
+    new: true
+    purpose: "Running in cowork mode"
+  - name: CLAUDE_CODE_USE_COWORK_PLUGINS
+    category: cowork
+    type: bool
+    new: true
+    purpose: "Enable cowork plugins"
+  - name: CLAUDE_COWORK_MEMORY_PATH_OVERRIDE
+    category: cowork
+    type: str
+    new: true
+    purpose: "Override cowork memory path"
+  - name: CLAUDE_COWORK_MEMORY_INDEX_CONTENT
+    category: cowork
+    type: str
+    new: true
+    purpose: "Cowork memory index content"
+  - name: CLAUDE_COWORK_MEMORY_GUIDELINES
+    category: cowork
+    type: str
+    new: true
+    purpose: "Cowork memory guidelines"
+  - name: CLAUDE_COWORK_MEMORY_EXTRA_GUIDELINES
+    category: cowork
+    type: str
+    new: true
+    purpose: "Extra cowork memory guidelines"
+
+  # ============================================================
+  # MCP
+  # ============================================================
+  - name: CLAUDE_CODE_MCP_SERVER_NAME
+    category: mcp
+    type: str
+    new: true
+    purpose: "Name when running as an MCP server"
+  - name: CLAUDE_CODE_MCP_SERVER_URL
+    category: mcp
+    type: str
+    new: true
+    purpose: "MCP server URL"
+  - name: CLAUDE_CODE_MCP_ALLOWLIST_ENV
+    category: mcp
+    type: str
+    new: true
+    purpose: "Env-var allow-list passed to MCP servers"
+  - name: MCP_TIMEOUT
+    category: mcp
+    type: int
+    new: true
+    purpose: "MCP startup timeout"
+  - name: MCP_CONNECT_TIMEOUT_MS
+    category: mcp
+    type: int
+    new: true
+    purpose: "MCP connect timeout"
+  - name: MCP_TOOL_TIMEOUT
+    category: mcp
+    type: int
+    new: true
+    purpose: "MCP tool-call timeout"
+  - name: MCP_CONNECTION_NONBLOCKING
+    category: mcp
+    type: bool
+    new: true
+    purpose: "Non-blocking MCP connection startup"
+  - name: MCP_SERVER_CONNECTION_BATCH_SIZE
+    category: mcp
+    type: int
+    new: true
+    purpose: "Batch size for connecting MCP servers"
+  - name: MCP_REMOTE_SERVER_CONNECTION_BATCH_SIZE
+    category: mcp
+    type: int
+    new: true
+    purpose: "Batch size for remote MCP servers"
+  - name: MCP_OAUTH_CALLBACK_PORT
+    category: mcp
+    type: int
+    new: true
+    purpose: "Port for MCP OAuth callback"
+  - name: MCP_OAUTH_CLIENT_METADATA_URL
+    category: mcp
+    type: str
+    new: true
+    purpose: "MCP OAuth client metadata URL"
+  - name: MCP_CLIENT_SECRET
+    category: mcp
+    type: str
+    new: true
+    danger: true
+    purpose: "MCP client secret"
+  - name: MCP_XAA_IDP_CLIENT_SECRET
+    category: mcp
+    type: str
+    new: true
+    danger: true
+    purpose: "XAA IdP client secret for MCP"
+  - name: MCP_TRUNCATION_PROMPT_OVERRIDE
+    category: mcp
+    type: str
+    new: true
+    purpose: "Override MCP truncation prompt"
+  - name: ENABLE_MCP_LARGE_OUTPUT_FILES
+    category: mcp
+    type: bool
+    new: true
+    purpose: "Write large MCP output to files"
+  - name: ENABLE_CLAUDEAI_MCP_SERVERS
+    category: mcp
+    type: bool
+    new: true
+    purpose: "Enable claude.ai-provided MCP servers"
+  - name: ALLOW_ANT_COMPUTER_USE_MCP
+    category: mcp
+    type: bool
+    new: true
+    danger: true
+    purpose: "Allow Anthropic computer-use MCP server"
+  - name: ENABLE_TOOL_SEARCH
+    category: mcp
+    type: bool
+    new: true
+    purpose: "Enable the deferred tool-search mechanism"
+  - name: EMBEDDED_SEARCH_TOOLS
+    category: mcp
+    type: bool
+    new: true
+    purpose: "Embed search tools inline"
+
+  # ============================================================
+  # PLUGINS / SKILLS
+  # ============================================================
+  - name: CLAUDE_PLUGIN_ROOT
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Plugin root dir (path placeholder substitution)"
+  - name: CLAUDE_PLUGIN_DATA
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Plugin data dir (path placeholder)"
+  - name: CLAUDE_CODE_PLUGIN_CACHE_DIR
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Plugin cache dir"
+  - name: CLAUDE_CODE_PLUGIN_SEED_DIR
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Plugin seed dir"
+  - name: CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS
+    category: plugins-skills
+    type: int
+    new: true
+    purpose: "Git timeout for plugin fetch"
+  - name: CLAUDE_CODE_PLUGIN_PREFER_HTTPS
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Prefer HTTPS for plugin git remotes"
+  - name: CLAUDE_CODE_PLUGIN_USE_ZIP_CACHE
+    category: plugins-skills
+    type: bool
+    new: true
+    purpose: "Use zip cache for plugins"
+  - name: CLAUDE_CODE_PLUGIN_KEEP_MARKETPLACE_ON_FAILURE
+    category: plugins-skills
+    type: bool
+    new: true
+    purpose: "Keep marketplace install on failure"
+  - name: CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL
+    category: plugins-skills
+    type: bool
+    new: true
+    purpose: "Disable official marketplace auto-install"
+  - name: FORCE_AUTOUPDATE_PLUGINS
+    category: plugins-skills
+    type: bool
+    new: true
+    purpose: "Force plugin auto-update"
+  - name: CLAUDE_CODE_SYNC_PLUGINS
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Sync plugins config"
+  - name: CLAUDE_CODE_SYNC_PLUGIN_INSTALL
+    category: plugins-skills
+    type: bool
+    new: true
+    purpose: "Synchronous plugin install"
+  - name: CLAUDE_CODE_SYNC_PLUGIN_INSTALL_TIMEOUT_MS
+    category: plugins-skills
+    type: int
+    new: true
+    purpose: "Timeout for sync plugin install"
+  - name: CLAUDE_CODE_SYNC_PLUGINS_INSTALL_TIMEOUT_MS
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Timeout for sync plugins install (variant)"
+  - name: CLAUDE_CODE_SYNC_PLUGINS_MCP_TIMEOUT_MS
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "MCP timeout during plugin sync"
+  - name: CLAUDE_CODE_SYNC_SKILLS
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Sync skills config"
+  - name: CLAUDE_CODE_SYNC_SKILLS_INSTALL_TIMEOUT_MS
+    category: plugins-skills
+    type: int
+    new: true
+    purpose: "Timeout for skills install"
+  - name: CLAUDE_CODE_SYNC_SKILLS_WAIT_TIMEOUT_MS
+    category: plugins-skills
+    type: int
+    new: true
+    purpose: "Wait timeout for skills sync"
+  - name: CLAUDE_CODE_DISABLE_BUNDLED_SKILLS
+    category: plugins-skills
+    type: bool
+    new: true
+    purpose: "Disable bundled skills"
+  - name: CLAUDE_CODE_DISABLE_POLICY_SKILLS
+    category: plugins-skills
+    type: bool
+    new: true
+    purpose: "Disable policy-pushed skills"
+  - name: CLAUDE_CODE_DISABLE_CLAUDE_API_SKILL
+    category: plugins-skills
+    type: bool
+    new: true
+    purpose: "Disable the bundled claude-api skill"
+  - name: CLAUDE_CODE_DISABLE_CLAUDE_CODE_SKILL
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Disable the bundled claude-code skill"
+  - name: CLAUDE_API_SKILL_DESCRIPTION
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Override claude-api skill description"
+  - name: CLAUDE_CODE_SKILL_NAME
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Skill name (running as a skill)"
+  - name: CLAUDE_CODE_SKILL_DESCRIPTION
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Skill description"
+  - name: CLAUDE_CODE_INVOKED_SKILLS
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "List of invoked skills"
+  - name: CLAUDE_SKILL_DIR
+    category: plugins-skills
+    type: str
+    new: true
+    purpose: "Skill directory"
+  - name: SLASH_COMMAND_TOOL_CHAR_BUDGET
+    category: plugins-skills
+    type: int
+    new: true
+    purpose: "Char budget for slash-command tool descriptions"
+
+  # ============================================================
+  # PERMISSIONS / SANDBOX / SECURITY
+  # ============================================================
+  - name: CLAUDE_CODE_BUBBLEWRAP
+    category: permissions-sandbox
+    type: bool
+    new: true
+    purpose: "Use bubblewrap (bwrap) for the Linux sandbox"
+  - name: CLAUDE_CODE_SANDBOXED
+    category: permissions-sandbox
+    type: bool
+    new: true
+    purpose: "Marker that the process is already sandboxed"
+  - name: CLAUDE_CODE_FORCE_SANDBOX
+    category: permissions-sandbox
+    type: bool
+    new: true
+    purpose: "Force sandboxed bash execution"
+  - name: CLAUDE_CODE_BASH_SANDBOX_SHOW_INDICATOR
+    category: permissions-sandbox
+    type: bool
+    new: true
+    purpose: "Show sandbox indicator in bash output"
+  - name: IS_SANDBOX
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Generic sandbox marker (skips some host checks)"
+  - name: CLAUDE_CODE_SAFE_MODE
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Safe mode (restricted capabilities)"
+  - name: CLAUDE_CODE_ADDITIONAL_PROTECTION
+    category: permissions-sandbox
+    type: bool
+    purpose: "Additional security protection"
+  - name: CLAUDE_CODE_SUPERVISED
+    category: permissions-sandbox
+    type: bool
+    new: true
+    purpose: "Supervised mode (host approves actions)"
+  - name: CLAUDE_CODE_AUTO_MODE_EXTERNAL_PERMISSIONS
+    category: permissions-sandbox
+    type: bool
+    new: true
+    purpose: "Delegate auto-mode permissions to an external decider"
+  - name: CLAUDE_CODE_ENABLE_AUTO_MODE
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Enable auto (autonomous) mode"
+  - name: CLAUDE_CODE_TWO_STAGE_CLASSIFIER
+    category: permissions-sandbox
+    type: bool
+    new: true
+    purpose: "Use two-stage command safety classifier"
+  - name: CLAUDE_CODE_SUBPROCESS_ENV_SCRUB
+    category: permissions-sandbox
+    type: bool
+    new: true
+    purpose: "Scrub env for subprocesses; forces default permission mode"
+  - name: CLAUDE_CODE_DONT_INHERIT_ENV
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Do not inherit parent env into subprocesses"
+  - name: CLAUDE_CODE_TEST_FORCE_DENY
+    category: permissions-sandbox
+    type: str
+    new: true
+    danger: true
+    purpose: "Force-deny all permission checks (testing)"
+  - name: CLAUDE_CHROME_PERMISSION_MODE
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Permission mode for Chrome/computer-use"
+  - name: CLAUDE_CODE_DISABLE_COMMAND_INJECTION_CHECK
+    category: permissions-sandbox
+    type: str
+    danger: true
+    purpose: "(LEGACY) old command-injection regex opt-out; pipeline removed in 2.1.169"
+  - name: CLAUDE_CODE_SCRIPT_CAPS
+    category: permissions-sandbox
+    type: int
+    new: true
+    purpose: "Script capability caps"
+  - name: CLAUDE_CODE_STOP_HOOK_BLOCK_CAP
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Cap on stop-hook blocks"
+  - name: CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS
+    category: permissions-sandbox
+    type: int
+    new: true
+    purpose: "SessionEnd hooks timeout"
+  - name: CLAUDE_CODE_CERT_STORE
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "TLS cert store selector"
+  - name: CLAUDE_CODE_CLIENT_CERT
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Client TLS cert (mTLS)"
+  - name: CLAUDE_CODE_CLIENT_KEY
+    category: permissions-sandbox
+    type: str
+    new: true
+    danger: true
+    purpose: "Client TLS key (mTLS)"
+  - name: CLAUDE_CODE_CLIENT_KEY_PASSPHRASE
+    category: permissions-sandbox
+    type: str
+    new: true
+    danger: true
+    purpose: "Passphrase for client TLS key"
+  - name: NODE_EXTRA_CA_CERTS
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Extra CA certs (Node TLS)"
+  - name: SSL_CERT_FILE
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "CA bundle file"
+  - name: CLAUDE_CODE_MANAGED_SETTINGS_PATH
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Path to managed/enterprise settings"
+  - name: CLAUDE_CODE_AGENT_RULE_DISABLED
+    category: permissions-sandbox
+    type: str
+    new: true
+    purpose: "Disable a specific agent rule"
+  - name: CLAUDE_CODE_GLOB_HIDDEN
+    category: permissions-sandbox
+    type: bool
+    purpose: "Glob includes hidden files"
+  - name: CLAUDE_CODE_GLOB_NO_IGNORE
+    category: permissions-sandbox
+    type: bool
+    purpose: "Glob ignores .gitignore"
+  - name: CLAUDE_CODE_GLOB_TIMEOUT_SECONDS
+    category: permissions-sandbox
+    type: int
+    new: true
+    purpose: "Glob timeout seconds"
+
+  # ============================================================
+  # IDE / TERMINAL / UI
+  # ============================================================
+  - name: CLAUDE_CODE_AUTO_CONNECT_IDE
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Auto-connect to IDE extension"
+  - name: CLAUDE_CODE_IDE_HOST_OVERRIDE
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Override IDE host"
+  - name: CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Skip IDE extension auto-install"
+  - name: CLAUDE_CODE_IDE_SKIP_VALID_CHECK
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Skip IDE validity check"
+  - name: CLAUDE_CODE_ACCESSIBILITY
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Accessibility mode"
+  - name: CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Do not use the terminal alternate screen"
+  - name: CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Full repaint on alt-screen"
+  - name: CLAUDE_CODE_DISABLE_VIRTUAL_SCROLL
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Disable virtual scroll"
+  - name: CLAUDE_CODE_DISABLE_MOUSE
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Disable mouse input"
+  - name: CLAUDE_CODE_NATIVE_CURSOR
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Use native cursor"
+  - name: CLAUDE_CODE_NO_FLICKER
+    category: ide-terminal-ui
+    type: triBool
+    new: true
+    purpose: "Reduce TUI flicker"
+  - name: CLAUDE_CODE_SYNTAX_HIGHLIGHT
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Syntax highlighting toggle"
+  - name: CLAUDE_CODE_SCROLL_SPEED
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Scroll speed"
+  - name: CLAUDE_CODE_DECSTBM
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "DEC scroll-region (DECSTBM) handling"
+  - name: CLAUDE_CODE_DISABLE_AGENT_VIEW
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Disable agent view UI"
+  - name: CLAUDE_CODE_AGENT_VIEW_RELAUNCH
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Relaunch into agent view"
+  - name: CLAUDE_CODE_FRAME
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Frame/host UI mode"
+  - name: CLAUDE_CODE_FRAME_AUTO_OPEN
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Auto-open frame UI"
+  - name: CLAUDE_CODE_FRAME_MCP
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Frame MCP integration"
+  - name: CLAUDE_CODE_FORCE_FULL_LOGO
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Force full logo on startup"
+  - name: CLAUDE_CODE_FORCE_FULLSCREEN_UPSELL
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Force fullscreen upsell"
+  - name: CLAUDE_CODE_FORCE_TIP_ID
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Force a specific tip id"
+  - name: CLAUDE_CODE_HIDE_CWD
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Hide cwd in UI"
+  - name: CLAUDE_CODE_ENABLE_MENU_KIND_LANES
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Menu lanes UI"
+  - name: CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Prompt suggestions"
+  - name: CLAUDE_CODE_QUESTION_PREVIEW_FORMAT
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Question preview format"
+  - name: CLAUDE_CODE_ENABLE_AWAY_SUMMARY
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Show away/idle summary"
+  - name: CLAUDE_CODE_ENABLE_DESIGN_SYNC
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "Design-sync feature"
+  - name: CLAUDE_CODE_AUTO_CONNECT_IDE_alias
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "(see CLAUDE_CODE_AUTO_CONNECT_IDE)"
+  - name: CLAUDE_CODE_TUI_JUST_SWITCHED
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Marker that TUI just switched modes"
+  - name: CLAUDE_CODE_TMUX_PREFIX
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "tmux prefix key"
+  - name: CLAUDE_CODE_TMUX_PREFIX_CONFLICTS
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "tmux prefix conflict detection"
+  - name: CLAUDE_CODE_TMUX_SESSION
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "tmux session name"
+  - name: CLAUDE_CODE_TMUX_TRUECOLOR
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "tmux truecolor support"
+  - name: CLAUDE_CODE_BS_AS_CTRL_BACKSPACE
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "Treat backspace as ctrl-backspace"
+  - name: CLAUDE_CODE_SCROLL_SPEED_alias
+    category: ide-terminal-ui
+    type: str
+    new: true
+    purpose: "(see CLAUDE_CODE_SCROLL_SPEED)"
+  - name: CLAUDE_CODE_NEW_INIT
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "New init flow"
+  - name: CLAUDE_CODE_EXIT_AFTER_FIRST_RENDER
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    danger: true
+    purpose: "Exit after first render (testing)"
+  - name: CLAUDE_CODE_EXIT_AFTER_STOP_DELAY
+    category: ide-terminal-ui
+    type: int
+    new: true
+    purpose: "Delay before exit after stop"
+  - name: CLAUDE_CODE_FORCE_FULL_LOGO_alias
+    category: ide-terminal-ui
+    type: bool
+    new: true
+    purpose: "(see CLAUDE_CODE_FORCE_FULL_LOGO)"
+
+  # ============================================================
+  # PROXY / NETWORK  (map N66 + k66 proxy bits + globals)
+  # ============================================================
+  - name: HTTP_PROXY
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "HTTP proxy"
+  - name: HTTPS_PROXY
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "HTTPS proxy"
+  - name: NO_PROXY
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Proxy bypass list"
+  - name: CLAUDE_CODE_HTTP_PROXY
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Claude-specific HTTP proxy"
+  - name: CLAUDE_CODE_HTTPS_PROXY
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Claude-specific HTTPS proxy"
+  - name: CLAUDE_CODE_PROXY_URL
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Proxy URL"
+  - name: CLAUDE_CODE_PROXY_HOST
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Proxy host"
+  - name: CLAUDE_CODE_PROXY_AUTHENTICATE
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Proxy authentication"
+  - name: CLAUDE_CODE_PROXY_RESOLVES_HOSTS
+    category: proxy-network
+    type: bool
+    new: true
+    purpose: "Proxy resolves DNS (vs client)"
+  - name: CLAUDE_CODE_HOST_HTTP_PROXY_PORT
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Host HTTP proxy port"
+  - name: CLAUDE_CODE_HOST_SOCKS_PROXY_PORT
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Host SOCKS proxy port"
+  - name: CLAUDE_CODE_SIMULATE_PROXY_USAGE
+    category: proxy-network
+    type: bool
+    new: true
+    danger: true
+    purpose: "Simulate proxy usage (testing)"
+  - name: CLAUDE_CODE_WEBFETCH_USE_CCR_PROXY
+    category: proxy-network
+    type: bool
+    new: true
+    purpose: "Route WebFetch through CCR proxy"
+  - name: CLAUDE_CODE_GB_BASE_URL
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "GrowthBook base URL override"
+  - name: CLAUDE_CODE_GB_REFRESH_INTERVAL_MS
+    category: proxy-network
+    type: int
+    new: true
+    purpose: "GrowthBook refresh interval"
+  - name: CLAUDE_STREAM_IDLE_TIMEOUT_MS
+    category: proxy-network
+    type: int
+    new: true
+    purpose: "Stream idle timeout"
+  - name: CLAUDE_BYTE_STREAM_IDLE_TIMEOUT_MS
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Byte-stream idle timeout"
+  - name: CLAUDE_SLOW_FIRST_BYTE_MS
+    category: proxy-network
+    type: int
+    new: true
+    purpose: "Slow-first-byte threshold"
+  - name: CLAUDE_ENABLE_STREAM_WATCHDOG
+    category: proxy-network
+    type: triBool
+    new: true
+    purpose: "Stream watchdog"
+  - name: CLAUDE_ENABLE_BYTE_WATCHDOG
+    category: proxy-network
+    type: bool
+    new: true
+    purpose: "Byte watchdog"
+  - name: CLAUDE_ENABLE_BYTE_WATCHDOG_BEDROCK
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Byte watchdog on Bedrock"
+  - name: CLAUDE_CODE_RETRY_WATCHDOG
+    category: proxy-network
+    type: bool
+    new: true
+    purpose: "Retry watchdog"
+  - name: CLAUDE_CODE_SLOW_OPERATION_THRESHOLD_MS
+    category: proxy-network
+    type: int
+    new: true
+    purpose: "Slow-operation threshold"
+  - name: CLAUDE_MOCK_HEADERLESS_429
+    category: proxy-network
+    type: int
+    new: true
+    danger: true
+    purpose: "Mock headerless 429 (testing)"
+  - name: CLAUDE_MOCK_HEADERLESS_429_alias
+    category: proxy-network
+    type: int
+    new: true
+    purpose: "(see CLAUDE_MOCK_HEADERLESS_429)"
+  - name: CLAUDE_CODE_BLOCKING_LIMIT_OVERRIDE
+    category: proxy-network
+    type: str
+    purpose: "Override rate-limit blocking behavior"
+  - name: CLAUDE_CODE_HOST_PLATFORM
+    category: proxy-network
+    type: str
+    new: true
+    purpose: "Host platform identifier"
+
+  # ============================================================
+  # SDK / ENTRYPOINT / ENVIRONMENT
+  # ============================================================
+  - name: CLAUDE_AGENT_SDK
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Marker: running under Agent SDK"
+  - name: CLAUDE_AGENT_SDK_VERSION
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Agent SDK version"
+  - name: CLAUDE_AGENT_SDK_CLIENT_APP
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Client app embedding the SDK"
+  - name: CLAUDE_AGENT_SDK_DISABLE_BUILTIN_AGENTS
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "Disable built-in agents in SDK"
+  - name: CLAUDE_AGENT_SDK_MCP_NO_PREFIX
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "Do not prefix MCP tool names (SDK)"
+  - name: CLAUDE_AGENT
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Agent identifier"
+  - name: CLAUDE_AGENTS_SELECT
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Agent selection list"
+  - name: CLAUDE_CODE_AGENT
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Active agent name"
+  - name: CLAUDE_CODE_AGENT_NAME
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Agent display name"
+  - name: CLAUDE_CODE_AGENT_LIST_IN_MESSAGES
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "List agents inside messages"
+  - name: CLAUDE_CODE_ENABLE_APPEND_SUBAGENT_PROMPT
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "Append subagent prompt"
+  - name: CLAUDE_CODE_TEAM_NAME
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Team name"
+  - name: CLAUDE_CODE_ENTRYPOINT
+    category: sdk-entrypoint
+    type: str
+    purpose: "Entrypoint identifier (cli/mcp/sdk-*/remote*/action/...)"
+  - name: CLAUDE_CODE_ACTION
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "GitHub Action mode marker"
+  - name: CLAUDE_CODE_ARTIFACT
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Artifact mode marker"
+  - name: CLAUDE_CODE_REPL
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "REPL mode"
+  - name: CLAUDE_REPL_VARIANT
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "REPL variant"
+  - name: CLAUDE_CODE_CONTAINER_ID
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Container id"
+  - name: CLAUDE_CODE_ENVIRONMENT_KIND
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Environment kind (e.g. 'byoc')"
+  - name: CLAUDE_CODE_ENVIRONMENT_RUNNER_VERSION
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Environment runner version"
+  - name: CLAUDE_CODE_EXECPATH
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Path to the claude binary (used for re-exec)"
+  - name: CLAUDE_CODE_VERSION
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Version override/marker"
+  - name: CLAUDE_CODE_TEE_SDK_STDOUT_alias
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "(see CLAUDE_CODE_TEE_SDK_STDOUT)"
+  - name: CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "Emit session-state events (SDK)"
+  - name: CLAUDE_CODE_EMIT_TOOL_USE_SUMMARIES
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "Emit tool-use summaries (SDK)"
+  - name: CLAUDE_CODE_INCLUDE_PARTIAL_MESSAGES_alias
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "(see CLAUDE_CODE_INCLUDE_PARTIAL_MESSAGES)"
+  - name: SDK_NATIVE_BIN
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Path to SDK native binary"
+  - name: COMPUTER_USE_SWIFT_NODE_PATH
+    category: sdk-entrypoint
+    type: str
+    new: true
+    purpose: "Node path for Swift computer-use helper"
+  - name: AI_AGENT
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "Generic AI-agent environment marker"
+  - name: CLAUDECODE
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    purpose: "Marker that env is Claude Code (set for subprocesses)"
+  - name: CLAUBBIT
+    category: sdk-entrypoint
+    type: bool
+    new: true
+    danger: true
+    purpose: "Internal/undocumented marker"
+
+  # ============================================================
+  # MISC RUNTIME / PATHS / FILES
+  # ============================================================
+  - name: CLAUDE_TMPDIR
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Temp dir for Claude"
+  - name: CLAUDE_CODE_TMPDIR
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Temp dir (Claude Code)"
+  - name: CLAUDE_PROJECT_DIR
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Project dir (hook/path placeholder)"
+  - name: CLAUDE_CODE_REPO_CHECKOUTS
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Dir for repo checkouts"
+  - name: CLAUDE_CODE_WORKSPACE_HOST_PATHS
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Host paths for workspace mapping"
+  - name: CLAUDE_BASE
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Base path constant"
+  - name: CLAUDE_ENV_FILE
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: ".env file to load"
+  - name: CLAUDE_CODE_SHELL
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Shell to use for Bash tool"
+  - name: CLAUDE_CODE_SHELL_PREFIX
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Prefix prepended to shell commands"
+  - name: CLAUDE_CODE_GIT_BASH_PATH
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Path to Git Bash (Windows)"
+  - name: CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Keep cwd at project root for Bash"
+  - name: BASH_MAX_OUTPUT_LENGTH
+    category: runtime-misc
+    type: int
+    new: true
+    purpose: "Max Bash tool output length"
+  - name: CLAUDE_CODE_USE_POWERSHELL_TOOL
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Use PowerShell tool"
+  - name: CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Respect PowerShell execution policy"
+  - name: CLAUDE_CODE_PWSH_PARSE_TIMEOUT_MS
+    category: runtime-misc
+    type: int
+    new: true
+    purpose: "PowerShell parse timeout"
+  - name: CLAUDE_CODE_USE_NATIVE_FILE_SEARCH
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Use native file search"
+  - name: USE_BUILTIN_RIPGREP
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Use bundled ripgrep vs system rg"
+  - name: CLAUDE_CODE_PERFORCE_MODE
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Perforce VCS mode"
+  - name: CLAUDE_CODE_BASE_REF
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Git base ref for diffs"
+  - name: CLAUDE_CODE_BASE_REFS
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Multiple git base refs"
+  - name: CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Omit git instructions from prompt"
+  - name: CLAUDE_CODE_DISABLE_FILE_CHECKPOINTING
+    category: runtime-misc
+    type: bool
+    purpose: "Disable file checkpointing"
+  - name: CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Enable SDK file checkpointing"
+  - name: CLAUDE_CODE_OVERRIDE_DATE
+    category: runtime-misc
+    type: str
+    new: true
+    danger: true
+    purpose: "Override current date (testing)"
+  - name: CLAUDE_CODE_SPAWN_TIMESTAMP_MS_alias
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "(see CLAUDE_CODE_SPAWN_TIMESTAMP_MS)"
+  - name: CLAUDE_CODE_SIMPLE
+    category: runtime-misc
+    type: bool
+    purpose: "Minimal system-prompt mode"
+  - name: CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Custom minimal system prompt"
+  - name: CLAUDE_CODE_MID_CONVERSATION_SYSTEM
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Mid-conversation system prompt"
+  - name: CLAUDE_CODE_FORCE_MID_CONVERSATION_SYSTEM
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Force mid-conversation system prompt"
+  - name: CLAUDE_CODE_SYSTEM_PROMPT_GB_FEATURE
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "GrowthBook feature gating system prompt"
+  - name: CLAUDE_CODE_VERIFY_PROMPT
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Verify prompt before sending"
+  - name: CLAUDE_CODE_TAGS
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Tags attached to requests"
+  - name: CLAUDE_CODE_TAG_ISMETA_MESSAGES
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Tag isMeta messages"
+  - name: CLAUDE_CODE_ENABLE_TOKEN_USAGE_ATTACHMENT
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Attach token-usage info"
+  - name: CLAUDE_CODE_ENABLE_CFC
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Enable CFC feature"
+  - name: CLAUDE_CODE_ENABLE_XAA
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Enable XAA feature"
+  - name: CLAUDE_CODE_KB_COHESION_FIXES
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Keyboard cohesion fixes"
+  - name: CLAUDE_CODE_ACT_DONT_REDERIVE
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Act without re-deriving state"
+  - name: CLAUDE_CODE_OWNERSHIP_FRAME
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Ownership frame UI/feature"
+  - name: CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Auto-update via package manager"
+  - name: CLAUDE_CODE_DEV_RAW_CHANGELOG_URL
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Raw changelog URL (dev)"
+  - name: CLAUDE_CODE_BRIEF
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Brief (task brief) content"
+  - name: CLAUDE_CODE_BRIEF_UPLOAD
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Upload brief"
+  - name: DISABLE_BRIEF_MODE_STOP_HOOK
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Disable brief-mode stop hook"
+  - name: CLAUDE_CODE_PROACTIVE
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Proactive mode (push notifications)"
+  - name: CLAUDE_CODE_USER_DIALOG_TIMEOUT_MS
+    category: runtime-misc
+    type: int
+    new: true
+    purpose: "User dialog timeout"
+  - name: CLAUDE_CODE_STALL_TIMEOUT_MS_FOR_TESTING
+    category: runtime-misc
+    type: int
+    new: true
+    danger: true
+    purpose: "Stall timeout (testing)"
+  - name: CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS_alias
+    category: runtime-misc
+    type: int
+    new: true
+    purpose: "(see CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS)"
+  - name: CLAUDE_CODE_GLOB_TIMEOUT_SECONDS_alias
+    category: runtime-misc
+    type: int
+    new: true
+    purpose: "(see CLAUDE_CODE_GLOB_TIMEOUT_SECONDS)"
+  - name: CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS
+    category: runtime-misc
+    type: bool
+    purpose: "Disable experimental API betas"
+  - name: CLAUDE_CODE_ENABLE_EXPERIMENTAL_ADVISOR_TOOL
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Enable experimental advisor tool"
+  - name: CLAUDE_CODE_DISABLE_ADVISOR_TOOL
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Disable advisor tool"
+  - name: ENABLE_LSP_TOOL
+    category: runtime-misc
+    type: bool
+    purpose: "Enable LSP tool"
+  - name: ENABLE_EXPERIMENTAL_SHELL_BUILTINS
+    category: runtime-misc
+    type: bool
+    purpose: "Experimental shell builtins"
+  - name: ENABLE_SESSION_PERSISTENCE
+    category: runtime-misc
+    type: bool
+    purpose: "Session persistence"
+  - name: TEST_ENABLE_SESSION_PERSISTENCE
+    category: runtime-misc
+    type: bool
+    new: true
+    danger: true
+    purpose: "Force session persistence (testing)"
+  - name: ENABLE_SESSION_BACKGROUNDING
+    category: runtime-misc
+    type: bool
+    purpose: "Session backgrounding"
+  - name: CLAUDE_CODE_FORCE_SESSION_PERSISTENCE
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Force session persistence"
+  - name: ENABLE_PID_BASED_VERSION_LOCKING
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "PID-based version locking"
+  - name: ENABLE_LOCKLESS_UPDATES
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "Lockless updates"
+  - name: ENABLE_BTW
+    category: runtime-misc
+    type: bool
+    purpose: "Enable /btw side-question feature"
+  - name: ENABLE_TENTATIVE_ERA
+    category: runtime-misc
+    type: bool
+    purpose: "Unknown experimental feature"
+  - name: ENABLE_SUBAGENT_ZOOM
+    category: runtime-misc
+    type: bool
+    purpose: "Subagent zoom"
+  - name: FORCE_VCR
+    category: runtime-misc
+    type: bool
+    new: true
+    danger: true
+    purpose: "Force VCR record/replay (testing)"
+  - name: VCR_RECORD
+    category: runtime-misc
+    type: bool
+    new: true
+    danger: true
+    purpose: "Record VCR cassette (testing)"
+  - name: CLAUDE_CODE_TEST_FIXTURES_ROOT
+    category: runtime-misc
+    type: str
+    new: true
+    danger: true
+    purpose: "Test fixtures root"
+  - name: CLAUDE_CODE_TEST_NO_GIT_BASH
+    category: runtime-misc
+    type: str
+    new: true
+    danger: true
+    purpose: "Disable git-bash detection (testing)"
+  - name: CLAUDE_CODE_TEST_NO_PWSH
+    category: runtime-misc
+    type: str
+    new: true
+    danger: true
+    purpose: "Disable pwsh detection (testing)"
+  - name: CLAUDE_CODE_MOCK_TRIAL
+    category: runtime-misc
+    type: bool
+    new: true
+    danger: true
+    purpose: "Mock trial state (testing)"
+  - name: CLAUDE_INTERNAL_FC_OVERRIDES
+    category: runtime-misc
+    type: str
+    new: true
+    danger: true
+    purpose: "Internal feature-config overrides"
+  - name: CLAUDE_INTERNAL_WARM_RESUME_QA
+    category: runtime-misc
+    type: bool
+    new: true
+    danger: true
+    purpose: "Internal warm-resume QA mode"
+  - name: MORERIGHT_TEST
+    category: runtime-misc
+    type: bool
+    new: true
+    danger: true
+    purpose: "Internal test toggle"
+  - name: CLAUDE_SNIP
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Snippet/clip feature"
+  - name: CLAUDE_SSH_VERSION
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "SSH client version"
+  - name: CLAUDE_SSH_LOCAL_BINARY
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Path to local SSH binary"
+  - name: CLAUDE_CODE_NATIVE_CURSOR_alias
+    category: runtime-misc
+    type: bool
+    new: true
+    purpose: "(see CLAUDE_CODE_NATIVE_CURSOR)"
+  - name: BUGHUNTER_DEV_BUNDLE_B64
+    category: runtime-misc
+    type: str
+    new: true
+    danger: true
+    purpose: "Bughunter dev bundle (base64)"
+  - name: BUGHUNTER_FLEET_SIZE
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Bughunter fleet size"
+  - name: SWE_BENCH_INSTANCE_ID
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "SWE-bench instance id"
+  - name: SWE_BENCH_RUN_ID
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "SWE-bench run id"
+  - name: SWE_BENCH_TASK_ID
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "SWE-bench task id"
+  - name: SCREENSHOT_DIR
+    category: runtime-misc
+    type: str
+    new: true
+    purpose: "Directory for screenshots"

@@ -1,0 +1,4 @@
+autocompact
+autofix-pr
+team-onboarding
+toggle-memory

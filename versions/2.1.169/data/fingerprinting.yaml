@@ -1,0 +1,1043 @@
+version: 2.1.169
+build: 2026-06-08T03:22:12Z
+git_sha: eb44edf196b8a320135d5a27a3cfba37773ce0cd
+scope: full_device_fingerprint
+note: >-
+  FP1 partial dataset. Owns the hard hardware machine-id and the host/OS
+  OpenTelemetry resource attributes only. Soft env/runtime/network signals are
+  in data/_fp4.yaml. Other FP agents append to their own partial; this file is
+  FP1-exclusive.
+
+machine_identity:
+  # The transmitted device_id is NOT the hardware machine-id (see device_id below).
+  hardware_machine_id:
+    purpose: OpenTelemetry host.id (vendored node-machine-id style detector)
+    bundled_at:
+      - cli.beauty.js:136682   # first copy of @opentelemetry/resources
+      - cli.beauty.js:323174   # second copy (byte-identical)
+    dispatcher:
+      function: OE_           # second copy: Ic5
+      line: cli.beauty.js:136784
+      behaviour: lazy require per process.platform, memoised
+    hashed: false
+    salted: false
+    truncated: false
+    transmitted_by_default: false
+    notes: >-
+      Raw platform UUID/GUID, returned unmodified. Read only by the OTel
+      hostDetector. Even when OTel telemetry is enabled, Kf4() keeps ONLY
+      host.arch and discards host.id and host.name, so the hardware id never
+      leaves the device in the default product.
+    platforms:
+      darwin:
+        command: 'ioreg -rd1 -c "IOPlatformExpertDevice"'
+        parse: 'find line containing IOPlatformUUID, split on the equals separator, value minus trailing quote'
+        line: cli.beauty.js:136685
+      linux:
+        files:
+          - /etc/machine-id
+          - /var/lib/dbus/machine-id   # fallback
+        parse: readFile(utf8).trim(), first existing wins
+        line: cli.beauty.js:136706
+      freebsd:
+        sources:
+          - file: /etc/hostid
+          - command: kenv -q smbios.system.uuid   # fallback
+        parse: trim()
+        line: cli.beauty.js:136727
+      win32:
+        command: '%windir%\System32\REG.exe QUERY HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography /v MachineGuid'
+        registry_key: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography
+        registry_value: MachineGuid
+        wow64_shim: 'uses %windir%\sysnative\cmd.exe when arch==ia32 and PROCESSOR_ARCHITEW6432 in env'
+        parse: 'split on "REG_SZ", take [1].trim()'
+        line: cli.beauty.js:136752
+      default:
+        result: undefined
+        log: 'could not read machine-id: unsupported platform'
+        line: cli.beauty.js:136771
+    error_handling: 'try/catch each read; on failure only OTel diag.debug("error reading machine id: ...")'
+
+  device_id:
+    # This is what is actually transmitted as device_id / user_id / user.id.
+    getter: cU
+    alias: getOrCreateUserID
+    line: cli.beauty.js:141641
+    source: persisted random token in global config
+    generation: crypto.randomBytes(32).toString("hex")   # 64 hex chars, 256-bit
+    crypto_module: require("crypto")  # GeK, cli.beauty.js:141732
+    storage: global config file (h$ read 141179 / L8 write 141040); ~/.claude.json or $CLAUDE_CONFIG_DIR
+    config_field: userID
+    stable: across sessions
+    scope: per-install / per-config-dir   # NOT per-hardware
+    derived_from_hardware: false
+    hashed_before_transmission: false
+    salted: false
+    truncated: false
+    local_hash_only:
+      where: feature-flag bucketing
+      function: XS_
+      line: cli.beauty.js:141899
+      formula: parseInt(sha256(cU()).slice(0,8),16) % JS_
+      transmitted: false
+    transmitted_as:
+      - field: device_id
+        context: model-API metadata blob (aPH), JSON-stringified into user_id
+        line: cli.beauty.js:559637
+      - field: deviceId
+        context: user-metadata bundle gnH
+        line: cli.beauty.js:132451
+      - field: user_id
+        context: first-party OTel log events
+        line: cli.beauty.js:139980
+      - field: device_id
+        context: GrowthBook experiment events (qG6)
+        line: cli.beauty.js:140035
+      - field: user.id
+        context: third-party OTel resource attrs (BhH)
+        line: cli.beauty.js:185364
+
+  naming_collision_warning: >-
+    The deviceId fields at cli.beauty.js:12xxx/13xxx/37xxx/523xxx are
+    Chrome-extension / browser-bridge instance IDs (select_browser /
+    list_connected_browsers) and are unrelated to machine fingerprinting.
+
+  service_instance_id:
+    attribute: service.instance.id
+    value: crypto.randomUUID()
+    stable: false   # fresh per process, not a device id
+    line: cli.beauty.js:136918
+
+host_resource_attributes:
+  # Attributes describing the host/OS/process. "transmitted" = leaves the device
+  # in some default-or-enabled path. host.id/host.name are stripped (see Kf4).
+  detectors:
+    hostDetector:
+      class: vsK
+      line: cli.beauty.js:136845
+    osDetector:
+      class: EsK
+      line: cli.beauty.js:136866
+    processDetector:
+      class: SsK
+      line: cli.beauty.js:136886
+    serviceInstanceIdDetector:
+      class: IsK
+      line: cli.beauty.js:136918
+    envDetector:
+      class: jsK
+      line: cli.beauty.js:136577
+      reads_env: [OTEL_RESOURCE_ATTRIBUTES, OTEL_SERVICE_NAME]
+  third_party_resource_builder:
+    function: Kf4
+    line: cli.beauty.js:325308
+    gate_env: CLAUDE_CODE_ENABLE_TELEMETRY
+    behaviour: >-
+      Merges service.name/version, osDetector (os.type, os.version), and from
+      hostDetector ONLY host.arch. host.id and host.name are explicitly dropped
+      at cli.beauty.js:325331.
+  attributes:
+    - name: host.id
+      source: getMachineId() (hardware UUID)
+      detector: hostDetector
+      transmitted: false   # stripped by Kf4
+      identifying: high
+    - name: host.name
+      source: os.hostname()
+      detector: hostDetector
+      transmitted: false   # stripped by Kf4
+      identifying: high
+    - name: host.arch
+      source: normalizeArch(os.arch())   # x64->amd64, arm->arm32, ppc->ppc32
+      detector: hostDetector
+      transmitted: true
+      identifying: low
+      also_in: [BigQuery exporter resource cli.beauty.js:294428]
+    - name: os.type
+      source: normalizeType(os.platform())   # win32->windows, sunos->solaris
+      detector: osDetector
+      transmitted: true
+      identifying: low
+    - name: os.version
+      source: os.release()
+      detector: osDetector
+      transmitted: true
+      identifying: medium
+    - name: process.pid
+      source: process.pid
+      detector: processDetector
+      transmitted: false   # detector not run by CC
+    - name: process.executable.name
+      source: process.title
+      detector: processDetector
+      transmitted: false
+    - name: process.executable.path
+      source: process.execPath
+      detector: processDetector
+      transmitted: false
+    - name: process.command_args
+      source: '[argv[0], ...execArgv, ...argv.slice(1)]'
+      detector: processDetector
+      transmitted: false
+    - name: process.runtime.version
+      source: process.versions.node
+      detector: processDetector
+      transmitted: false
+    - name: process.runtime.name
+      value: nodejs
+      detector: processDetector
+      transmitted: false
+    - name: process.owner
+      source: os.userInfo().username
+      detector: processDetector
+      transmitted: false
+    - name: service.instance.id
+      source: crypto.randomUUID()
+      detector: serviceInstanceIdDetector
+      stable: false
+    - name: wsl.version
+      source: r$()/xvH() from /proc/version WSL(\d+) or WSL_DISTRO_NAME
+      transmitted: true
+      lines: [cli.beauty.js:47744, cli.beauty.js:325324, cli.beauty.js:294431]
+      identifying: low
+    - name: terminal.type
+      source: jE.terminal (TERM_PROGRAM etc.)
+      transmitted: true
+      attached_by: BhH
+      line: cli.beauty.js:185393
+      identifying: low
+
+other_host_introspection:
+  # read for local logic, NOT used as a transmitted device fingerprint
+  - signal: cpu_count
+    source: os.cpus().length
+    use: local concurrency sizing
+    line: cli.beauty.js:373006
+  - signal: free_memory
+    source: os.freemem()
+    use: background-agent memory-pressure decisions
+    lines: [cli.beauty.js:11920, cli.beauty.js:542074, cli.beauty.js:659703]
+  - signal: timezone
+    source: Intl.DateTimeFormat().resolvedOptions().timeZone (qz$)
+    use: UI time formatting; China-TZ check (Asia/Shanghai, Asia/Urumqi) for routing
+    lines: [cli.beauty.js:11417, cli.beauty.js:211024]
+  - signal: locale
+    source: Intl.DateTimeFormat().resolvedOptions().locale language (jVq)
+    use: local formatting
+    line: cli.beauty.js:11423
+  - signal: shell
+    source: basename of $SHELL/$COMSPEC, whitelisted (Z66/tn$)
+    use: env context
+    line: cli.beauty.js:45504
+
+telemetry_sdk_constants:
+  service_name: claude-code
+  service_name_lines: [cli.beauty.js:140075, cli.beauty.js:325313, cli.beauty.js:294424]
+  default_service_name_fallback: 'unknown_service:${process.argv0}'   # cli.beauty.js:136385 (overridden)
+  service_version: 2.1.169
+  logger_scope: com.anthropic.claude_code.events
+  meter_scope: com.anthropic.claude_code
+  telemetry_sdk_attributes:
+    source: SDK_INFO static (defaultResource)
+    line: cli.beauty.js:136512
+    keys: [telemetry.sdk.name, telemetry.sdk.language, telemetry.sdk.version]
+  x_service_name_header:
+    value: claude-code
+    line: cli.beauty.js:139748
+  user_agent:
+    value: claude-code/2.1.169   # version only, no host info
+    function: WO
+    line: cli.beauty.js:186
+
+env_overrides:
+  - var: CLAUDE_CODE_HOST_PLATFORM
+    effect: forces reported platform (win32/darwin/linux) overriding os.platform()
+    function: H3$
+    line: cli.beauty.js:45499
+  - var: CLAUDE_CONFIG_DIR
+    effect: relocates config holding persisted random device_id; change => new device_id
+  - var: CLAUDE_CODE_ENABLE_TELEMETRY
+    effect: gates third-party OTel path (Kf4) that runs host/os detectors then strips host.id/host.name
+  - var: OTEL_RESOURCE_ATTRIBUTES
+    effect: parsed by envDetector, merged into OTel resource
+  - var: OTEL_SERVICE_NAME
+    effect: overrides service.name in envDetector
+  - var: OTEL_METRICS_INCLUDE_RESOURCE_ATTRIBUTES
+    effect: include OTEL_RESOURCE_ATTRIBUTES on metrics
+    default: true
+    line: cli.beauty.js:185413
+  - var: CLAUDE_CODE_ACCOUNT_TAGGED_ID
+    effect: overrides derived user.account_id tag
+    line: cli.beauty.js:185389
+
+privacy_summary:
+  transmitted_unique_default: device_id (random 256-bit, install-scoped, unhashed)
+  hardware_uuid_transmitted: false   # read only when OTel enabled, then stripped by Kf4
+  low_entropy_host_signals_sent: [host.arch, os.type, os.version, wsl.version, terminal.type, platform]
+  read_but_not_transmitted: [hostname, host.id, cpu_count, free_memory, timezone, locale]
+  cross_install_correlator: account/org uuid + email (not hardware)
+
+# ── Identity & cross-service correlation (account/user/session) ──
+# Account, User & Session Identity — structured data (partial _fp2)
+# Version 2.1.169 | Build 2026-06-08T03:22:12Z | Bun 1.3.14 | linux-x86_64
+# Citations are cli.beauty.js line numbers / minified function names.
+
+identity_fields:
+  - name: userID
+    aka: [device_id, distinctId, anonymousId, "user.id"]
+    role: canonical anonymous/distinct id (device-scoped)
+    source: "config ~/.claude.json key `userID`; else generated randomBytes(32).toString('hex') (64 hex)"
+    accessor: "cU() — cli.beauty.js:141641"
+    persisted: true
+    persisted_to: "~/.claude.json (or $CLAUDE_CONFIG_DIR/.claude.json)"
+    hashed: false
+    hashed_note: "only its sha256 bucket XS_() is hashed for sampling, value itself sent plaintext"
+    sent_to: [anthropic_api, growthbook, datadog_seed, otel, first_party_events]
+
+  - name: accountUuid
+    aka: [account_uuid, "user.account_uuid"]
+    role: canonical authenticated account id
+    source: "oauthAccount (OAuth profile /api/oauth/profile, or token, or env)"
+    env_override: CLAUDE_CODE_ACCOUNT_UUID
+    accessor: "F_()?.accountUuid — cli.beauty.js:131589 ; persisted by TcH() :93835"
+    validator: "DQK() length>=8 passthrough (NOT a hash) — cli.beauty.js:132422"
+    persisted: true
+    persisted_to: "~/.claude.json under oauthAccount"
+    hashed: false
+    sent_to: [anthropic_api, growthbook, datadog, otel, first_party_events, trusted_device_enroll]
+
+  - name: organizationUuid
+    aka: [organization_uuid, "organization.id"]
+    role: org / enterprise tenant id
+    source: oauthAccount
+    env_override: CLAUDE_CODE_ORGANIZATION_UUID
+    accessor: "F_()?.organizationUuid"
+    hashed: false
+    sent_to: [growthbook, datadog, otel, first_party_events, trusted_device_enroll]
+
+  - name: emailAddress
+    aka: [email, "user.email"]
+    role: account email (PII)
+    source: "oauthAccount.emailAddress (profile fetch / token / env)"
+    env_override: CLAUDE_CODE_USER_EMAIL
+    accessor: "F_()?.emailAddress ; central getter eV_() is a STUB returning undefined :132415"
+    hashed: false
+    plaintext_pii: true
+    sent_to: [otel, oidc_gateway]
+    not_sent_to: [growthbook, first_party_events, anthropic_api_metadata]
+    note: "eV_() stub means email is absent from gnH/GrowthBook surface in this build; OTel reads oauthAccount.emailAddress directly (unconditional, no env gate)"
+
+  - name: sessionId
+    aka: [session_id, "session.id", CLAUDE_CODE_SESSION_ID]
+    role: per-conversation id
+    source: "B$.sessionId = randomUUID() (:2385); CV() async-local override"
+    accessor: "y$() — cli.beauty.js:2465"
+    env_export: "CLAUDE_CODE_SESSION_ID (accessor GG1 :45954), re-synced on fork :456346"
+    cli_flag: "--session-id"
+    hashed: false
+    sent_to: [anthropic_api, growthbook, datadog, otel, first_party_events]
+
+  - name: parentSessionId
+    aka: [parent_session_id]
+    role: session lineage link (fork parent)
+    source: "B$.parentSessionId; set by Rl8({setCurrentAsParent}) :2469"
+    accessor: "Il8() :2481 ; Xh_() :139144 for agent context"
+    hashed: false
+    sent_to: [datadog, first_party_events]
+
+  - name: oauthAccount
+    role: container object for all account identity + billing
+    fields: [accountUuid, emailAddress, organizationUuid, displayName, hasExtraUsageEnabled, billingType, accountCreatedAt, subscriptionCreatedAt, ccOnboardingFlags, claudeCodeTrialEndsAt, claudeCodeTrialDurationDays, seatTier]
+    source: "RjH() GET ${BASE_API_URL}/api/oauth/profile :93494 ; persisted TcH() :93835"
+    accessor: "h$().oauthAccount ; F_() :131589 (gated by yM() auth check)"
+    persisted_to: "~/.claude.json"
+
+  - name: oidc_sub
+    aka: ["user.id (gateway)"]
+    role: enterprise gateway JWT subject claim
+    source: "decoded gateway JWT payload (ni_ base64url :185271)"
+    accessor: "iY8() :185283"
+    extra_claims: [email, groups]
+    identity_source_tag: gateway-oidc
+    hashed: false
+    sent_to: [otel]
+    note: "overrides user.*/identity.* from OTEL_RESOURCE_ATTRIBUTES when present"
+
+  - name: user.account_id
+    role: base58-encoded tagged account id (user_01<base58>)
+    source: "f37('user', accountUuid) :185329 — strip dashes -> BigInt -> base58 (reversible encoding)"
+    env_override: CLAUDE_CODE_ACCOUNT_TAGGED_ID
+    hashed: false
+    encoding: base58
+    sent_to: [otel]
+    gate: OTEL_METRICS_INCLUDE_ACCOUNT_UUID
+
+  - name: userBucket
+    role: sampling bucket 0-29 (the ONLY hashed identity derivative)
+    source: "parseInt(sha256(cU()).slice(0,8),16) % 30"
+    accessor: "XS_() — cli.beauty.js:141899"
+    hashed: true
+    hash_algo: sha256
+    sent_to: [datadog]
+
+  - name: userType
+    role: caller class (hard-coded)
+    value: external
+    accessor: "literal 'external' in gnH/j_8 :132466,:139231"
+    hashed: false
+    sent_to: [growthbook, datadog, otel, first_party_events]
+
+  - name: messages_api_user_id
+    aka: [metadata.user_id]
+    role: per-request identity blob on Anthropic Messages API
+    source: "aPH() :559624 -> CH({device_id:cU(), account_uuid:F_()?.accountUuid??'', session_id:y$(), ...CLAUDE_CODE_EXTRA_METADATA})"
+    serializer: "CH = JSON.stringify (:10081)"
+    hashed: false
+    plaintext_structured: true
+    env_extra: CLAUDE_CODE_EXTRA_METADATA
+    sent_to: [anthropic_api]
+    note: "user_id is a JSON string of an object, not an opaque id"
+
+service_identity_matrix:
+  anthropic_messages_api:
+    active: true
+    builder: "aPH() cli.beauty.js:559624"
+    fields:
+      id: "device_id = cU()"
+      account: account_uuid
+      session: session_id
+      extra: CLAUDE_CODE_EXTRA_METADATA merged
+    hashed: false
+    gate: always
+
+  growthbook:
+    active: true
+    role: feature flags + experiments (default backend, 62 refs)
+    builder: "YG6() cli.beauty.js:140351 (attrs); qG6() :140021 (exposure event)"
+    fields:
+      id: "deviceId = cU()"
+      account: accountUUID
+      organization: organizationUUID
+      session: sessionId
+      email: "ABSENT (eV_ stub)"
+      other: [deviceID, userType, subscriptionType, rateLimitTier, firstTokenTime, platform, apiBaseUrlHost, appVersion]
+    hashed: false
+    gates: [DISABLE_GROWTHBOOK, "iu()"]
+
+  datadog:
+    active: true
+    role: logs (first-party only)
+    endpoint: "https://http-intake.logs.us5.datadoghq.com/api/v2/logs"
+    client_token: pubea5604404508cdd34afb69e6f42a05bc
+    client_token_2_1_32: pubbbf48e6d78dae54bceaa4acf463299bf
+    region: us5
+    flush_ms: 15000
+    batch: 100
+    flush_env: CLAUDE_CODE_DATADOG_FLUSH_INTERVAL_MS
+    builder: "EiH() cli.beauty.js:141812"
+    fields:
+      id: "userBucket = sha256(cU())%30"
+      account: "auth.account_uuid (via core_metadata)"
+      organization: auth.organization_uuid
+      session: [session_id, parent_session_id]
+      static: {service: claude-code, hostname: claude-code, env: external, ddsource: nodejs}
+      tags: [userType, subscriptionType, model, platform]
+    hashed: "userBucket only"
+    gates: ["Mq()==='firstParty'", "tengu_log_datadog_events flag (yeK)"]
+
+  opentelemetry:
+    active: opt-in
+    role: resource attributes + metrics
+    builder: "BhH() cli.beauty.js:185353 ; OIDC iY8() :185283"
+    fields:
+      id: "user.id = cU()"
+      account: ["user.account_uuid", "user.account_id (base58 user_01...)"]
+      organization: organization.id
+      email: "user.email (oauthAccount.emailAddress, plaintext, no env gate)"
+      session: "session.id (gate OTEL_METRICS_INCLUDE_SESSION_ID)"
+      oidc: ["user.id=jwt.sub", "user.email=jwt.email", "user.groups", "identity.source=gateway-oidc"]
+      other: [app.version, app.entrypoint, terminal.type]
+    hashed: false
+    gates: [OTEL_METRICS_INCLUDE_SESSION_ID, OTEL_METRICS_INCLUDE_VERSION, OTEL_METRICS_INCLUDE_ACCOUNT_UUID, OTEL_METRICS_INCLUDE_ENTRYPOINT, OTEL_METRICS_INCLUDE_RESOURCE_ATTRIBUTES]
+
+  first_party_event_sink:
+    active: true
+    role: tengu_* events via d()/Ny -> OTel logger
+    builder: "$G6() cli.beauty.js:139967 ; payload shape ltK() :139270 ; base j_8() :139220"
+    fields:
+      id: "user_id = cU()"
+      account: core.auth.account_uuid
+      organization: core.auth.organization_uuid
+      session: [core.session_id, core.parent_session_id]
+      agent: [agent_id, agent_type, team_name, parent_agent_id]
+      user_metadata: "full gnH() object"
+      userType: external
+    hashed: false
+    gate: "iu() (= !nonessential-traffic-disabled)"
+
+  trusted_device_enrollment:
+    active: true
+    builder: "Iy8()/_4f() cli.beauty.js:383523"
+    fields:
+      account: accountUuid
+      organization: organizationUuid
+    token_env: CLAUDE_TRUSTED_DEVICE_TOKEN
+    note: "re-enrollment skipped when same accountUuid+organizationUuid re-login with existing token"
+
+  segment:
+    active: false
+    status: REMOVED
+    note: "0 hits for api.segment.io (was primary analytics in 2.1.32)"
+
+  statsig:
+    active: false
+    status: not_present
+    note: "single incidental hit is a local cache dir name (:593189), not a backend"
+
+config_storage:
+  file: "~/.claude.json"
+  dir_resolver: "CLAUDE_CONFIG_DIR ?? ~/.claude (cli.beauty.js:4168)"
+  path_fn: "TG() cli.beauty.js:45520"
+  reader: "h$() cli.beauty.js:141179 (mtime-memoised)"
+  writer: "L8()/b_8() cli.beauty.js:141040 (locked; auth-wipe guard :141272 GH#3117)"
+  keys: [userID, oauthAccount, firstStartTime, firstTokenDate]
+
+kill_switches:
+  - DISABLE_TELEMETRY
+  - DISABLE_GROWTHBOOK
+  - DISABLE_ERROR_REPORTING
+  - DO_NOT_TRACK
+  - CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+
+env_identity_overrides:
+  - CLAUDE_CODE_ACCOUNT_UUID
+  - CLAUDE_CODE_ORGANIZATION_UUID
+  - CLAUDE_CODE_USER_EMAIL
+  - CLAUDE_CODE_ACCOUNT_TAGGED_ID
+  - CLAUDE_CODE_SESSION_ID
+  - CLAUDE_CODE_EXTRA_METADATA
+  - CLAUDE_TRUSTED_DEVICE_TOKEN
+  - CLAUDE_CODE_HOST_PLATFORM
+
+hashing_summary:
+  identity_hashes_used:
+    - "userBucket = sha256(cU()) % 30 (sampling only) — XS_() :141899"
+  plaintext_identifiers:
+    - userID/device_id
+    - accountUuid
+    - organizationUuid
+    - emailAddress (OTel)
+    - sessionId / parentSessionId
+    - "messages_api user_id (JSON-stringified object)"
+  reversible_encodings:
+    - "user.account_id base58 (user_01<base58> of accountUuid) — f37() :185329"
+
+# ── Device trust, auth & credential binding ──
+# Device Trust, Auth & Credential Binding — Claude Code 2.1.169
+# Partial FP3. Merged into device-fingerprinting.yaml by orchestrator.
+# Citations are cli.beauty.js line numbers.
+
+trust_mechanisms:
+
+  trusted_device_token:
+    summary: >
+      Opaque server-issued bearer string (device_token) gating Remote-Control / bridge
+      features. NOT computed locally, NOT derived from machine id. Only the hostname is
+      sent to the server at enrollment.
+    module_lines: "288285-288473"
+    env_override: CLAUDE_TRUSTED_DEVICE_TOKEN   # takes precedence over stored token
+    env_override_lines: "288386-288389, 288469-288471"
+    obtained_via:
+      method: POST
+      url: "{BASE_API_URL}/api/auth/trusted_devices"
+      auth: "Bearer <oauth access_token>"
+      request_body:
+        display_name: "Claude Code on ${os.hostname()} · linux"   # only device identifier sent
+      response_field: device_token
+      logged_field: device_id
+      line: "288409-288441"
+    stored_in: ".credentials.json -> trustedDeviceToken (plaintext, chmod 0600)"
+    stored_reader: "readStoredTrustedDeviceToken (WWH), 288468-288472"
+    sent_as_header: X-Trusted-Device-Token
+    header_builder: "qP4 (369069-369083)"
+    header_injection_sites:
+      - "qP4 bridge PR/Slack subscribe (369026, 369054)"
+      - "interruptRemoteSession (371879-371886)"
+      - "environment runner headers (522413-522414)"
+      - "teleport-events fetch (369609)"
+      - "session-ingress"
+    scope: "Remote Control / bridge / teleport / session-ingress ONLY (never inference traffic)"
+    machine_bound: false
+    gates:
+      - name: tengu_sessions_elevated_auth_enforcement   # GrowthBook master gate
+        const: WP8
+        default: false
+        lines: "288318, 288323, 288449"
+      - name: require_trusted_devices                    # org managed-policy key
+        const: ev$
+        check: "isPolicyAllowed / isPolicyEnforced"
+        lines: "288392, 288450"
+      - name: tengu_sessions_elevated_auth_disable_proactive_enrollment
+        const: jo7
+        default: false
+        lines: "288305-288307, 288451"
+    lifecycle_functions:
+      enroll: "enrollTrustedDevice (QH$, 288368-288448)"
+      enroll_if_needed: "enrollTrustedDeviceIfNeeded (nF6, 288351-288355); triggered 529920"
+      get: "getTrustedDeviceToken (Qb, 288333-288336)"
+      clear_cache: "clearTrustedDeviceTokenCache (qN$, 288348)"
+      clear: "clearTrustedDeviceToken (iF6, 288357-288367)"
+      unenrolled_check: "isTrustedDeviceUnenrolled ($N$, 288337-288341)"
+    failure_ux: >
+      Server 403 with error.resource == "untrusted_device" -> "This session requires a trusted
+      device. Run /login to enroll this device, then retry." (369639, 574096-574099, 574723)
+    telemetry: "bridge_trusted_device_enroll (request_failed|http_error|missing_token|storage_failed|unexpected_error)"
+
+  attestation:
+    summary: >
+      Per-event device_attestation_status filter on inbound Remote-Control events.
+      Server-driven trust signaling, NOT local TPM/hardware attestation.
+    module_lines: "287890-287974"
+    statuses: ["UNSPECIFIED","ABSENT","VERIFIED","VERIFIED_BY_GATE","INVALID","UNCHECKED"]
+    status_prefix: DEVICE_ATTESTATION_STATUS_
+    policy_builder: "getAttestationFilterPolicy (CIH, 288327-288332)"
+    default_policy:
+      enforce: false
+      acceptLevel: VERIFIED
+      acceptStatuses: []
+      const: MP8
+      lines: "287966-287969"
+    enforce_requires:
+      - "flag tengu_bridge_attestation_enforce (default false)"
+      - "org enforces require_trusted_devices"
+    enforce_config_flag: tengu_bridge_attestation_enforce_config   # default {}
+    filter_fn: "jP8 (287920-287957)"
+    on_drop_ui: >
+      "Remote Control received a <type> without a valid device signature (attestation: <status>)
+      and will not execute it." (575357-575366, 573803)
+    telemetry: "bridge_event_attestation, bridge-attestation-drop"
+
+  oauth:
+    client_id_prod: "9d1c250a-e61b-44d9-88ed-5944d1962f5e"
+    client_id_local_dev: "22422756-60c9-4084-8eb7-27705fd5cf9a"
+    client_id_env_override: CLAUDE_CODE_OAUTH_CLIENT_ID
+    config_fn: "nK (40256-40292); prod constants MRq (40303-40319)"
+    endpoints:
+      console_authorize: "https://platform.claude.com/oauth/authorize"
+      claude_ai_authorize: "https://claude.com/cai/oauth/authorize"
+      token: "https://platform.claude.com/v1/oauth/token"
+      revoke: "{TOKEN_URL}/revoke"
+      create_api_key: "https://api.anthropic.com/api/oauth/claude_cli/create_api_key"
+      roles: "https://api.anthropic.com/api/oauth/claude_cli/roles"
+      profile: "{BASE_API_URL}/api/claude_cli_profile"
+      manual_redirect: "https://platform.claude.com/oauth/code/callback"
+      loopback_redirect: "http://localhost:{port}/callback"
+    custom_oauth_url_env: CLAUDE_CODE_CUSTOM_OAUTH_URL   # restricted to allowlist Dn$ (40267-40285)
+    pkce:
+      method: S256
+      code_verifier: "base64url(randomBytes(32)) (Df4, 326071-326073)"
+      code_challenge: "base64url(sha256(verifier)) (Jf4, 326075-326078)"
+      state: "base64url(randomBytes(32)) (Xf4, 326080-326082)"
+      class: "EzH (326087-326132)"
+    scopes:
+      user_inference: "user:inference"
+      user_profile: "user:profile"
+      org_create_api_key: "org:create_api_key"
+      remote_control: "user:sessions:claude_code"
+      mcp_servers: "user:mcp_servers"
+      file_upload: "user:file_upload"
+      default_set_const: "e$6 (40303)"
+    device_identifiers_sent: "NONE (no machine-id/MAC/hw-uuid); only hostname in trusted-device display_name"
+    client_platform_header: "anthropic-client-platform via i2() (190-216)"
+    client_platform_values:
+      - claude_code_cli
+      - claude_code_vscode
+      - claude_code_remote
+      - claude_code_sdk
+      - claude_code_mcp
+      - claude_code_github_action
+      - claude_code_local_agent
+      - claude_in_slack
+    token_exchange_fn: "VY6 (93588-93606) grant_type=authorization_code"
+    refresh_fn: "FNH (93607-93678) grant_type=refresh_token"
+    revoke_fn: "vY6 (93679-93695)"
+    env_injection:
+      - CLAUDE_CODE_OAUTH_TOKEN              # static token, bypasses cred file (130700-130705)
+      - CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR
+      - CLAUDE_CODE_OAUTH_SCOPES
+      - CLAUDE_CODE_OAUTH_REFRESH_TOKEN
+      - CLAUDE_CODE_OAUTH_CLIENT_ID
+
+  first_party_detection:
+    provider_fn: "getAPIProvider Mq() (93073-93074)"
+    is_first_party_provider: "o_() == (Mq()=='firstParty') (93081-93083)"
+    is_first_party_base_url: "zf() (93119-93129)"
+    assume_first_party_flag: "_CLAUDE_CODE_ASSUME_FIRST_PARTY_BASE_URL (read off xQH bag, 93120)"
+    base_url_check: "URL(ANTHROPIC_BASE_URL).host === 'api.anthropic.com' else not first-party"
+    trace_propagation: "shouldPropagateTraceContext Hj$ (93131-93132)"
+    data_residency_gate: "externalHttp throws on Anthropic-operated URL -> firstPartyApi (45397)"
+    implication: "assume-first-party override forces trust + trace propagation against any base URL"
+
+  api_key_helper:
+    setting: apiKeyHelper   # path to script outputting auth value (56355)
+    resolution_fn: "JV_ (130923+)"
+    exec_timeout_ms: 600000
+    ttl_env: CLAUDE_CODE_API_KEY_HELPER_TTL_MS   # int >=0, tFK (130864-130874)
+    cache: "gU {value,timestamp}, re-run when now-ts >= TTL (130880-130896)"
+    trust_guard: >
+      Refuses to execute before workspace trust confirmed: "Security: apiKeyHelper executed before
+      workspace trust is confirmed"; telemetry tengu_apiKeyHelper_missing_trust11 (130926-130930)
+    script_valued_settings_const: "ro7 (289447)"
+
+  federation_oidc:
+    summary: "Enterprise/CI workload-identity federation: external OIDC assertion -> Anthropic token"
+    provider_lines: "4844-5180, 102464-102476"
+    grant: token-exchange   # POST {baseURL}/v1/oauth/token
+    request_fields: [grant_type, assertion, federation_rule_id, organization_id, service_account_id, workspace_id]
+    identity_token_max_kib: 16
+    identity_token_source_supported: ["file"]
+    env_vars:
+      - ANTHROPIC_IDENTITY_TOKEN
+      - ANTHROPIC_IDENTITY_TOKEN_FILE
+      - ANTHROPIC_FEDERATION_RULE_ID
+      - ANTHROPIC_SERVICE_ACCOUNT_ID
+      - ANTHROPIC_ORGANIZATION_ID
+    trust_model: "delegated to external IdP, not local hardware"
+
+  bare_mode:
+    flag: "--bare"
+    sets_env: CLAUDE_CODE_SIMPLE=1
+    auth: "strictly ANTHROPIC_API_KEY or apiKeyHelper via --settings; OAuth and keychain never read"
+    line: "656422"
+
+credential_storage:
+
+  backend_resolver: "v1() returns Xw6 (plaintext) — 101829-101831"
+  effective_backend: plaintext
+  backend_name_string: "plaintext (101693)"
+  file_path: "${L8H()}/.credentials.json  (default ~/.claude)"
+  path_fn: "k68 (101675-101682); dir L8H (94162-94166)"
+  config_dir_env: CLAUDE_SECURESTORAGE_CONFIG_DIR
+  on_disk_format: "JSON, chmod 0600 (mode 384)"
+  encryption_at_rest: none
+  machine_bound: false
+  machine_id_used_as_key_or_salt: false
+  write_warning_string: "Warning: Storing credentials in plaintext. (101731)"
+  stored_keys:
+    - "claudeAiOauth {accessToken, refreshToken, expiresAt, scopes, subscriptionType, rateLimitTier, clientId}"
+    - trustedDeviceToken
+    - "enterpriseGateway {url, jwt, expiresAt, idpRefreshToken, tokenEndpoint}"
+    - organizationUuid
+  oauth_save_fn: "cDH (131204-131252); telemetry tengu_oauth_tokens_saved storageBackend=plaintext"
+  logout_clears: [claudeAiOauth, organizationUuid, trustedDeviceToken, enterpriseGateway]   # 325832
+  change_detection: "EV_ watches file mtimeMs to invalidate cache (131271-131280)"
+
+  macos_keychain:
+    status: "present but largely inert in this Bun build"
+    reader: "security find-generic-password -a <user> -w -s <service> (m0K, 101780-101792)"
+    service_name_fn: "J_H (94168-94174) = 'Claude Code{suffix}{name}-{sha256(configDir).slice(0,8)}'"
+    service_name_salt: "sha256 of CONFIG DIR path (not machine id)"
+    legacy_api_key_prefetch: "getApiKeyFromConfigOrMacOSKeychain (FnH/Z98, 130565-130566); prefetch Pw6 is a no-op (101794-101798)"
+    api_key_save_to_keychain: 'DEAD CODE — let $=!1; keychain branch never runs; key saved to config (EY6, 131146-131182)'
+
+  not_credential_crypto:
+    note: "pbkdf2/createCipher/AES-CBC hits (187357,188982,189004,195696) belong to bundled node-forge TLS, not credential storage"
+
+privacy_security_implications:
+  - "Tokens (OAuth + trusted-device + gateway) are plaintext on disk; no machine binding -> trivially portable / exfiltratable"
+  - "Trusted-device token lives in the same plaintext file it is meant to protect"
+  - "macOS keychain save is dead code in Bun build — likely regression vs prior Node build (inference)"
+  - "Trusted-device + attestation are opt-in, org-policy gated; default consumer never enrolls"
+  - "OAuth/auth sends no hardware fingerprint; only hostname (trusted-device display_name)"
+  - "apiKeyHelper trust gate genuinely blocks settings-based RCE from untrusted dirs"
+  - "_CLAUDE_CODE_ASSUME_FIRST_PARTY_BASE_URL can force first-party trust + trace propagation against any base URL"
+
+uncertainties:
+  - "Whether dead keychain branch is deliberate Bun-port choice or temporary regression (inference)"
+  - "Server-side schema of device_token is opaque to client (only device_id logged)"
+  - "Did not trace every downstream consumer of each CLAUDE_CODE_OAUTH_* env accessor thunk"
+
+# ── Environment, runtime & network ──
+# Environment, runtime & network fingerprinting (FP4 partial)
+# Source: cli.beauty.js (Claude Code 2.1.169, Bun v1.3.14 standalone)
+# Merged into device-fingerprinting.md / fingerprinting.yaml by orchestrator.
+
+environment_signals:
+  collector: "Lh_ (envContext builder)"
+  collector_line: 139439
+  serializer: "ltK -> protobuf env message"
+  serializer_line: 139270
+  central_service: "Y$ / bQH (environment service)"
+  central_service_line: 5611
+
+  entrypoint:
+    env_var: "CLAUDE_CODE_ENTRYPOINT"
+    normaliser: "_Rq"
+    normaliser_line: 39983
+    recognised_set_fn: "j31"
+    recognised_set_line: 40011
+    recognised_values:
+      - cli
+      - mcp
+      - sdk-cli
+      - sdk-ts
+      - sdk-py
+      - bench
+      - claude-vscode
+      - claude-code-github-action
+      - local-agent
+      - claude-desktop
+      - remote
+      - remote_baku
+      - remote_cowork
+      - remote_trigger
+      - remote_desktop
+      - remote_mobile
+      - claude_in_slack
+      - claude-desktop-3p
+      - ssh-remote
+    sent_via:
+      - { channel: "telemetry env/core.entrypoint", line: 139236 }
+      - { channel: "x-anthropic-billing-header cc_entrypoint", line: 99856, fn: "q68" }
+      - { channel: "User-Agent claude-cli/...", line: 132311 }
+
+  runtime:
+    - { field: "platform", source: "CLAUDE_CODE_HOST_PLATFORM || process.platform", fn: "H3$", line: 45499 }
+    - { field: "platformRaw", source: "CLAUDE_CODE_HOST_PLATFORM || 'linux'", line: 139443 }
+    - { field: "arch", source: "build constant 'x64'", line: 45616 }
+    - { field: "nodeVersion", source: "process.version", line: 45617 }
+    - { field: "isRunningWithBun", source: "cd() (true this build)", line: 45622 }
+    - { field: "runtimes", source: "PATH probe bun/deno/node", fn: "cX1", line: 45542 }
+    - { field: "packageManagers", source: "PATH probe npm/yarn/pnpm", fn: "dX1", line: 45536 }
+    - { field: "shell", source: "$SHELL/$COMSPEC basename, whitelisted", fn: "Z66/tn$", line: 45504 }
+    - { field: "isCi", source: "HARDCODED false ($$(!1))", line: 45614, note: "env-context is_ci is constant false; CI only affects colour level (line 42871)" }
+    - { field: "is_github_action", source: "$$(GITHUB_ACTIONS)", line: 139469 }
+    - { field: "github_actions_metadata", source: "GITHUB_* env (actor/repo/owner ids)", line: 139310 }
+    - { field: "is_interactive", source: "a2()", line: 139248 }
+    - { field: "client_type", source: "jUH() -> B$.clientType (mutable)", line: 3068, uncertainty: "full value space not fully traced" }
+    - { field: "is_local_agent_mode", source: "CLAUDE_CODE_ENTRYPOINT === 'local-agent'", line: 139454 }
+    - { field: "is_claude_code_remote", source: "$$(CLAUDE_CODE_REMOTE)", line: 139453 }
+    - { field: "is_claubbit", source: "Y$.CLAUBBIT", line: 139452 }
+    - { field: "is_conductor", source: "Y$.isConductor()", line: 139455 }
+
+  container_sandbox:
+    - { field: "isDocker", method: "test -f /.dockerenv", fn: "LtK", line: 138175 }
+    - { field: "docker(alt)", method: "existsSync('/.dockerenv')", line: 45604 }
+    - { field: "container_id", env_var: "CLAUDE_CODE_CONTAINER_ID", line: 139460 }
+    - { field: "bubblewrap_sandbox", env_var: "CLAUDE_CODE_BUBBLEWRAP / IS_SANDBOX", line: 138183 }
+    - { field: "isMusl", method: "stat /lib/libc.musl-x86_64.so.1", line: 138189 }
+    - { field: "contained_no_internet", method: "(docker|bwrap|IS_SANDBOX) && !internet", fn: "WtK", line: 138181 }
+    - { field: "internet_probe", method: "HEAD http://1.1.1.1 timeout 1s", fn: "QX1", line: 45529 }
+
+  wsl:
+    - { field: "isWsl", method: "WSL_DISTRO_NAME|WSL_INTEROP else /proc/version match", fn: "r$", line: 47727 }
+    - { field: "wslVersion", method: "/proc/version WSL(\\d+)", fn: "xvH", line: 47744 }
+    - { field: "wslInterop", method: "/proc/sys/fs/binfmt_misc/WSLInterop", fn: "kxq", line: 45548 }
+    - { field: "isNpmFromWindowsPath", method: "npm path startsWith /mnt/c/", fn: "lX1", line: 45554 }
+
+  linux_distro:
+    - { field: "linux_distro_id", source: "/etc/os-release ID", fn: "Pmq", line: 47759 }
+    - { field: "linux_distro_version", source: "/etc/os-release VERSION_ID", line: 47770 }
+    - { field: "linux_kernel", source: "os.release()", line: 47761 }
+
+  vcs_in_cwd:
+    field: "vcs"
+    method: "dir probe + P4PORT env"
+    fn: "Zmq"
+    line: 47710
+    markers: [".git=git", ".hg=mercurial", ".svn=svn", ".p4config=perforce", "$tf=tfs", ".tfvc=tfs", ".jj=jujutsu", ".sl=sapling"]
+
+  deployment_environment:
+    field: "deployment_environment"
+    fn: "yxq"
+    line: 45565
+    values:
+      - codespaces
+      - gitpod
+      - coder
+      - devpod
+      - daytona
+      - gcp-cloud-workstations
+      - aws-cloud9
+      - replit
+      - glitch
+      - vercel
+      - railway
+      - render
+      - netlify
+      - heroku
+      - fly.io
+      - cloudflare-pages
+      - deno-deploy
+      - aws-lambda
+      - aws-fargate
+      - aws-ecs
+      - aws-ec2
+      - gcp-cloud-run
+      - gcp
+      - azure-app-service
+      - azure-functions
+      - digitalocean-app-platform
+      - huggingface-spaces
+      - github-actions
+      - gitlab-ci
+      - circleci
+      - buildkite
+      - ci
+      - kubernetes
+      - docker
+      - unknown-darwin
+      - unknown-linux
+      - unknown-win32
+      - unknown
+
+  terminal_ide:
+    resolver: "iX1"
+    resolver_line: 45445
+    async_jetbrains_refiner: "lE_ / nE_"
+    async_jetbrains_refiner_line: 138149
+    reported_as:
+      - { field: "env.terminal", line: 139446 }
+      - { field: "otel terminal.type", line: 185393 }
+    detection_order:
+      - jetbrains_set            # pycharm,intellij,webstorm,phpstorm,rubymine,clion,goland,rider,datagrip,appcode,dataspell,aqua,gateway,fleet,jetbrains,androidstudio
+      - "VisualStudioVersion -> visualstudio"
+      - "TERMINAL_EMULATOR=JetBrains-JediTerm -> pycharm"
+      - "TERM=xterm-ghostty / kitty"
+      - "TERM_PROGRAM (devin->windsurf, else verbatim: vscode/iTerm.app/Apple_Terminal/...)"
+      - "TMUX/STY/KONSOLE_VERSION/GNOME_TERMINAL_SERVICE/XTERM_VERSION/VTE_VERSION/TERMINATOR_UUID/KITTY_WINDOW_ID/ALACRITTY_LOG/TILIX_ID/WT_SESSION/cygwin/MSYSTEM/ConEmu"
+      - "WSL_DISTRO_NAME -> wsl-<name>"
+      - "SSH (SSH_CONNECTION|SSH_CLIENT|SSH_TTY) -> ssh-session"
+      - "raw TERM"
+      - "no TTY -> non-interactive"
+    terminal_version_env: ["TERM_PROGRAM_VERSION", "LC_TERMINAL (iTerm2 special-case)"]
+    vscode_special_cases: [149272, 151008, 163378]
+
+  git_repo_identity:
+    committer_email_fn: "q6H (git config --get user.email)"
+    committer_email_line: 132482
+    committer_name_fn: "LQK (git config --get user.name)"
+    committer_name_line: 132488
+    sent_in_telemetry: false
+    committer_use_sites: [569312, 569313, 283794, 286267, 588645]
+    notes: >-
+      git committer email/name are NOT in the telemetry env payload. They are used
+      only for commit/PR authoring and local UI. The user.email in OTel attrs
+      (185294 gateway-OIDC jwt; 185386 oauthAccount.emailAddress) is the LOGIN
+      identity, not the git committer.
+    repo_url_and_branch:
+      collected: true
+      scope: "remote-control bridge + GitHub Action only, not core telemetry"
+      bridge_post: { endpoint: "/v1/environments/bridge", fields: ["git_repo_url","branch","machine_name","directory"], line: 522445, sanitizer: "OgH" }
+      git_origin_cmd: { cmd: "git config --get remote.origin.url", line: 52527 }
+      git_branch_cmd: { cmd: "git rev-parse --abbrev-ref HEAD", line: 53129 }
+
+  locale_timezone:
+    sent_in_telemetry: false
+    reaches_model_prompt: true
+    signals:
+      - { field: "timezone", source: "Intl.DateTimeFormat().resolvedOptions().timeZone", fn: "qz$", line: 11416 }
+      - { field: "timezone(system prompt env block)", line: 615083 }
+      - { field: "tz_offset", source: "Date.getTimezoneOffset()", line: 576705 }
+      - { field: "locale_language", source: "Intl.DateTimeFormat().resolvedOptions().locale -> Intl.Locale.language", fn: "jVq", line: 11421 }
+      - { field: "posix_locale", source: "LC_ALL || LC_TIME || LANG", line: 388596 }
+
+network_geo:
+  ip_or_country_collection: false
+  notes: >-
+    No client-IP collection, no country list, no cf-ipcountry / geolocation gate.
+    "Geo" gating is purely provider data-residency routing.
+  data_residency_gate:
+    fn: "nL$ (firstPartyApi)"
+    line: 138716
+    rule: "Mq() must === 'firstParty' else reason:'data-residency'"
+    provider_resolver: { fn: "Mq", line: 93073, env_map: { CLAUDE_CODE_USE_BEDROCK: bedrock, CLAUDE_CODE_USE_FOUNDRY: foundry, CLAUDE_CODE_USE_ANTHROPIC_AWS: anthropicAws, CLAUDE_CODE_USE_MANTLE: mantle, CLAUDE_CODE_USE_VERTEX: vertex, default: firstParty } }
+    http_lanes:
+      - { lane: firstPartyApi, host: "api.anthropic.com", note: "residency-gated", line: 138716 }
+      - { lane: externalHttp, note: "non-Anthropic hosts; throws on Anthropic host", line: 45397 }
+      - { lane: cdn, host: "downloads.claude.ai", line: 242118 }
+    telemetry_on_3p: { dropped: true, line: 185467, analytics_disabled_flag: 279875 }
+  proxy:
+    module_line: 83545
+    proxy_url_env: ["https_proxy", "HTTPS_PROXY", "http_proxy", "HTTP_PROXY"]
+    proxy_url_fn: "yS"
+    proxy_url_line: 83587
+    no_proxy_env: ["no_proxy", "NO_PROXY"]
+    no_proxy_matching: "wildcard *, .suffix, host:port, CIDR"
+    no_proxy_fn: ["Gc", "B56"]
+    no_proxy_line: [83595, 83616]
+    claude_proxy_controls:
+      - { env: "CLAUDE_CODE_PROXY_AUTH_HELPER_TTL_MS", line: 83674 }
+      - { env: "CLAUDE_CODE_PROXY_RESOLVES_HOSTS", effect: "custom DNS lookup through proxy", line: 83647 }
+      - { env: "CLAUDE_CODE_PROXY_URL / _PROXY_HOST / _PROXY_AUTHENTICATE", role: "passed to auth-helper subprocess", line: 83703 }
+      - { env: "CLAUDE_CODE_CLIENT_CERT / _CLIENT_KEY / _CLIENT_KEY_PASSPHRASE / _CERT_STORE", role: "client mTLS" }
+  internal_network_probe:
+    fn: "gX1 (probeInternalNetworkAccess) + passesAntDspEnvGate (QE_)"
+    line: 138185
+    purpose: "Anthropic sandbox/datacentre detection, NOT user geo"
+
+persisted_install_fields:
+  config_path:
+    resolution: ".config.json in cwd > $CLAUDE_CONFIG_DIR/.claude*.json > ~/.claude.json"
+    line: 5520
+  defaults_fn: "oU"
+  defaults_line: 140921
+  global_keys_const: "I_8 / GLOBAL_CONFIG_KEYS"
+  global_keys_line: 141743
+  fields:
+    - name: userID
+      type: "256-bit random hex (crypto.randomBytes(32))"
+      stability: "permanent per-install, NOT machine-derived"
+      fn: "cU (getOrCreateUserID)"
+      line: 141641
+      exported_as: "otel user.id (185364); primary analytics actor"
+    - name: firstStartTime
+      type: "ISO timestamp, written once"
+      fn: "kG6"
+      line: 141660
+    - name: numStartups
+      type: "monotonic counter, +1 each session start"
+      increment_line: 657608
+      uses: ["tengu_init payload", "tips gating <10/<50 (633182,633231)", "lastUsedNumStartups deltas (185709)"]
+    - name: installMethod
+      type: "enum local|global|native"
+      lines: [326303, 326850, 328435]
+      note: "cross-checked vs runtime install dir for drift warnings (327327)"
+    - name: oauthAccount
+      type: "identity blob"
+      lines: [93383, 93863]
+      subfields: [accountUuid, emailAddress, organizationUuid, displayName, organizationRole, workspaceRole, billingType, subscriptionType, seatTier, accountCreatedAt, claudeCodeTrialEndsAt, ccOnboardingFlags, hasExtraUsageEnabled]
+    - name: hasCompletedOnboarding
+      type: boolean
+      line: 141036
+  identity_env_overrides:
+    - CLAUDE_CODE_ACCOUNT_UUID
+    - CLAUDE_CODE_ACCOUNT_TAGGED_ID   # else derived base58 from accountUuid (f37, 185389)
+    - CLAUDE_CODE_ORGANIZATION_UUID
+    - CLAUDE_CODE_USER_EMAIL
+    - CLAUDE_TRUSTED_DEVICE_TOKEN
+  otel_resource_attr_builder:
+    fn: "BhH"
+    line: 185353
+    opt_in_env: [OTEL_METRICS_INCLUDE_RESOURCE_ATTRIBUTES, OTEL_METRICS_INCLUDE_SESSION_ID, OTEL_METRICS_INCLUDE_VERSION, OTEL_METRICS_INCLUDE_ENTRYPOINT, OTEL_METRICS_INCLUDE_ACCOUNT_UUID]
+    emits: ["user.id", "session.id", "app.version", "app.entrypoint", "organization.id", "user.email", "user.account_uuid", "user.account_id", "terminal.type", "identity.source(gateway-oidc)"]
+
+privacy_implications:
+  - "userID is a permanent 256-bit random per-install token in ~/.claude.json; reset only by deleting the file."
+  - "Every telemetry event carries a rich passive env profile (platform/distro/kernel/wsl/shell/runtimes/terminal/deployment-env)."
+  - "git committer email / origin URL / branch are NOT in standard telemetry; leak only via commit/PR flow, remote-control bridge, or GitHub Action."
+  - "No client-IP or country collection; geo gating is provider data-residency only."
+  - "Timezone, locale, and local time reach the model via the system prompt, though absent from the analytics protobuf."
+  - "Entrypoint is broadcast to the model API (x-anthropic-billing-header + User-Agent), not just analytics."
+
+changes_vs_2_1_32:
+  - "Bun runtime (isRunningWithBun true)"
+  - "Broader deployment_environment cascade"
+  - "WSL version parsing + linux_distro_* + linux_kernel + vcs list"
+  - "is_claubbit / is_conductor / is_local_agent_mode added"
+  - "Expanded entrypoint set (remote_*, claude_in_slack, ssh-remote, claude-desktop-3p)"
+  - "Telemetry transport now protobuf api.anthropic.com/api/event_logging/v2/batch (was Segment)"
+
+uncertainties:
+  - "client_type (jUH/B$.clientType) value space not fully traced beyond 'cli'."
+  - "isCi:false is a verified literal constant in envContext; a downstream override was not observed but not exhaustively ruled out."

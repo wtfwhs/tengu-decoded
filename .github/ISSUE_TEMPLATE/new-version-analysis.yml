@@ -1,0 +1,36 @@
+name: New Version Available
+description: Report a new Claude Code version that needs analysis
+title: "[Version]: "
+labels: ["new-version"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Claude Code Version
+      description: The version number of the binary
+      placeholder: "e.g., 2.2.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux x86-64
+        - macOS ARM64
+        - macOS x86-64
+        - Windows x86-64
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: build_timestamp
+    attributes:
+      label: Build Timestamp
+      description: If known, the build timestamp from the binary
+      placeholder: "e.g., 2026-02-05T17:02:25Z"
+  - type: textarea
+    id: context
+    attributes:
+      label: Release Context
+      description: Any known changes, release blog posts, or notable features in this version
