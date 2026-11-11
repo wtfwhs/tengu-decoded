@@ -720,7 +720,10 @@ Diffed with the same regex over `cli.min.js` of both builds.
 
 `context_management` is on every entry except the three 3.x models and Mythos 5, whose list is
 empty; `gU` (`:127290`) still grants it to Mythos 5 by name. Output caps come from `sae`
-(`:126973`). A served `runtime.max_output_tokens` (1024–128000) overrides them.
+(`:126973`). A served `runtime.max_output_tokens` (1024–128000) overrides them. If the catalog has no
+`default_output_tokens`, the account's server-sent `client_data.heather_vale` can set the default instead
+(`Sv()`, `:126962`; capped at the upper limit), before `CLAUDE_CODE_MAX_OUTPUT_TOKENS` is applied. See
+[feature-flags: server-sent client data](feature-flags.md#server-sent-client-data-client_data-a-second-remote-config-channel).
 
 ## What's new vs 2.1.197 (summary)
 

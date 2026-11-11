@@ -270,6 +270,33 @@ plan-keyed:
 - `pro-compact-threshold` — Pro past 200K tokens with no autoCompactWindow → suggest setting
   `autoCompactWindow: 200000` (`351104`).
 
+### Sonnet 5 promo pricing (`cedar_basin`)
+
+*Added 2026-11-11, prompted by a reader asking about the dated `cedar_basin` value in their
+`~/.claude.json`.*
+
+`cedar_basin` is not a GrowthBook flag or an experiment group. It is a key in the account's server-sent
+client data (`clientDataCache`, read by `AI()`, `:606518`), and it holds a **promo end date**:
+
+```js
+function Dlo() {                                  // :231109
+  let e = AI()?.cedar_basin;
+  if (typeof e !== "string" || e.trim() === "") return;
+  let t = pBn(e);                                 // :230926, ISO date parse (bare dates read as UTC)
+  return Date.now() < t ? e : void 0              // only while the date is still in the future
+}
+```
+
+While the date is in the future, the model picker's Sonnet 5 entries add
+"$2/$10 per Mtok · promo through <Mon D>" and keep "$3/$15" as the list price (`:231219`, `:231335`).
+`Rlo()` (`:230945`) formats the date as month and day only, in UTC, so `2027-08-31` would show as
+"Aug 31". After the date passes, the label disappears without any update. The label is only built when
+`ud()` is true, i.e. on the `firstParty`, `anthropicAws` and `gateway` planes (`:94671`).
+
+This is display logic only: the client shows the promo price but does not bill anything. Whether the
+promo price is actually charged is decided server-side. `cedar_basin` is gone from 2.1.300 (0
+occurrences); see [2.1.300 feature-flags](../2.1.300/feature-flags.md#server-sent-client-data-client_data-a-second-remote-config-channel).
+
 ## Upsell Mechanics
 
 | Mechanism | Symbol / flag | Behaviour |
@@ -385,5 +412,3 @@ remote_sessions in 2.1.169). `DW()` (`145876`) wraps `js()` to throw the policy-
   `tengu_idle_amber_finch` defaults are `!1`/code-side only.
 - `upgradePaths` is a server-provided string array (`upgrade_plan`/`overage`) consumed by the upsell
   UI; its full domain isn't enumerable from the client.
-</content>
-</invoke>

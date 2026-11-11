@@ -569,7 +569,7 @@ and `required` (1). `:orgUUID` is substituted from the OAuth org (`:138744`, `:1
 | `/api/hello` | unchanged | `:1550762` |
 | `/api/web/domain_info?domain=` | unchanged (now hard-coded to `https://api.anthropic.com`) | `:489667` |
 | `/api/claude_cli_feedback` | unchanged | `:763576` |
-| `/api/claude_cli/bootstrap` | pre-existing | `:760225` |
+| `/api/claude_cli/bootstrap` | pre-existing. Returns `client_data` (per-account remote config) plus `oauth_account`, `model_access`, `org_model_default`, extra model options/costs and `auto_compact_windows`. Skipped when `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set or the provider is not `firstParty`. See [feature-flags](feature-flags.md#server-sent-client-data-client_data-a-second-remote-config-channel) | `:760225`, `:760218-760219` |
 | `/api/claude_code/{policy_limits,settings,skills,notification/preferences}` | pre-existing | `:75334`, `:770676`, `:1687673`, `:965324` |
 | `/api/claude_code_grove`, `/api/oauth/account/grove_notice_viewed` | pre-existing | `:958327`, `:958259` |
 | `/api/claude_code_penguin_mode` | pre-existing | `:121386` |
