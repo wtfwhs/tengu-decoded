@@ -330,5 +330,3 @@ Beta headers (`:100577`): `s4r = advanced-tool-use-2025-11-20` and
   `tengu_amber_sentinel` is confirmed, `Hu()` is treated as a secondary availability check.
 - Name-const → string mappings (`Co`, `Ms`, `$He`, `Nvl`, `N1`, `UJn`, `$J`, …) were each resolved
   from their `var X = "Name"` declarations and confirmed against the `Ys({ name: X, … })` site.
-</content>
-</invoke>
