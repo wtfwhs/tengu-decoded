@@ -384,6 +384,7 @@ CHANGED vs 2.1.197:
 | **Device registry** (`/api/organizations/:orgUUID/cowork/remote_devices`) | **`public_key`** (SPKI b64) → server `id` | via `teleport-org` auth | path | — | — | n/a | **NEW** `:1000196-1000203`; `display_name` = `Claude Code on <hostname> · Linux` |
 | **Plugin telemetry** (`https://api.anthropic.com/api/event_logging/v2/batch`) | `deviceId` (config `userID`) | `auth.accountUuid` | `auth.organizationUuid` | only if `userType==="ant"` | `sessionId` | no | **NEW** `:1534454-1534470` |
 | **Trusted-device enrollment** | — | bearer | — | — | — | n/a | `:292628`; `display_name` hostname |
+| **API requests via `Gw`** (`x-cc-atis` header) | **`atis`** (server-issued, echoed back) | — | — | — | — | no | from `client_data.atis` (`:142940`), set at `:182426` when `Wl()` holds; also GrowthBook attribute **`atisPin`** (NEW, `:142838`). Pre-existing header; not generated on the device |
 | **Segment** | absent | — | — | — | — | — | — |
 
 ### 2.5 OTel include-flag defaults (`Se`, `:194373-194378`)

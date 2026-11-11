@@ -88,5 +88,3 @@ The standout *new* code in 2.1.197 is the rewrite of how Claude Code knows about
 - **The identity model is unchanged in shape.** `device_id`/`userID` is still a random 256-bit token from `crypto.randomBytes(32).toString("hex")` (`vW()`, `:606434`), persisted to `~/.claude.json`, surviving logout — re-verified, not regressed. See [Device Fingerprinting](device-fingerprinting.md).
 
 The takeaway: 2.1.197 is not a new platform, it's a **hardening pass on the 2.1.169 platform** — a typed model catalog, credential vaults, skill versioning, a design/deploy surface, and the steady upward creep of flags, events, and tools, all bolted onto the same Bun-based agent fabric, now running on Bun v1.4.0.
-</content>
-</invoke>

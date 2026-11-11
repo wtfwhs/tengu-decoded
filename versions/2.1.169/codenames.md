@@ -149,5 +149,3 @@ to the *noun*, with random adjective prefixes minted per-flag from the `DeK`/`Je
   layer under the broader bridge remote-control feature rather than a separate product.
 - Several single-flag `adjective_noun` names with dedicated gates (e.g. `kestrel_arch`,
   `compass_dial`) could be nascent codenames; classified as non-meaningful pending a second flag.
-</content>
-</invoke>

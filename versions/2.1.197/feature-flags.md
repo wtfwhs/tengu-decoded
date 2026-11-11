@@ -226,5 +226,3 @@ Live enumeration over the four accessors (`grep` for `it("tengu_…"` / `J7(` / 
 - **Confirmed default flip**: `tengu_mcp_stateless_skip_init` `false`→**`true`**; new default-TRUE guards `mcp_server_policy_bypass_exempt`, `mcp_startup_policy_seed`, `cobalt_plinth_putguard`, `cobalt_harbor_notice`.
 - The growth is concentrated in **Frame artifacts / Design**, **credits/overage billing**, **Remote Control defaults**, and **MCP/plugin hardening**.
 - See [data/feature-flags.yaml](data/feature-flags.yaml) for the full structured dataset with per-flag line citations.
-</content>
-</invoke>

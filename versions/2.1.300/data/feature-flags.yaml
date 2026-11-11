@@ -20,6 +20,51 @@
 #                  KEPT flags carry the 2.1.197 description unless re-decoded here.
 # Codenames (amber_*, violin_*, cobalt_plinth_*, ...) are opaque labels; behaviour is inferred from call sites with line cites.
 
+client_data:
+  summary: "Per-account remote config sent by the server alongside GrowthBook flags; not a flag system"
+  source: "GET {base}/api/claude_cli/bootstrap (module 668 chunk-92kvs3r1.js, cli.beauty.js:760225; schema :759998)"
+  fetched_when: "skipped if CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC is set (any non-empty value, :760218) or provider != firstParty (:760219); DISABLE_TELEMETRY / DO_NOT_TRACK do not skip it"
+  storage: "~/.claude.json clientDataCacheSlots[slot] = {data, at, entrypoint, model, org} (:760369); legacy clientDataCache read as fallback (:760348)"
+  slot_key: "'bi1-' + sha256(JSON.stringify([entrypoint, model, ccVersion, organizationUuid]))[0:16] (sMr; prefix :112645)"
+  stale_after_ms: 86400000
+  readers: "Cl(model) per-model slot (:115797), Iin() unkeyed slot (:115814); both module 152"
+  telemetry: "tengu_client_data_cache_key {slot_hit, slot_changed, legacy_fallback, slot_stale} (:760345)"
+  keys:
+    - key: atis
+      effect: "opaque server-issued string echoed back as x-cc-atis request header (:182426) and GrowthBook attribute atisPin (:142838)"
+      status: "header KEPT; atisPin NEW"
+      evidence: "cli.beauty.js:142940"
+    - key: heather_vale
+      effect: "default max output tokens per model; used only if the catalog has no default_output_tokens; capped at the model upper limit"
+      status: "CHANGED (2.1.197 accepted only a model-id map)"
+      evidence: "cli.beauty.js:126962-126985"
+    - key: tengu_heron_brook
+      effect: "remote system-prompt text; wins over the flag of the same name"
+      evidence: "cli.beauty.js:491907"
+    - key: default_effort
+      effect: "default reasoning effort (inferred)"
+      evidence: "cli.beauty.js:163656"
+    - key: footer_indicator
+      effect: "UI footer indicator (inferred)"
+      evidence: "cli.beauty.js:685761, 1323253"
+    - key: model_notices
+      effect: "model-picker notices (inferred)"
+      evidence: "cli.beauty.js:1315738"
+    - key: non_deferrable_builtins
+      effect: "built-in tools exempt from deferred loading (inferred)"
+      evidence: "cli.beauty.js:219718"
+    - key: pewter_owl_model
+      effect: "unreleased-model preview gating"
+      evidence: "cli.beauty.js:368641"
+    - key: tengu_juniper_sundial
+      effect: "read beside the flag of the same name (not traced)"
+      evidence: "cli.beauty.js:553825"
+  indirect_keys: [tengu_lapis_anchor, meadow_lantern]
+  removed_since_2_1_197:
+    - key: cedar_basin
+      was: "Sonnet 5 promo end date; model picker showed '$2/$10 per Mtok · promo through <Mon D>' (list $3/$15) on firstParty/anthropicAws/gateway while the date was in the future"
+      evidence: "2.1.197 cli.beauty.js:231109, 231218, 231335"
+
 resolver:
   class: vf (module 152 chunk-7rwjz6p0.js, cli.beauty.js:133732)
   singleton: Fe() cli.beauty.js:142671 - one vf per host slot (Ui() -> qOr.of(j().host))

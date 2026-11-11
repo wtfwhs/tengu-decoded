@@ -135,7 +135,55 @@ The first read wins for the life of the session state (`To()`). A mid-session Gr
 - **Cache keys.** The remote-eval cache is keyed on `["id", "organizationUUID", "slackTagConnected", "atisPin", "ccrDerivedSurface"]` (`:134100`).
 - **Refresh cadence `n6s()`** (`:142924`). `tengu_gb_refresh_interval_minutes` null → every 360 min (`flagged:false`). Otherwise a positive finite number (strings are coerced) is clamped to [5, 360] min, multiplied by a 0.9–1.1 jitter factor and re-capped at 360 min; a non-numeric or non-positive value falls back to 360 min but still returns `flagged:true`. When `flagged`, a refresh that does not raise the OK-fetch count is retried after up to 5 s (`periodicRefreshLoop`, `:134296`).
 - **Disk persistence.** `syncRemoteEvalToDisk()` writes `cachedGrowthBookFeatures`, `cachedExperimentFeatures`, `cachedExperimentData` and `cachedGrowthBookFeaturesAt`. It skips the write when the client was built for a Slack-tag-connected identity, or after auth was lost mid-session (`:133960–133983`). `cachedExperimentData` is NEW (0 occurrences in 2.1.197).
-- **ATIS pin.** `tengu_serene_teacup` (`BW()`, `:142951`) re-evaluates when the `atisPin` attribute changes. `tengu_kestrel_moor` (`r6s()`, `:142963`) latches the conversation ATIS.
+- **ATIS pin.** `tengu_serene_teacup` (`BW()`, `:142951`) re-evaluates when the `atisPin` attribute changes. `tengu_kestrel_moor` (`r6s()`, `:142963`) latches the conversation ATIS. The account-level ATIS comes from
+  `client_data.atis`; see [Server-sent client data](#server-sent-client-data-client_data-a-second-remote-config-channel).
+
+### Server-sent client data (`client_data`): a second remote-config channel
+
+Besides GrowthBook flags, the server sends each account a free-form JSON object called `client_data`.
+Several features read it before (or instead of) their flag, so a value found in `~/.claude.json` is not
+necessarily a GrowthBook flag.
+
+- **Source.** `GET {base}/api/claude_cli/bootstrap` (module 668 `chunk-92kvs3r1.js`, `:760225`). The same
+  response carries `oauth_account`, `additional_model_options`, `additional_model_costs`, `model_access`,
+  `org_model_default` and `auto_compact_windows` (schema at `:759998`).
+- **When it is fetched.** Skipped when `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set (`Ct()`, `:760218`;
+  any non-empty value counts) and on every non-`firstParty` provider plane (`:760219`). `DISABLE_TELEMETRY`
+  and `DO_NOT_TRACK` select a separate "no-telemetry" mode that does **not** skip it (`VUt()`, module
+  `chunk-sw5grb7z.js`).
+- **Storage.** `~/.claude.json` → `clientDataCacheSlots[<slot>]` = `{data, at, entrypoint, model, org}`
+  (`:760369`). The slot key is `"bi1-"` (`:112645`) + the first 16 hex characters of
+  `sha256(JSON.stringify([entrypoint, model, ccVersion, organizationUuid]))` (`sMr`). A slot older
+  than 24 h (`i$s = 86400000`, `:112654`) counts as stale. The older single `clientDataCache` key is still read as a
+  fallback (`legacy_fallback`, `:760348`). Each bootstrap fires `tengu_client_data_cache_key`
+  `{slot_hit, slot_changed, legacy_fallback, slot_stale}` (`:760345`).
+- **Readers.** `Cl(model)` reads the slot for a model and `Iin()` the unkeyed slot (module 152, `:115797`,
+  `:115814`). Both return `null` when `clientDataReadGate()` refuses. All six modules below import module
+  152's `Cl`, so the short name is not a collision.
+
+Keys the 2.1.300 client reads directly (`Cl(…)?.key`); at least two more are read indirectly
+(`tengu_lapis_anchor`, `meadow_lantern`, see below):
+
+| Key | Effect | Evidence |
+|---|---|---|
+| `atis` | An opaque string the client sends back: as the `x-cc-atis` request header from the `Gw` fetch wrapper (`:182426`) when `Wl()` holds (`firstParty` plus a further check `Si()`, not decoded; or `anthropicAws` without `ANTHROPIC_AWS_BASE_URL`), and as the GrowthBook targeting attribute `atisPin` (`Ein()` strips a `v1.<id>.<…>` wrapper, `:142838`). `tengu_kestrel_moor` can pin a conversation-level value instead (`Fxo()`, `:142966`). What "ATIS" stands for is not in the code. The header existed in 2.1.197; **`atisPin` is NEW** (0 occurrences in 2.1.197). | `:142940` |
+| `heather_vale` | Default **max output tokens** per model: a number, or a map of model id → number. Used only when the served model catalog gives no `default_output_tokens` (`bc(e,s) ?? Sv(e,s)`), and capped at the model's upper limit; `CLAUDE_CODE_MAX_OUTPUT_TOKENS` is applied afterwards (`tmt()`, `:126992`). Non-integer or non-positive values are ignored. **CHANGED:** 2.1.197 (`XPd`, `2.1.197:132590`) accepted only the model-id map. | `:126962-126985` |
+| `tengu_heron_brook` | Remotely supplied system-prompt text; the client data value wins over the flag of the same name. See [system-prompt](system-prompt.md). | `:491907` |
+| `default_effort` | Default reasoning effort. | `:163656` |
+| `footer_indicator` | Footer indicator in the UI. | `:685761`, `:1323253` |
+| `model_notices` | Notices shown in the model picker. | `:1315738` |
+| `non_deferrable_builtins` | Built-in tools exempt from deferred loading. | `:219718` |
+| `pewter_owl_model` | Unreleased-model preview gating (also flag `tengu_pewter_owl_model`). | `:368641` |
+| `tengu_juniper_sundial` | Read beside the flag of the same name. | `:553825` |
+
+The effects for `default_effort`, `footer_indicator`, `model_notices`, `non_deferrable_builtins` and
+`tengu_juniper_sundial` are inferred from the key name and the reading function, not traced in full.
+
+**Removed since 2.1.197:** `cedar_basin` (0 occurrences in 2.1.300). In 2.1.197 it was a **promo end date**,
+not an experiment: if the date was in the future, the model picker priced Sonnet 5 as
+"$2/$10 per Mtok · promo through <Mon D>" against a $3/$15 list price, on the `firstParty`, `anthropicAws` and
+`gateway` planes. See [2.1.197 plan-tier-gating](../2.1.197/plan-tier-gating.md#sonnet-5-promo-pricing-cedar_basin).
+A stale `cedar_basin` value can remain in `~/.claude.json` from an older version.
 
 ### Dual-gated features (env var AND/OR flag): the dominant pattern
 
